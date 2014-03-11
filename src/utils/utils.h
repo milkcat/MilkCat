@@ -54,7 +54,7 @@ inline const char *_filename(const char *path) {
 
 #ifdef ENABLE_LOG
 #define LOG(format, ...) \
-        fprintf(stderr, "[%s:%d] " format, _filename(__FILE__), \
+        fprintf(stderr, "[%s:%d] " format "\n", _filename(__FILE__), \
                 __LINE__, __VA_ARGS__)
 #else
 #define LOG(...)
@@ -62,7 +62,7 @@ inline const char *_filename(const char *path) {
 
 #ifdef ENABLE_LOG
 #define LOG_IF(cond, format, ...) if (cond) \
-        fprintf(stderr, "[%s:%d] " format, _filename(__FILE__), \
+        fprintf(stderr, "[%s:%d] " format "\n", _filename(__FILE__), \
                 __LINE__, __VA_ARGS__)
 #else
 #define LOG_IF(...)

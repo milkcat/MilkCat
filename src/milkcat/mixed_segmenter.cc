@@ -71,7 +71,7 @@ MixedSegmenter::~MixedSegmenter() {
 void MixedSegmenter::Segment(TermInstance *term_instance,
                              TokenInstance *token_instance) {
   bigram_->Segment(bigram_result_, token_instance);
-  oov_recognizer_->Process(term_instance, bigram_result_, token_instance);
+  oov_recognizer_->Recognize(term_instance, bigram_result_, token_instance);
 }
 
 }  // namespace milkcat

@@ -68,84 +68,101 @@ OutOfVocabularyWordRecognition::OutOfVocabularyWordRecognition():
     crf_segmenter_(NULL) {
 }
 
-void OutOfVocabularyWordRecognition::Process(TermInstance *term_instance,
-                                             TermInstance *in_term_instance,
-                                             TokenInstance *in_token_instance) {
-  int ner_begin_token = 0;
+void OutOfVocabularyWordRecognition::GetOOVProperties(
+    TermInstance *term_instance) {
+  for (int i = 0; i < term_instance->size(); ++i) 
+    oov_properties_[i] = kNoRecognize;
+
+  for (int i = 0; i < term_instance->size(); ++i) {
+    int token_number = term_instance->token_number_at(i);
+    int term_type = term_instance->term_type_at(i);
+    if (token_number > 1) {
+      continue;
+    } else if (term_type != TermInstance::kChineseWord) {
+      continue;
+    } else {
+      const char *term_text = term_instance->term_text_at(i);
+      int oov_property = oov_property_->Search(term_text);
+      if (oov_property < 0) {
+        oov_properties_[i] = kDoRecognize;
+      } else {
+        switch (oov_property) {
+          case kOOVBeginOfWord:
+            oov_properties_[i] = kDoRecognize;
+            if (i < term_instance->size() - 1) {
+              oov_properties_[i + 1] = kDoRecognize;
+            }
+            break;
+
+          case kOOVEndOfWord:
+            oov_properties_[i] = kDoRecognize;
+            if (i > 0 && oov_properties_[i - 1] != kNeverRecognize) {
+              oov_properties_[i - 1] = kDoRecognize;
+            }
+            break;
+
+          case kOOVFilteredWord:
+            oov_properties_[i] = kNeverRecognize;
+            break;
+        }
+      }
+    }
+  }
+}
+
+void OutOfVocabularyWordRecognition::Recognize(
+    TermInstance *term_instance,
+    TermInstance *in_term_instance,
+    TokenInstance *in_token_instance) {
   int current_token = 0;
   int current_term = 0;
   int term_token_number;
-  int current_token_type;
-  int ner_term_number = 0;
-  const char *term_str;
-  bool oov_flag = false,
-       next_oov_flag = false;
+  int oov_begin_token = 0;
+  int oov_token_num = 0;
 
-  for (size_t i = 0; i < in_term_instance->size(); ++i) {
+  GetOOVProperties(in_term_instance);
+
+  for (int i = 0; i < in_term_instance->size(); ++i) {
     term_token_number = in_term_instance->token_number_at(i);
-    current_token_type = in_token_instance->token_type_at(current_token);
-    term_str = in_term_instance->term_text_at(i);
-    // printf("%d\n", ner_term_number);
 
-    if (term_token_number > 1) {
-      if (next_oov_flag == true) {
-        oov_flag = true;
-        next_oov_flag = false;
-      } else {
-        oov_flag = false;
-      }
-    } else if (current_token_type != TokenInstance::kChineseChar) {
-      oov_flag = false;
-      next_oov_flag = false;
-    } else {
-      int oov_property = oov_property_->Search(term_str);
-      if (oov_property == kOOVBeginOfWord) {
-        next_oov_flag = true;
-        oov_flag = true;
-      } else if (oov_property == kOOVFilteredWord) {
-        oov_flag = false;
-        next_oov_flag = false;
-      } else {
-        oov_flag = true;
-        next_oov_flag = false;
-      }
-    }
+    LOG("OOV Property for '%s' is: %d", 
+        in_term_instance->term_text_at(i),
+        oov_properties_[i]);
 
-    if (oov_flag) {
-      ner_term_number++;
+    if (oov_properties_[i] == kDoRecognize) {
+      oov_token_num++;
 
     } else {
-      // Recognize token from ner_begin_token to current_token
-      if (ner_term_number > 1) {
-        RecognizeRange(in_token_instance, ner_begin_token, current_token);
+      // Recognize token from oov_begin_token to current_token
+      if (oov_token_num > 1) {
+        RecognizeRange(in_token_instance, oov_begin_token, current_token);
 
-        for (size_t j = 0; j < term_instance_->size(); ++j) {
+        for (int j = 0; j < term_instance_->size(); ++j) {
           CopyTermValue(term_instance, current_term, term_instance_, j);
           current_term++;
         }
-      } else if (ner_term_number == 1) {
+      } else if (oov_token_num == 1) {
         CopyTermValue(term_instance, current_term, in_term_instance, i - 1);
         current_term++;
       }
 
       CopyTermValue(term_instance, current_term, in_term_instance, i);
-      ner_begin_token = current_token + term_token_number;
+      oov_begin_token = current_token + term_token_number;
       current_term++;
-      ner_term_number = 0;
+      oov_token_num = 0;
     }
 
     current_token += term_token_number;
   }
 
   // Recognize remained tokens
-  if (ner_term_number > 1) {
-    RecognizeRange(in_token_instance, ner_begin_token, current_token);
-    for (size_t j = 0; j < term_instance_->size(); ++j) {
+  if (oov_token_num > 1) {
+    RecognizeRange(in_token_instance, oov_begin_token, current_token);
+    for (int j = 0; j < term_instance_->size(); ++j) {
       CopyTermValue(term_instance, current_term, term_instance_, j);
       current_term++;
     }
-    ner_begin_token = current_token + term_token_number;
-  } else if (ner_term_number == 1) {
+  } else if (oov_token_num == 1) {
     CopyTermValue(term_instance,
                   current_term,
                   in_term_instance,
@@ -174,6 +191,7 @@ void OutOfVocabularyWordRecognition::RecognizeRange(
     TokenInstance *token_instance,
     int begin,
     int end) {
+  LOG("RecognizeRange [%d, %d)", begin, end);
   crf_segmenter_->SegmentRange(term_instance_, token_instance, begin, end);
 }
 

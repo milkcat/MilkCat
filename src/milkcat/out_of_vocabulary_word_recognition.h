@@ -29,6 +29,7 @@
 #ifndef SRC_MILKCAT_OUT_OF_VOCABULARY_WORD_RECOGNITION_H_
 #define SRC_MILKCAT_OUT_OF_VOCABULARY_WORD_RECOGNITION_H_
 
+#include <stdint.h>
 #include <stdio.h>
 #include "utils/utils.h"
 #include "milkcat/darts.h"
@@ -47,19 +48,29 @@ class OutOfVocabularyWordRecognition {
   static OutOfVocabularyWordRecognition *New(ModelFactory *model_factory,
                                              Status *status);
   ~OutOfVocabularyWordRecognition();
-  void Process(TermInstance *term_instance,
-               TermInstance *in_term_instance,
-               TokenInstance *in_token_instance);
+  void Recognize(TermInstance *term_instance,
+                 TermInstance *in_term_instance,
+                 TokenInstance *in_token_instance);
 
-  static const int kOOVBeginOfWord = 1;
-  static const int kOOVFilteredWord = 2;
+  static constexpr int kOOVBeginOfWord = 1;
+  static constexpr int kOOVEndOfWord = 2;
+  static constexpr int kOOVFilteredWord = 3;
+
+  static constexpr int kNoRecognize = 0;
+  static constexpr int kNeverRecognize = 1;
+  static constexpr int kDoRecognize = 2;
 
  private:
   TermInstance *term_instance_;
   CRFSegmenter *crf_segmenter_;
   const TrieTree *oov_property_;
+  int8_t oov_properties_[kTokenMax];
 
   OutOfVocabularyWordRecognition();
+
+  // Get the oov properties for term_instance, and write the result into
+  // oov_properties_
+  void GetOOVProperties(TermInstance *term_instance);
 
   void RecognizeRange(TokenInstance *token_instance, int begin, int end);
 
