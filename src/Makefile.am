@@ -8,7 +8,8 @@ include_HEADERS = milkcat/milkcat.h
 
 lib_LTLIBRARIES = libmilkcat.la
 libmilkcat_la_SOURCES = common/get_vocabulary.cc \
-                        common/get_vocabulary.hmilkcat/beam.h \
+                        common/get_vocabulary.h \
+                        milkcat/beam.h \
                         milkcat/bigram_segmenter.cc \
                         milkcat/bigram_segmenter.h \
                         milkcat/crf_model.cc \
