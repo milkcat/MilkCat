@@ -1,0 +1,11 @@
+build
+autom4te.cache
+
+configure
+scripts
+m4
+aclocal.m4
+Makefile.in
+
+/data/*
+!/data/Makefile.am
