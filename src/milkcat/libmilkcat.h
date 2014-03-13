@@ -32,12 +32,8 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <map>
-#include <mutex>
 #include <string>
 #include <vector>
-#include "utils/utils.h"
-#include "utils/status.h"
-#include "utils/readable_file.h"
 #include "milkcat/hmm_model.h"
 #include "milkcat/crf_model.h"
 #include "milkcat/trie_tree.h"
@@ -50,6 +46,10 @@
 #include "milkcat/milkcat_config.h"
 #include "milkcat/term_instance.h"
 #include "milkcat/part_of_speech_tag_instance.h"
+#include "utils/mutex.h"
+#include "utils/utils.h"
+#include "utils/status.h"
+#include "utils/readable_file.h"
 
 namespace milkcat {
 
@@ -74,19 +74,9 @@ struct milkcat_t {
 
 namespace milkcat {
 
-// Model filenames
-constexpr const char *UNIGRAM_INDEX = "unigram.idx";
-constexpr const char *UNIGRAM_DATA = "unigram.bin";
-constexpr const char *BIGRAM_DATA = "bigram.bin";
-constexpr const char *HMM_PART_OF_SPEECH_MODEL = "ctb_pos.hmm";
-constexpr const char *CRF_PART_OF_SPEECH_MODEL = "ctb_pos.crf";
-constexpr const char *CRF_SEGMENTER_MODEL = "ctb_seg.crf";
-constexpr const char *DEFAULT_TAG = "default_tag.cfg";
-constexpr const char *OOV_PROPERTY = "oov_property.idx";
-
-constexpr int kTokenizerMask = 0x0000000f;
-constexpr int kSegmenterMask = 0x00000ff0;
-constexpr int kPartOfSpeechTaggerMask = 0x000ff000;
+const int kTokenizerMask = 0x0000000f;
+const int kSegmenterMask = 0x00000ff0;
+const int kPartOfSpeechTaggerMask = 0x000ff000;
 
 class Cursor;
 class ModelFactory;
@@ -127,7 +117,7 @@ class ModelFactory {
  private:
   std::string model_dir_path_;
   std::string user_dictionary_path_;
-  std::mutex mutex;
+  Mutex mutex;
 
   const TrieTree *unigram_index_;
   const TrieTree *user_index_;

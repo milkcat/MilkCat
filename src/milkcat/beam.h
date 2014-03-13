@@ -36,7 +36,10 @@ class NodePool {
   NodePool(): alloc_index_(0) {}
 
   ~NodePool() {
-    for (auto &node : nodes_) delete node;
+    typename std::vector<Node *>::iterator it;
+    for (it = nodes_.begin(); it < nodes_.end(); ++it) {
+      delete *it;
+    }
   }
 
   // Alloc a node

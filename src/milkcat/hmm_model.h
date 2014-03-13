@@ -28,7 +28,7 @@
 #define SRC_MILKCAT_HMM_MODEL_H_
 
 #include <string.h>
-#include <unordered_map>
+#include <map>
 #include "utils/status.h"
 
 namespace milkcat {
@@ -67,10 +67,10 @@ class HMMModel {
     return -1;
   }
 
-  // Get the emit row (tag, cost) of a term, if no data return nullptr
+  // Get the emit row (tag, cost) of a term, if no data return NULL
   Emit *emit(int term_id) const {
     if (term_id > max_term_id_ || term_id < 0)
-      return nullptr;
+      return NULL;
     else
       return emits_[term_id];
   }
@@ -86,7 +86,7 @@ class HMMModel {
   float tag_cost(int tag_id) const { return tag_cost_[tag_id]; }
 
  private:
-  static constexpr int kTagStrLenMax = 16;
+  static const int kTagStrLenMax = 16;
   Emit **emits_;
   int max_term_id_;
   int emit_num_;
@@ -97,23 +97,21 @@ class HMMModel {
 
   HMMModel();
 
-  static void LoadTransFromText(
-      HMMModel *self,
-      const char *trans_model_path,
-      const std::unordered_map<std::string, int> &y_tag,
-      Status *status);
+  static void LoadTransFromText(HMMModel *self,
+                                const char *trans_model_path,
+                                const std::map<std::string, int> &y_tag,
+                                Status *status);
 
-  static void LoadEmitFromText(
-      HMMModel *self,
-      const char *emit_model_path,
-      const char *index_path,
-      const std::unordered_map<std::string, int> &y_tag,
-      Status *status);
+  static void LoadEmitFromText(HMMModel *self,
+                               const char *emit_model_path,
+                               const char *index_path,
+                               const std::map<std::string, int> &y_tag,
+                               Status *status);
 
-  static std::unordered_map<std::string, int> 
-  LoadYTagFromText(HMMModel *self,
-                   const char *emit_model_path,
-                   Status *status);
+  static void LoadYTagFromText(HMMModel *self,
+                               const char *emit_model_path,
+                               std::map<std::string, int> *y_set,
+                               Status *status);
 };
 
 struct HMMModel::Emit {

@@ -52,13 +52,13 @@ class OutOfVocabularyWordRecognition {
                  TermInstance *in_term_instance,
                  TokenInstance *in_token_instance);
 
-  static constexpr int kOOVBeginOfWord = 1;
-  static constexpr int kOOVEndOfWord = 2;
-  static constexpr int kOOVFilteredWord = 3;
+  static const int kOOVBeginOfWord = 1;
+  static const int kOOVEndOfWord = 2;
+  static const int kOOVFilteredWord = 3;
 
-  static constexpr int kNoRecognize = 0;
-  static constexpr int kNeverRecognize = 1;
-  static constexpr int kDoRecognize = 2;
+  static const int kNoRecognize = 0;
+  static const int kNeverRecognize = 1;
+  static const int kDoRecognize = 2;
 
  private:
   TermInstance *term_instance_;

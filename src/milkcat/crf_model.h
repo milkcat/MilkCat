@@ -58,7 +58,8 @@ class CRFModel {
 
   // Get Tag's id by its text, return -1 if it not exists
   int GetTagId(const char *tag_text) const  {
-    for (auto it = y_.begin(); it != y_.end(); ++it) {
+    std::vector<const char *>::const_iterator it;
+    for (it = y_.begin(); it != y_.end(); ++it) {
       if (strcmp(tag_text, *it) == 0) return it - y_.begin();
     }
 

@@ -164,7 +164,7 @@ class StaticHashTable {
   }
 
   // Find the value by key in hash table if exist return a const pointer to the
-  // value else return nullptr
+  // value else return NULL
   const V *Find(const K &key) const {
     int position = FindPosition(key);
     if (buckets_[position].empty) {

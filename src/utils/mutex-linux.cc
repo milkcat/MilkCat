@@ -21,28 +21,48 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 //
-// crf_vocab.h --- Created at 2014-02-02
+// mutex-linux.cc --- Created at 2013-03-13
 //
 
-#ifndef SRC_NEKO_CRF_VOCAB_H_
-#define SRC_NEKO_CRF_VOCAB_H_
-
-#include <unordered_map>
-#include <string>
-#include "utils/status.h"
+#include "utils/mutex.h"
+#include <pthread.h>
 
 namespace milkcat {
 
-// Segment the corpus from path and return the vocabulary of chinese words.
-// If any errors occured, status is not Status::OK()
-std::unordered_map<std::string, int> GetCrfVocabulary(
-    const char *path,
-    int *total_count,
-    void (* progress)(int64_t bytes_processed,
-                      int64_t file_size,
-                      int64_t bytes_per_second),
-    Status *status);
+class Mutex::MutexImpl {
+ public:
+  MutexImpl() {
+    pthread_mutex_init(&mutex, NULL);
+  }
+
+  ~MutexImpl() {
+    pthread_mutex_destroy(&mutex);
+  }
+
+  void lock() {
+    pthread_mutex_lock(&mutex);
+  }
+
+  void unlock() {
+    pthread_mutex_unlock(&mutex);
+  }
+
+ private:
+  pthread_mutex_t mutex;
+};
+
+Mutex::Mutex(): impl_(new MutexImpl()) {}
+Mutex::~Mutex() {
+  delete impl_;
+  impl_ = NULL;
+}
+
+void Mutex::lock() {
+  impl_->lock();
+}
+
+void Mutex::unlock() {
+  impl_->unlock();
+}
 
 }  // namespace milkcat
-
-#endif  // SRC_NEKO_CRF_VOCAB_H_

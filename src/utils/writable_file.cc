@@ -29,11 +29,11 @@
 
 namespace milkcat {
 
-WritableFile::WritableFile(): fd_(nullptr) {
+WritableFile::WritableFile(): fd_(NULL) {
 }
 
 WritableFile::~WritableFile() {
-  if (fd_ != nullptr) fclose(fd_);
+  if (fd_ != NULL) fclose(fd_);
 }
 
 WritableFile *WritableFile::New(const char *path, Status *status) {
@@ -42,7 +42,7 @@ WritableFile *WritableFile::New(const char *path, Status *status) {
   self->file_path_ = path;
 
   self->fd_ = fopen(path, "wb");
-  if (self->fd_ == nullptr) {
+  if (self->fd_ == NULL) {
     error_message = std::string("Unable to open ") + path + " for write.";
     *status = Status::IOError(error_message.c_str());
   }
@@ -51,7 +51,7 @@ WritableFile *WritableFile::New(const char *path, Status *status) {
     return self;
   } else {
     delete self;
-    return nullptr;
+    return NULL;
   }
 }
 

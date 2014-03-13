@@ -91,7 +91,7 @@ CRFSegmenter *CRFSegmenter::New(ModelFactory *model_factory, Status *status) {
     return self;
   } else {
     delete self;
-    return nullptr;
+    return NULL;
   }
 }
 

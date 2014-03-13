@@ -25,6 +25,7 @@
 //
 
 #include "milkcat/hmm_part_of_speech_tagger.h"
+#include <math.h>
 #include <stdio.h>
 #include <stdint.h>
 #include <algorithm>
@@ -51,28 +52,30 @@ struct HMMPartOfSpeechTagger::Node {
 };
 
 CRFEmitGetter::CRFEmitGetter(): pool_top_(0),
-                                feature_extractor_(nullptr),
-                                crf_part_of_speech_tagger_(nullptr),
-                                crf_tagger_(nullptr),
-                                probabilities_(nullptr),
-                                crf_to_hmm_tag_(nullptr),
+                                feature_extractor_(NULL),
+                                crf_part_of_speech_tagger_(NULL),
+                                crf_tagger_(NULL),
+                                probabilities_(NULL),
+                                crf_to_hmm_tag_(NULL),
                                 crf_tag_num_(0) {
 }
 
 CRFEmitGetter::~CRFEmitGetter() {
   delete feature_extractor_;
-  feature_extractor_ = nullptr;
+  feature_extractor_ = NULL;
 
   delete crf_part_of_speech_tagger_;
-  crf_part_of_speech_tagger_ = nullptr;
+  crf_part_of_speech_tagger_ = NULL;
 
   delete[] probabilities_;
-  probabilities_ = nullptr;
+  probabilities_ = NULL;
 
   delete[] crf_to_hmm_tag_;
-  crf_to_hmm_tag_ = nullptr;
+  crf_to_hmm_tag_ = NULL;
 
-  for (auto &emit : emit_pool_) delete emit;
+
+  std::vector<HMMModel::Emit *>::iterator it;
+  for (it = emit_pool_.begin(); it != emit_pool_.end(); ++it) delete *it;
 }
 
 CRFEmitGetter *CRFEmitGetter::New(ModelFactory *model_factory, Status *status) {
@@ -80,7 +83,7 @@ CRFEmitGetter *CRFEmitGetter::New(ModelFactory *model_factory, Status *status) {
   self->feature_extractor_ = new PartOfSpeechFeatureExtractor();
 
   const CRFModel *crf_model = model_factory->CRFPosModel(status);
-  self->hmm_model_ = nullptr;
+  self->hmm_model_ = NULL;
 
   if (status->ok()) {
     self->crf_part_of_speech_tagger_ = new CRFPartOfSpeechTagger(crf_model);
@@ -103,7 +106,7 @@ CRFEmitGetter *CRFEmitGetter::New(ModelFactory *model_factory, Status *status) {
     return self;
   } else {
     delete self;
-    return nullptr;
+    return NULL;
   }
 }
 
@@ -116,7 +119,7 @@ HMMModel::Emit *CRFEmitGetter::GetEmits(TermInstance *term_instance,
   
   double max_probability = *std::max_element(probabilities_,
                                              probabilities_ + crf_tag_num_);
-  HMMModel::Emit *emit = nullptr, *p;
+  HMMModel::Emit *emit = NULL, *p;
   for (int crf_tag = 0; crf_tag < crf_tag_num_; ++crf_tag) {
     if (probabilities_[crf_tag] > 0.2 * max_probability) {
       int hmm_tag = crf_to_hmm_tag_[crf_tag];
@@ -138,40 +141,40 @@ HMMModel::Emit *CRFEmitGetter::GetEmits(TermInstance *term_instance,
   return emit;
 }
 
-HMMPartOfSpeechTagger::HMMPartOfSpeechTagger(): node_pool_(nullptr),
-                                                model_(nullptr),
-                                                index_(nullptr),
-                                                crf_emit_getter_(nullptr),
-                                                PU_emit_(nullptr),
-                                                CD_emit_(nullptr),
-                                                NN_emit_(nullptr),
-                                                oov_emits_(nullptr),
-                                                term_instance_(nullptr) {
+HMMPartOfSpeechTagger::HMMPartOfSpeechTagger(): node_pool_(NULL),
+                                                model_(NULL),
+                                                index_(NULL),
+                                                crf_emit_getter_(NULL),
+                                                PU_emit_(NULL),
+                                                CD_emit_(NULL),
+                                                NN_emit_(NULL),
+                                                oov_emits_(NULL),
+                                                term_instance_(NULL) {
   for (int i = 0; i < kMaxBeams; ++i) {
-    beams_[i] = nullptr;
+    beams_[i] = NULL;
   }
 }
 
 HMMPartOfSpeechTagger::~HMMPartOfSpeechTagger() {
   delete node_pool_;
-  node_pool_ = nullptr;
+  node_pool_ = NULL;
 
   delete PU_emit_;
-  PU_emit_ = nullptr;
+  PU_emit_ = NULL;
 
   delete CD_emit_;
-  CD_emit_ = nullptr;
+  CD_emit_ = NULL;
 
   delete NN_emit_;
-  NN_emit_ = nullptr;
+  NN_emit_ = NULL;
 
   delete crf_emit_getter_;
-  crf_emit_getter_ = nullptr;
+  crf_emit_getter_ = NULL;
 
   for (int i = 0; i < kMaxBeams; ++i) {
-    if (beams_[i] != nullptr)
+    if (beams_[i] != NULL)
       delete beams_[i];
-    beams_[i] = nullptr;
+    beams_[i] = NULL;
   }
 
   HMMModel::Emit *p = oov_emits_, *q;
@@ -180,7 +183,7 @@ HMMPartOfSpeechTagger::~HMMPartOfSpeechTagger() {
     delete p;
     p = q;
   }
-  oov_emits_ = nullptr;
+  oov_emits_ = NULL;
 }
 
 namespace {
@@ -192,16 +195,16 @@ bool HmmNodePtrCmp(HMMPartOfSpeechTagger::Node *n1,
 }
 
 // New an emit node for tag specified by tag_str. If tag_str not exist in model
-// return a nullptr and status indicates an corruption error.
+// return a NULL and status indicates an corruption error.
 HMMModel::Emit *NewEmitFromTag(const char *tag_str,
                                const HMMModel *model,
                                Status *status) {
   int tagid = model->tag_id(tag_str);
   if (tagid < 0) *status = Status::Corruption("Invalid HMM model.");
 
-  HMMModel::Emit *emit = nullptr;
+  HMMModel::Emit *emit = NULL;
   if (status->ok()) {
-    emit = new HMMModel::Emit(tagid, 0.0, nullptr);
+    emit = new HMMModel::Emit(tagid, 0.0, NULL);
   }
 
   return emit;
@@ -220,7 +223,7 @@ void HMMPartOfSpeechTagger::InitEmit(HMMPartOfSpeechTagger *self,
     self->NN_emit_ = NewEmitFromTag("NN", self->model_, status);
 
   // Create the default emits
-  HMMModel::Emit *emit = nullptr, *p;
+  HMMModel::Emit *emit = NULL, *p;
   if (status->ok()) {
     p = NewEmitFromTag("NN", self->model_, status);
     p->next = emit;
@@ -285,7 +288,7 @@ HMMPartOfSpeechTagger *HMMPartOfSpeechTagger::New(
     return self;
   } else {
     delete self;
-    return nullptr;
+    return NULL;
   }
 }
 
@@ -299,7 +302,7 @@ HMMModel::Emit *HMMPartOfSpeechTagger::GetEmitAtPosition(int position) {
   }
 
   emit = model_->emit(term_id);
-  if (emit == nullptr) {
+  if (emit == NULL) {
     int term_type = term_instance_->term_type_at(position);
     switch (term_type) {
       case TermInstance::kPunction:
@@ -316,18 +319,18 @@ HMMModel::Emit *HMMPartOfSpeechTagger::GetEmitAtPosition(int position) {
     }
   }
 
-  if (emit == nullptr && crf_emit_getter_) {
+  if (emit == NULL && crf_emit_getter_) {
       emit = crf_emit_getter_->GetEmits(term_instance_, position);
   }
 
-  if (emit == nullptr) emit = oov_emits_;
+  if (emit == NULL) emit = oov_emits_;
 
   return emit;
 }
 
 inline void HMMPartOfSpeechTagger::AddBOSNodeToBeam() {
   Node *bos_node = node_pool_->Alloc();
-  bos_node->set_value(BOS_tagid_, 0, nullptr);
+  bos_node->set_value(BOS_tagid_, 0, NULL);
   beams_[0]->Clear();
   beams_[0]->Add(bos_node);
 
@@ -389,7 +392,7 @@ void HMMPartOfSpeechTagger::BuildBeam(int position) {
   const Node *min_left_node;
   while (emit) {
     min_cost = 1e38;
-    min_left_node = nullptr;
+    min_left_node = NULL;
     for (int i = 0; i < previous_beam->size(); ++i) {
       left_node = previous_beam->node_at(i);
       leftleft_node = left_node->prevoius_node;

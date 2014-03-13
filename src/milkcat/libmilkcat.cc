@@ -46,6 +46,16 @@
 
 namespace milkcat {
 
+// Model filenames
+const char *UNIGRAM_INDEX = "unigram.idx";
+const char *UNIGRAM_DATA = "unigram.bin";
+const char *BIGRAM_DATA = "bigram.bin";
+const char *HMM_PART_OF_SPEECH_MODEL = "ctb_pos.hmm";
+const char *CRF_PART_OF_SPEECH_MODEL = "ctb_pos.crf";
+const char *CRF_SEGMENTER_MODEL = "ctb_seg.crf";
+const char *DEFAULT_TAG = "default_tag.cfg";
+const char *OOV_PROPERTY = "oov_property.idx";
+
 Tokenization *TokenizerFactory(int analyzer_type) {
   int tokenizer_type = analyzer_type & kTokenizerMask;
 
@@ -54,7 +64,7 @@ Tokenization *TokenizerFactory(int analyzer_type) {
       return new Tokenization();
 
     default:
-      return nullptr;
+      return NULL;
   }
 }
 
@@ -78,7 +88,7 @@ Segmenter *SegmenterFactory(ModelFactory *factory,
 
     default:
       *status = Status::NotImplemented("Invalid segmenter type");
-      return nullptr;
+      return NULL;
   }
 }
 
@@ -97,29 +107,29 @@ PartOfSpeechTagger *PartOfSpeechTaggerFactory(ModelFactory *factory,
       if (status->ok()) {
         return new CRFPartOfSpeechTagger(crf_pos_model);
       } else {
-        return nullptr;
+        return NULL;
       }
 
     case POSTAGGER_HMM:
       if (status->ok()) {
         return HMMPartOfSpeechTagger::New(factory, false, status);
       } else {
-        return nullptr;
+        return NULL;
       }
 
     case POSTAGGER_MIXED:
       if (status->ok()) {
         return HMMPartOfSpeechTagger::New(factory, true, status);
       } else {
-        return nullptr;
+        return NULL;
       }
 
     case 0:
-      return nullptr;
+      return NULL;
 
     default:
       *status = Status::NotImplemented("Invalid Part-of-speech tagger type");
-      return nullptr;
+      return NULL;
   }
 }
 
@@ -132,49 +142,49 @@ Status global_status;
 
 ModelFactory::ModelFactory(const char *model_dir_path):
     model_dir_path_(model_dir_path),
-    unigram_index_(nullptr),
-    user_index_(nullptr),
-    unigram_cost_(nullptr),
-    user_cost_(nullptr),
-    bigram_cost_(nullptr),
-    seg_model_(nullptr),
-    crf_pos_model_(nullptr),
-    hmm_pos_model_(nullptr),
-    oov_property_(nullptr) {
+    unigram_index_(NULL),
+    user_index_(NULL),
+    unigram_cost_(NULL),
+    user_cost_(NULL),
+    bigram_cost_(NULL),
+    seg_model_(NULL),
+    crf_pos_model_(NULL),
+    hmm_pos_model_(NULL),
+    oov_property_(NULL) {
 }
 
 ModelFactory::~ModelFactory() {
   delete user_index_;
-  user_index_ = nullptr;
+  user_index_ = NULL;
 
   delete unigram_index_;
-  unigram_index_ = nullptr;
+  unigram_index_ = NULL;
 
   delete unigram_cost_;
-  unigram_cost_ = nullptr;
+  unigram_cost_ = NULL;
 
   delete user_cost_;
-  user_cost_ = nullptr;
+  user_cost_ = NULL;
 
   delete bigram_cost_;
-  bigram_cost_ = nullptr;
+  bigram_cost_ = NULL;
 
   delete seg_model_;
-  seg_model_ = nullptr;
+  seg_model_ = NULL;
 
   delete crf_pos_model_;
-  crf_pos_model_ = nullptr;
+  crf_pos_model_ = NULL;
 
   delete hmm_pos_model_;
-  hmm_pos_model_ = nullptr;
+  hmm_pos_model_ = NULL;
 
   delete oov_property_;
-  oov_property_ = nullptr;
+  oov_property_ = NULL;
 }
 
 const TrieTree *ModelFactory::Index(Status *status) {
   mutex.lock();
-  if (unigram_index_ == nullptr) {
+  if (unigram_index_ == NULL) {
     std::string model_path = model_dir_path_ + UNIGRAM_INDEX;
     unigram_index_ = DoubleArrayTrieTree::New(model_path.c_str(), status);
   }
@@ -203,7 +213,7 @@ void ModelFactory::LoadUserDictionary(Status *status) {
       char *p = strchr(line, ' ');
 
       // Checks if the entry has a cost
-      if (p != nullptr) {
+      if (p != NULL) {
         strlcpy(word, line, p - line + 1);
         trim(word);
         trim(p);
@@ -213,7 +223,9 @@ void ModelFactory::LoadUserDictionary(Status *status) {
         trim(word);
         cost = default_cost;
       }
-      term_ids.emplace(word, kUserTermIdStart + term_ids.size());
+      term_ids.insert(std::pair<std::string, int>(
+          word, 
+          kUserTermIdStart + term_ids.size()));
       user_costs.push_back(cost);
     }
   }
@@ -237,7 +249,7 @@ void ModelFactory::LoadUserDictionary(Status *status) {
 
 const TrieTree *ModelFactory::UserIndex(Status *status) {
   mutex.lock();
-  if (user_index_ == nullptr) {
+  if (user_index_ == NULL) {
     LoadUserDictionary(status);
   }
   mutex.unlock();
@@ -246,7 +258,7 @@ const TrieTree *ModelFactory::UserIndex(Status *status) {
 
 const StaticArray<float> *ModelFactory::UserCost(Status *status) {
   mutex.lock();
-  if (user_cost_ == nullptr) {
+  if (user_cost_ == NULL) {
     LoadUserDictionary(status);
   }
   mutex.unlock();
@@ -318,7 +330,7 @@ const TrieTree *ModelFactory::OOVProperty(Status *status) {
 // ---------- Cursor ----------
 
 Cursor::Cursor():
-    analyzer_(nullptr),
+    analyzer_(NULL),
     tokenizer_(TokenizerFactory(TOKENIZER_NORMAL)),
     token_instance_(new TokenInstance()),
     term_instance_(new TermInstance()),
@@ -407,31 +419,31 @@ milkcat_t *milkcat_new(milkcat_model_t *model, int analyzer_type) {
 
   if (!milkcat::global_status.ok()) {
     milkcat_destroy(analyzer);
-    return nullptr;
+    return NULL;
   } else {
     return analyzer;
   }
 }
 
 void milkcat_model_destroy(milkcat_model_t *model) {
-  if (model == nullptr) return;
+  if (model == NULL) return;
 
   delete model->model_factory;
-  model->model_factory = nullptr;
+  model->model_factory = NULL;
 
   delete model;
 }
 
 void milkcat_destroy(milkcat_t *analyzer) {
-  if (analyzer == nullptr) return;
+  if (analyzer == NULL) return;
 
-  analyzer->model = nullptr;
+  analyzer->model = NULL;
 
   delete analyzer->segmenter;
-  analyzer->segmenter = nullptr;
+  analyzer->segmenter = NULL;
 
   delete analyzer->part_of_speech_tagger;
-  analyzer->part_of_speech_tagger = nullptr;
+  analyzer->part_of_speech_tagger = NULL;
 
   delete analyzer;
 }
@@ -454,7 +466,7 @@ int milkcat_cursor_get_next(milkcat_cursor_t *cursor,
   milkcat::Cursor *internal_cursor = cursor->internal_cursor;
 
   // If the cursor has not used or already reaches the end
-  if (internal_cursor->analyzer() == nullptr) return MC_NONE;
+  if (internal_cursor->analyzer() == NULL) return MC_NONE;
 
   internal_cursor->MoveToNext();
 
@@ -476,10 +488,10 @@ milkcat_cursor_t *milkcat_cursor_new() {
 }
 
 void milkcat_cursor_destroy(milkcat_cursor_t *cursor) {
-  if (cursor == nullptr) return;
+  if (cursor == NULL) return;
 
   delete cursor->internal_cursor;
-  cursor->internal_cursor = nullptr;
+  cursor->internal_cursor = NULL;
 
   delete cursor;
 }

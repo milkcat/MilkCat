@@ -84,7 +84,7 @@ class CRFEmitGetter {
     if (pool_top_ < emit_pool_.size()) {
       return emit_pool_[pool_top_++];
     } else {
-      HMMModel::Emit *emit = new HMMModel::Emit(0, 0.0, nullptr);
+      HMMModel::Emit *emit = new HMMModel::Emit(0, 0.0, NULL);
       pool_top_++;
       emit_pool_.push_back(emit);
       return emit;

@@ -29,8 +29,7 @@
 #define SRC_MILKCAT_BIGRAM_SEGMENTER_H_
 
 #include <stdint.h>
-#include <array>
-#include <unordered_set>
+#include <set>
 #include "milkcat/beam.h"
 #include "milkcat/darts.h"
 #include "milkcat/milkcat_config.h"
@@ -52,7 +51,7 @@ class BigramSegmenter: public Segmenter {
   struct Node;
 
   // Create the bigram segmenter from a model factory. On success, return an
-  // instance of BigramSegmenter. On failed, return nullptr and set status
+  // instance of BigramSegmenter. On failed, return NULL and set status
   // a failed value
   static BigramSegmenter *New(ModelFactory *model_factory,
                               bool use_bigram,
@@ -61,8 +60,7 @@ class BigramSegmenter: public Segmenter {
   ~BigramSegmenter();
 
   // Segment a token instance into term instance
-  void Segment(TermInstance *term_instance,
-               TokenInstance *token_instance) override;
+  void Segment(TermInstance *term_instance, TokenInstance *token_instance);
 
   // Get the recent segmentation cost
   double RecentSegCost() { return cost_; }
@@ -85,12 +83,12 @@ class BigramSegmenter: public Segmenter {
   }
 
  private:
-  static constexpr int kDefaultBeamSize = 3;
+  static const int kDefaultBeamSize = 3;
   // Number of Node in each buckets_
   int beam_size_;
 
   // Buckets contain nodes for viterbi decoding
-  std::array<Beam<Node> *, kTokenMax + 1> beams_;
+  Beam<Node> *beams_[kTokenMax + 1];
 
   // NodePool instance to alloc and release node
   NodePool<Node> *node_pool_;
@@ -111,7 +109,7 @@ class BigramSegmenter: public Segmenter {
 
   // The disabled term-ids variables
   bool use_disabled_term_ids_;
-  std::unordered_set<int> disabled_term_ids_;
+  std::set<int> disabled_term_ids_;
 
   BigramSegmenter();
 

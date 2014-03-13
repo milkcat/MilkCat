@@ -1,15 +1,13 @@
 AUTOMAKE_OPTIONS = gnu subdir-objects
-AM_CXXFLAGS = -I$(top_srcdir)/src -DMODEL_PATH=\"$(pkgdatadir)/\" -std=c++11 -fno-rtti \
-              -fno-exceptions -Wall -Werror -pthread
-
+AM_CXXFLAGS = -I$(top_srcdir)/src -DMODEL_PATH=\"$(pkgdatadir)/\" -fno-rtti \
+              -fno-exceptions -Wall -Werror
 ACLOCAL_AMFLAGS = -I m4
 
 include_HEADERS = milkcat/milkcat.h
 
 lib_LTLIBRARIES = libmilkcat.la
-libmilkcat_la_SOURCES = common/get_vocabulary.cc \
-                        common/get_vocabulary.h \
-                        milkcat/beam.h \
+libmilkcat_la_LDFLAGS = -version-info 0:2:0
+libmilkcat_la_SOURCES = milkcat/beam.h \
                         milkcat/bigram_segmenter.cc \
                         milkcat/bigram_segmenter.h \
                         milkcat/crf_model.cc \
@@ -52,19 +50,6 @@ libmilkcat_la_SOURCES = common/get_vocabulary.cc \
                         milkcat/segmenter.h \
                         milkcat/static_array.h \
                         milkcat/static_hashtable.h \
-                        neko/bigram_anal.cc \
-                        neko/bigram_anal.h \
-                        neko/candidate.cc \
-                        neko/candidate.h \
-                        neko/crf_vocab.cc \
-                        neko/crf_vocab.h \
-                        neko/final_rank.cc \
-                        neko/final_rank.h \
-                        neko/maxent_classifier.cc \
-                        neko/maxent_classifier.h \
-                        neko/mutual_information.cc \
-                        neko/mutual_information.h \
-                        neko/utf8.h \
                         utils/readable_file.cc \
                         utils/readable_file.h \
                         utils/status.h \
@@ -72,4 +57,6 @@ libmilkcat_la_SOURCES = common/get_vocabulary.cc \
                         utils/utils.cc \
                         utils/utils.h \
                         utils/writable_file.cc \
-                        utils/writable_file.h
+                        utils/writable_file.h \
+                        utils/mutex.h \
+                        utils/mutex-linux.cc

@@ -74,23 +74,23 @@ static inline bool NodePtrCmp(BigramSegmenter::Node *n1,
 }  // namespace
 
 BigramSegmenter::BigramSegmenter(): beam_size_(0),
-                                    node_pool_(nullptr),
-                                    unigram_cost_(nullptr),
-                                    user_cost_(nullptr),
-                                    bigram_cost_(nullptr),
-                                    index_(nullptr),
-                                    user_index_(nullptr),
+                                    node_pool_(NULL),
+                                    unigram_cost_(NULL),
+                                    user_cost_(NULL),
+                                    bigram_cost_(NULL),
+                                    index_(NULL),
+                                    user_index_(NULL),
                                     has_user_index_(false),
                                     use_disabled_term_ids_(false) {
 }
 
 BigramSegmenter::~BigramSegmenter() {
   delete node_pool_;
-  node_pool_ = nullptr;
+  node_pool_ = NULL;
 
-  for (int i = 0; i < beams_.size(); ++i) {
+  for (int i = 0; i < sizeof(beams_) / sizeof(Beam<Node> *); ++i) {
     delete beams_[i];
-    beams_[i] = nullptr;
+    beams_[i] = NULL;
   }
 }
 
@@ -103,7 +103,7 @@ BigramSegmenter *BigramSegmenter::New(ModelFactory *model_factory,
   self->node_pool_ = new NodePool<Node>();
 
   // Initialize the beams_
-  for (int i = 0; i < self->beams_.size(); ++i) {
+  for (int i = 0; i < sizeof(self->beams_) / sizeof(Beam<Node> *); ++i) {
     self->beams_[i] = new Beam<Node>(self->beam_size_,
                                      self->node_pool_,
                                      i,
@@ -128,7 +128,7 @@ BigramSegmenter *BigramSegmenter::New(ModelFactory *model_factory,
     return self;
   } else {
     delete self;
-    return nullptr;
+    return NULL;
   }
 }
 
@@ -200,11 +200,11 @@ inline double BigramSegmenter::CalculateBigramCost(int left_id,
   double cost;
 
   // If bigram is disabled
-  if (bigram_cost_ == nullptr) return left_cost + right_cost;
+  if (bigram_cost_ == NULL) return left_cost + right_cost;
 
   int64_t key = (static_cast<int64_t>(left_id) << 32) + right_id;
   const float *it = bigram_cost_->Find(key);
-  if (it != nullptr) {
+  if (it != NULL) {
     // if have bigram data use p(x_n+1|x_n) = p(x_n+1, x_n) / p(x_n)
     cost = left_cost + (*it - unigram_cost_->get(left_id));
     LOG("bigram find %d %d %lf\n", left_id, right_id, cost - left_cost);
@@ -237,11 +237,11 @@ void BigramSegmenter::BuildBeamFromPosition(TokenInstance *token_instance,
   bool index_flag = true, 
        user_flag = has_user_index_;
   double cost, right_cost;
-  const Node *node = nullptr;
-  Node *new_node = nullptr;
+  const Node *node = NULL;
+  Node *new_node = NULL;
 
   beams_[position]->Shrink();
-  const char *token_str = nullptr;
+  const char *token_str = NULL;
   int length_end = token_instance->size() - position;
   for (int length = 0; length < length_end; ++length) {
     LOG("Position: [%d, %d)\n", position, position + length + 1);
@@ -256,7 +256,7 @@ void BigramSegmenter::BuildBeamFromPosition(TokenInstance *token_instance,
                                           &right_cost);
 
     double min_cost = 1e38;
-    const Node *min_node = nullptr;
+    const Node *min_node = NULL;
 
     assert(beams_[position]->size() > 0);
 
@@ -345,7 +345,7 @@ void BigramSegmenter::FindTheBestResult(TermInstance *term_instance,
 void BigramSegmenter::Segment(TermInstance *term_instance,
                               TokenInstance *token_instance) {
   Node *new_node = node_pool_->Alloc();
-  new_node->set_value(0, 0, 0, nullptr);
+  new_node->set_value(0, 0, 0, NULL);
   // Add begin-of-sentence node
   beams_[0]->Add(new_node);
 

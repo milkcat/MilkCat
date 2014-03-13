@@ -52,10 +52,10 @@ void read_value(const char **ptr, T *value) {
   memcpy(value, r, sizeof(T));
 }
 
-CRFModel::CRFModel(): double_array_(nullptr),
-                      cost_data_(nullptr),
+CRFModel::CRFModel(): double_array_(NULL),
+                      cost_data_(NULL),
                       cost_num_(0),
-                      data_(nullptr), 
+                      data_(NULL), 
                       cost_factor_(0.0) {
 }
 
@@ -63,14 +63,14 @@ CRFModel::~CRFModel() {
   // cost_data_ and y_ are point to the area of data_
   // so it is unnecessary to delete them
 
-  if (data_ != nullptr) {
+  if (data_ != NULL) {
     delete[] data_;
-    data_ = nullptr;
+    data_ = NULL;
   }
 
-  if (double_array_ != nullptr) {
+  if (double_array_ != NULL) {
     delete double_array_;
-    double_array_ = nullptr;
+    double_array_ = NULL;
   }
 }
 

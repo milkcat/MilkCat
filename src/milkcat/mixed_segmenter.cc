@@ -33,9 +33,9 @@
 namespace milkcat {
 
 MixedSegmenter::MixedSegmenter():
-    bigram_result_(nullptr),
-    bigram_(nullptr),
-    oov_recognizer_(nullptr) {
+    bigram_result_(NULL),
+    bigram_(NULL),
+    oov_recognizer_(NULL) {
 }
 
 MixedSegmenter *MixedSegmenter::New(ModelFactory *model_factory, 
@@ -53,19 +53,19 @@ MixedSegmenter *MixedSegmenter::New(ModelFactory *model_factory,
     return self;
   } else {
     delete self;
-    return nullptr;
+    return NULL;
   }
 }
 
 MixedSegmenter::~MixedSegmenter() {
   delete bigram_result_;
-  bigram_result_ = nullptr;
+  bigram_result_ = NULL;
 
   delete bigram_;
-  bigram_ = nullptr;
+  bigram_ = NULL;
 
   delete oov_recognizer_;
-  oov_recognizer_ = nullptr;
+  oov_recognizer_ = NULL;
 }
 
 void MixedSegmenter::Segment(TermInstance *term_instance,

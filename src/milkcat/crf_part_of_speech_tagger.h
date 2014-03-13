@@ -47,7 +47,7 @@ class PartOfSpeechFeatureExtractor: public FeatureExtractor {
 
   void ExtractFeatureAt(size_t position,
                         char (*feature_list)[kFeatureLengthMax],
-                        int list_size) override;
+                        int list_size);
 
  private:
   const TermInstance *term_instance_;

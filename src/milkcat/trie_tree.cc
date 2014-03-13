@@ -28,7 +28,6 @@
 #include <vector>
 #include <algorithm>
 #include <map>
-#include <unordered_map>
 #include "utils/utils.h"
 #include "utils/readable_file.h"
 #include "milkcat/darts.h"
@@ -44,7 +43,7 @@ DoubleArrayTrieTree *DoubleArrayTrieTree::New(const char *file_path,
   if (-1 == self->double_array_.open(file_path)) {
     *status = Status::IOError(file_path);
     delete self;
-    return nullptr;
+    return NULL;
   } else {
     return self;
   }
@@ -57,14 +56,15 @@ DoubleArrayTrieTree *DoubleArrayTrieTree::NewFromMap(
   std::vector<int> word_ids;
 
   // Note: the std::map is sorted by key, so it is unnecessary to sort the word
-  for (auto &x : src_map) {
-    word_strs.push_back(x.first.c_str());
-    word_ids.push_back(x.second);
+  std::map<std::string, int>::const_iterator it;
+  for (it = src_map.begin(); it != src_map.end(); ++it) {
+    word_strs.push_back(it->first.c_str());
+    word_ids.push_back(it->second);
   }
 
   self->double_array_.build(word_strs.size(),
                             word_strs.data(),
-                            nullptr,
+                            NULL,
                             word_ids.data());
   return self;
 }

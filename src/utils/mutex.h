@@ -21,45 +21,31 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 //
-// crf_vocab.cc --- Created at 2014-01-28
+// mutex.h --- Created at 2013-03-13
 //
 
-#include "neko/crf_vocab.h"
-#include <unordered_map>
-#include <string>
-#include <thread>
-#include "common/get_vocabulary.h"
-#include "milkcat/milkcat.h"
-#include "utils/readable_file.h"
-#include "utils/status.h"
+#ifndef SRC_UTILS_MUTEX_H_
+#define SRC_UTILS_MUTEX_H_
+
+#include "utils/utils.h"
 
 namespace milkcat {
 
+class Mutex {
+ public:
+  Mutex();
+  ~Mutex();
 
-// Segment the corpus from path and return the vocabulary of chinese words.
-// If any errors occured, status is not Status::OK()
-std::unordered_map<std::string, int> GetCrfVocabulary(
-    const char *path,
-    int *total_count,
-    void (* progress)(int64_t bytes_processed,
-                      int64_t file_size,
-                      int64_t bytes_per_second),
-    Status *status) {
+  void lock();
+  void unlock();
 
-  std::unordered_map<std::string, int> vocab;
-  milkcat_model_t *model = milkcat_model_new(NULL);
+ private:
+  class MutexImpl;
+  MutexImpl *impl_;
 
-  vocab = GetVocabularyFromFile(path,
-                                model,
-                                CRF_SEGMENTER,
-                                std::thread::hardware_concurrency(),
-                                total_count,
-                                progress,
-                                status);
-
-  milkcat_model_destroy(model);
-
-  return vocab;
-}
+  DISALLOW_COPY_AND_ASSIGN(Mutex);
+};
 
 }  // namespace milkcat
+
+#endif  // SRC_UTILS_UTILS_H_
