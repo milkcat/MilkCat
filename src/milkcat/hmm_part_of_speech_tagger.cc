@@ -242,7 +242,7 @@ void HMMPartOfSpeechTagger::InitEmit(HMMPartOfSpeechTagger *self,
   if (status->ok()) {
     p = NewEmitFromTag("AD", self->model_, status);
     p->next = emit;
-    self->oov_emits_ = p;   
+    emit = p;   
   }
   if (status->ok()) {
     p = NewEmitFromTag("NR", self->model_, status);
