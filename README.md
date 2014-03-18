@@ -10,7 +10,7 @@ MilkCat是一个简单、高效的中文自然语言处理的工具包，包含�
 
 ```sh
 wget http://milkcat.qiniudn.com/MilkCat-master.tar.gz
-tar xzvf MilkCat-master.tar.gz && cd milkcat-0.1
+tar xzvf MilkCat-master.tar.gz && cd milkcat-0.2
 ./configure
 make && make install
 ```
