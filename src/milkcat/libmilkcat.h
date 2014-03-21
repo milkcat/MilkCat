@@ -117,7 +117,7 @@ class ModelFactory {
  private:
   std::string model_dir_path_;
   std::string user_dictionary_path_;
-  Mutex mutex;
+  utils::Mutex mutex;
 
   const TrieTree *unigram_index_;
   const TrieTree *user_index_;

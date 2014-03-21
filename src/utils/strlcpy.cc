@@ -20,6 +20,7 @@
 #include <string.h>
 
 namespace milkcat {
+namespace utils {
 
 /*
  * Copy src to string dst of size siz.  At most siz-1 characters
@@ -47,4 +48,5 @@ size_t strlcpy(char *dst, const char *src, size_t siz) {
   return(s - src - 1);  /* count does not include NUL */
 }
 
+}  // namespace utils
 }  // namespace milkcat

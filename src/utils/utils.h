@@ -31,18 +31,41 @@
 
 #include <stdio.h>
 #include <string.h>
+#include "config.h"
 #include "utils/status.h"
 
-namespace milkcat {
+#if defined(HAVE_UNORDERED_MAP)
+#include <unordered_map>
+#elif defined(HAVE_TR1_UNORDERED_MAP)
+#include <tr1/unordered_map>
+#endif
 
-#define DISALLOW_COPY_AND_ASSIGN(TypeName) \
-            TypeName(const TypeName&); \
-            void operator=(const TypeName&)
+namespace milkcat {
+namespace utils {
+
 
 size_t strlcpy(char *dst, const char *src, size_t siz);
 char *trim(char *str);
 
+// Sleep for seconds
+void Sleep(double seconds);
+
+// Get number of processors/cores in current machine
+int ProcessorNumber();
+
+#if defined(HAVE_UNORDERED_MAP)
+using std::unordered_map;
+#elif defined(HAVE_TR1_UNORDERED_MAP)
+using std::tr1::unordered_map;
+#endif
+
+}  // namespace utils
 }  // namespace milkcat
+
+
+#define DISALLOW_COPY_AND_ASSIGN(TypeName) \
+            TypeName(const TypeName&); \
+            void operator=(const TypeName&)
 
 inline const char *_filename(const char *path) {
   int len = strlen(path);

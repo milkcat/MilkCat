@@ -21,33 +21,50 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 //
-// mutex.h --- Created at 2013-03-13
+// mutex-linux.cc --- Created at 2013-03-13
 //
 
-#ifndef SRC_UTILS_MUTEX_H_
-#define SRC_UTILS_MUTEX_H_
-
-#include "utils/utils.h"
+#include "utils/mutex.h"
+#include <pthread.h>
 
 namespace milkcat {
 namespace utils {
 
-class Mutex {
+class Mutex::MutexImpl {
  public:
-  Mutex();
-  ~Mutex();
+  MutexImpl() {
+    pthread_mutex_init(&mutex, NULL);
+  }
 
-  void Lock();
-  void Unlock();
+  ~MutexImpl() {
+    pthread_mutex_destroy(&mutex);
+  }
+
+  void Lock() {
+    pthread_mutex_lock(&mutex);
+  }
+
+  void Unlock() {
+    pthread_mutex_unlock(&mutex);
+  }
 
  private:
-  class MutexImpl;
-  MutexImpl *impl_;
-
-  DISALLOW_COPY_AND_ASSIGN(Mutex);
+  pthread_mutex_t mutex;
 };
+
+Mutex::Mutex(): impl_(new MutexImpl()) {}
+Mutex::~Mutex() {
+  delete impl_;
+  impl_ = NULL;
+}
+
+void Mutex::Lock() {
+  impl_->Lock();
+}
+
+void Mutex::Unlock() {
+  impl_->Unlock();
+}
 
 }  // namespace utils
 }  // namespace milkcat
-
-#endif  // SRC_UTILS_UTILS_H_

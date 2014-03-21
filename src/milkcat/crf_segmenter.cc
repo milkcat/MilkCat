@@ -52,11 +52,11 @@ class SegmentFeatureExtractor: public FeatureExtractor {
     assert(list_size == 1);
     int token_type = token_instance_->token_type_at(position);
     if (token_type == TokenInstance::kChineseChar) {
-      strlcpy(feature_list[0],
-              token_instance_->token_text_at(position),
-              kFeatureLengthMax);
+      utils::strlcpy(feature_list[0],
+                     token_instance_->token_text_at(position),
+                     kFeatureLengthMax);
     } else {
-      strlcpy(feature_list[0], "，", kFeatureLengthMax);
+      utils::strlcpy(feature_list[0], "，", kFeatureLengthMax);
     }
   }
 

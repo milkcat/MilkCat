@@ -21,33 +21,36 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 //
-// mutex.h --- Created at 2013-03-13
+// thread.h --- Created at 2014-03-17
 //
 
-#ifndef SRC_UTILS_MUTEX_H_
-#define SRC_UTILS_MUTEX_H_
+#ifndef SRC_UTILS_THREAD_H_
+#define SRC_UTILS_THREAD_H_
 
 #include "utils/utils.h"
 
 namespace milkcat {
 namespace utils {
 
-class Mutex {
+class Thread {
  public:
-  Mutex();
-  ~Mutex();
+  Thread();
+  virtual ~Thread();
 
-  void Lock();
-  void Unlock();
+  void Join();
+  void Start();
 
+  // Subclasses should override the Run method.
+  virtual void Run() = 0;
+ 
  private:
-  class MutexImpl;
-  MutexImpl *impl_;
+  class ThreadImpl;
+  ThreadImpl *impl_;
 
-  DISALLOW_COPY_AND_ASSIGN(Mutex);
+  DISALLOW_COPY_AND_ASSIGN(Thread);
 };
 
 }  // namespace utils
 }  // namespace milkcat
 
-#endif  // SRC_UTILS_UTILS_H_
+#endif

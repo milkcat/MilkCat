@@ -31,6 +31,7 @@
 #include <ctype.h>
 
 namespace milkcat {
+namespace utils {
 
 char *trim(char *s) {
   char *p = s;
@@ -43,4 +44,5 @@ char *trim(char *s) {
   return s;
 }
 
+}  // namespace utils
 }  // namespace milkcat

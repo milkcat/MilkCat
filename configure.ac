@@ -2,7 +2,7 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ([2.69])
-AC_INIT(MilkCat, 0.1, ling032x@gmail.com)
+AC_INIT(MilkCat, 0.2, ling032x@gmail.com)
 AC_CONFIG_AUX_DIR([scripts])
 
 # Checks for programs.
@@ -14,14 +14,20 @@ AC_CONFIG_MACRO_DIR([m4])
 AM_PROG_AR
 LT_INIT
 
-# Checks for libraries.
-# AC_PROG_RANLIB
+AX_PTHREAD
+
+LIBS="$PTHREAD_LIBS $LIBS"
+CFLAGS="$CFLAGS $PTHREAD_CFLAGS"
+CXXFLAGS="$CXXFLAGS $PTHREAD_CFLAGS"
+
+AC_MSG_NOTICE([23333 $PTHREAD_LIBS])
 
 # Checks for header files.
-AC_CHECK_HEADERS([])
+AC_LANG_PUSH(C++)
+AC_CHECK_HEADERS([tr1/unordered_map unordered_map])
+AC_LANG_POP()
 
 # Checks for typedefs, structures, and compiler characteristics.
-AC_CHECK_HEADER_STDBOOL
 AC_C_INLINE
 AC_TYPE_INT16_T
 AC_TYPE_INT32_T
@@ -41,6 +47,6 @@ AC_CHECK_FUNCS([memset munmap sqrt strdup strlcpy])
 # Set the model dir
 pkgdatadir=${datadir}/${PACKAGE}
 
-AC_CONFIG_HEADERS([config.h])
+AC_CONFIG_HEADERS([src/config.h])
 AC_CONFIG_FILES([Makefile src/Makefile data/Makefile])
 AC_OUTPUT

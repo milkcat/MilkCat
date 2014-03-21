@@ -154,7 +154,9 @@ void HMMModel::LoadYTagFromText(HMMModel *self,
         new char[kTagStrLenMax * y_tag->size()]);
     std::map<std::string, int>::iterator it;
     for (it = y_tag->begin(); it != y_tag->end(); ++it) {
-      strlcpy(self->tag_str_[it->second], it->first.c_str(), kTagStrLenMax);
+      utils::strlcpy(self->tag_str_[it->second],
+                     it->first.c_str(),
+                     kTagStrLenMax);
     }
     self->tag_num_ = y_tag->size();
 

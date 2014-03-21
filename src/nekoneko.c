@@ -21,33 +21,35 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 //
-// mutex.h --- Created at 2013-03-13
+// nekoneko.c --- Created at 2014-03-21
 //
 
-#ifndef SRC_UTILS_MUTEX_H_
-#define SRC_UTILS_MUTEX_H_
+#include <stdio.h>
+#include "nekoneko/nekoneko.h"
 
-#include "utils/utils.h"
+void display_progress(int64_t bytes_processed,
+                      int64_t file_size,
+                      int64_t bytes_per_second) {
+  printf("\rprogress %dMB/%dMB -- %2.1f%% %.3fMB/s",
+         (int)(bytes_processed / (1024 * 1024)),
+         (int)(file_size / (1024 * 1024)),
+         100.0 * bytes_processed / file_size,
+         bytes_per_second / (double)(1024 * 1024));
+  if (bytes_processed == file_size) puts("");
+  fflush(stdout);
+}
 
-namespace milkcat {
-namespace utils {
+int main(int argc, char **argv) {
+  nekoneko_result_t *r = NULL;
+  int i;
 
-class Mutex {
- public:
-  Mutex();
-  ~Mutex();
+  r = nekoneko_extract(argv[1], NULL, puts, display_progress);
+  for (i = 0; i < nekoneko_result_size(r); ++i) {
+    printf("%s %lf\n",
+           nekoneko_result_get_word_at(r, i),
+           nekoneko_result_get_weight_at(r, i));
+  }
 
-  void Lock();
-  void Unlock();
+  return 0;
+}
 
- private:
-  class MutexImpl;
-  MutexImpl *impl_;
-
-  DISALLOW_COPY_AND_ASSIGN(Mutex);
-};
-
-}  // namespace utils
-}  // namespace milkcat
-
-#endif  // SRC_UTILS_UTILS_H_

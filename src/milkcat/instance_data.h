@@ -49,7 +49,9 @@ class InstanceData {
   // Set the string of string_id at the position of this instance
   void set_string_at(int position, int string_id, const char *string_val) {
     assert(string_id < string_number_);
-    strlcpy(string_data_[string_id][position], string_val, kFeatureLengthMax);
+    utils::strlcpy(string_data_[string_id][position],
+                   string_val,
+                   kFeatureLengthMax);
   }
 
   // Get the integer of integer_id at the position of this instance

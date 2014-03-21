@@ -21,33 +21,24 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 //
-// mutex.h --- Created at 2013-03-13
+// utils_posix.cc --- Created at 2014-03-18
 //
 
-#ifndef SRC_UTILS_MUTEX_H_
-#define SRC_UTILS_MUTEX_H_
-
-#include "utils/utils.h"
+#include <unistd.h>
+#include "utils.h"
 
 namespace milkcat {
 namespace utils {
 
-class Mutex {
- public:
-  Mutex();
-  ~Mutex();
+void Sleep(double seconds) {
+  int usec = static_cast<int>(seconds * 1e6);
+  usleep(usec);
+}
 
-  void Lock();
-  void Unlock();
-
- private:
-  class MutexImpl;
-  MutexImpl *impl_;
-
-  DISALLOW_COPY_AND_ASSIGN(Mutex);
-};
+int ProcessorNumber() {
+  return sysconf(_SC_NPROCESSORS_ONLN);
+}
 
 }  // namespace utils
 }  // namespace milkcat
 
-#endif  // SRC_UTILS_UTILS_H_

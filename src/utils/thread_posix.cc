@@ -21,48 +21,68 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 //
-// mutex-linux.cc --- Created at 2013-03-13
+// thread_posix.cc --- Created at 2014-03-17
 //
 
-#include "utils/mutex.h"
+#include <assert.h>
 #include <pthread.h>
+#include "utils/thread.h"
+#include "utils/utils.h"
 
 namespace milkcat {
+namespace utils {
 
-class Mutex::MutexImpl {
+void *ThreadFunc(void *args) {
+  Thread *thread = static_cast<Thread *>(args);
+  thread->Run();
+
+  return NULL;
+}
+
+class Thread::ThreadImpl {
  public:
-  MutexImpl() {
-    pthread_mutex_init(&mutex, NULL);
+  ThreadImpl(Thread *thread): has_joined_(false),
+                              has_started_(false),
+                              thread_(thread) {
   }
 
-  ~MutexImpl() {
-    pthread_mutex_destroy(&mutex);
+  ~ThreadImpl() {
+    assert(has_joined_);
   }
 
-  void lock() {
-    pthread_mutex_lock(&mutex);
+  void Start() {
+    assert(!has_started_);
+    int rc = pthread_create(&thread_handle_, NULL, ThreadFunc, thread_);
+    assert(rc == 0);
+    has_started_ = true;
   }
 
-  void unlock() {
-    pthread_mutex_unlock(&mutex);
+  void Join() {
+    void *status = NULL;
+    assert(!has_joined_);
+    int rc = pthread_join(thread_handle_, &status);
+    assert(rc == 0);
+    has_joined_ = true;
   }
 
  private:
-  pthread_mutex_t mutex;
+  pthread_t thread_handle_;
+  Thread *thread_;
+  bool has_joined_;
+  bool has_started_;
+
+  DISALLOW_COPY_AND_ASSIGN(ThreadImpl);
 };
 
-Mutex::Mutex(): impl_(new MutexImpl()) {}
-Mutex::~Mutex() {
+Thread::Thread(): impl_(new Thread::ThreadImpl(this)) {}
+Thread::~Thread() {
   delete impl_;
   impl_ = NULL;
 }
 
-void Mutex::lock() {
-  impl_->lock();
-}
+void Thread::Start() { impl_->Start(); }
+void Thread::Join() { impl_->Join(); }
 
-void Mutex::unlock() {
-  impl_->unlock();
-}
-
+}  // namespace utils
 }  // namespace milkcat
+

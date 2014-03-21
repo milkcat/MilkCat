@@ -1,12 +1,14 @@
 AUTOMAKE_OPTIONS = gnu subdir-objects
+AM_CFLAGS = -fPIC
 AM_CXXFLAGS = -I$(top_srcdir)/src -DMODEL_PATH=\"$(pkgdatadir)/\" -fno-rtti \
-              -fno-exceptions -Wall -Werror
+              -fno-exceptions
+
 ACLOCAL_AMFLAGS = -I m4
 
 include_HEADERS = milkcat/milkcat.h
 
 lib_LTLIBRARIES = libmilkcat.la
-libmilkcat_la_LDFLAGS = -version-info 0:2:0
+libmilkcat_la_LIBADD = -lpthread
 libmilkcat_la_SOURCES = milkcat/beam.h \
                         milkcat/bigram_segmenter.cc \
                         milkcat/bigram_segmenter.h \
@@ -56,7 +58,21 @@ libmilkcat_la_SOURCES = milkcat/beam.h \
                         utils/strlcpy.cc \
                         utils/utils.cc \
                         utils/utils.h \
+                        utils/utils_posix.cc \
                         utils/writable_file.cc \
                         utils/writable_file.h \
                         utils/mutex.h \
-                        utils/mutex-linux.cc
+                        utils/mutex_posix.cc \
+                        utils/thread.h \
+                        utils/thread_posix.cc \
+                        nekoneko/candidate.cc \
+                        nekoneko/extract_adjent.cc \
+                        nekoneko/final_rank.cc \
+                        nekoneko/get_crf_vocabulary.cc \
+                        nekoneko/get_vocabulary.cc \
+                        nekoneko/libnekoneko.cc \
+                        nekoneko/libnekoneko.h \
+                        nekoneko/maxent_classifier.cc \
+                        nekoneko/maxent_classifier.h \
+                        nekoneko/mutual_information.cc \
+                        nekoneko/utf8.h
