@@ -10,7 +10,7 @@ MilkCat是一个简单、高效的中文自然语言处理的工具包，包含�
 
 ```sh
 wget http://milkcat.qiniudn.com/MilkCat-master.tar.gz
-tar xzvf MilkCat-master.tar.gz && cd milkcat-0.1
+tar xzvf MilkCat-master.tar.gz && cd milkcat-0.2
 ./configure
 make && make install
 ```
@@ -54,15 +54,15 @@ C语言例子
 
 int main() {
     milkcat_model_t *model = milkcat_model_new(NULL);
-    milkcat_t *analyzer = milkcat_new(model, DEFAULT_SEGMENTER);
+    milkcat_t *analyzer = milkcat_new(model, DEFAULT_ANALYZER);
     milkcat_cursor_t *cursor = milkcat_cursor_new(); 
 
-    const char *text = "这个是一个简单的例子";
+    const char *text = "接着门铃响了，我睁开双眼，转了转门把手。";
 
     milkcat_item_t item;
     milkcat_analyze(analyzer, cursor, text);
     while (milkcat_cursor_get_next(cursor, &item)) {
-        printf("%s  ", item.word);
+        printf("%s/%s  ", item.word, item.part_of_speech_tag);
     }
     printf("\n");
 
@@ -72,14 +72,15 @@ int main() {
 
     return 0;
 }
+
 ```
 
 使用gcc编译运行即可
 
 ```sh
-$ gcc -o milkcat_demo example.c -lmilkcat
+$ gcc -pthread -o milkcat_demo example.c -lmilkcat
 $ ./milkcat_demo
-这个  是  一个  简单  的  例子
+接着/AD  门铃/NN  响/VV  了/AS  ，/PU  我/PN  睁/VV  开/VV  双眼/CD  ，/PU  转/VV  了/AS  转/VV  门把手/NN  。/PU
 ```
 
 
