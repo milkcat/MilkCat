@@ -29,7 +29,7 @@
 #ifndef SRC_MILKCAT_MILKCAT_H_
 #define SRC_MILKCAT_MILKCAT_H_
 
-#include <stdbool.h>
+#include <stdint.h>
 
 #ifdef _WIN32
 #ifdef MILKCAT_EXPORTS
@@ -41,13 +41,15 @@
 #define EXPORT_API
 #endif
 
-typedef struct milkcat_t milkcat_t;
-typedef struct milkcat_model_t milkcat_model_t;
-typedef struct milkcat_cursor_t milkcat_cursor_t;
-
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+// ------------------------ MilkCat start ~!! ---------------------------------
+
+typedef struct milkcat_t milkcat_t;
+typedef struct milkcat_model_t milkcat_model_t;
+typedef struct milkcat_cursor_t milkcat_cursor_t;
 
 enum {
   TOKENIZER_NORMAL = 0x00000001,
@@ -120,6 +122,63 @@ EXPORT_API void milkcat_model_set_userdict(milkcat_model_t *model,
 
 // Get the error message if an error occurred
 EXPORT_API const char *milkcat_last_error();
+
+// -------------------------- MilkCat end ~!! ---------------------------------
+
+// ------------------------ Nekoneko start ~!! --------------------------------
+
+typedef struct nekoneko_result_t nekoneko_result_t;
+
+// Extracts new words from text file specified by corpus_path.
+// vocabulary_word_file is the file contains the knowned vocabulary word,
+// log_func is called when some message would output, set NULL to ignore,
+// progress_func is the function to show progress, set NULL to ignore.
+// On success, returns the word extracted from file as a
+// nekoneko_result_t pointer, use nekoneko_result_get_XXX to get the results.
+// On failed, returns NULL
+nekoneko_result_t *nekoneko_extract(
+    const char *corpus_path,
+    const char *vocabulary_word_file,
+    void (* log_func)(const char *msg),
+    void (* progress_func)(int64_t bytes_processed,
+                           int64_t file_size,
+                           int64_t bytes_per_second));
+
+// Gets the number of words in result
+int nekoneko_result_size(nekoneko_result_t *result);
+
+// Gets the word in the position of result specified by pos
+const char *nekoneko_result_get_word_at(nekoneko_result_t *result, int pos);
+
+// Gets the word's weight in the position of result specified by pos. The weight
+// is larger when its corresponding word is more likely to be a real word
+double nekoneko_result_get_weight_at(nekoneko_result_t *result, int pos);
+
+// Destroys the result returned by nekoneko_extract
+void nekoneko_result_destroy(nekoneko_result_t *result);
+
+// -------------------------- Nekoneko end ~!! --------------------------------
+
+// ------------------------ Keyphrase start ~!! -------------------------------
+
+typedef struct {
+  const char *keyphrase;
+  double weight;
+} keyphrase_item_t;
+
+typedef struct milkcat_keyphrase_t milkcat_keyphrase_t;
+
+#define MILKCAT_KEYPHRASE_DEFAULT 0
+
+milkcat_keyphrase_t *
+milkcat_keyphrase_new(milkcat_model_t *model, int method);
+
+keyphrase_item_t *
+milkcat_keyphrase_extract(milkcat_keyphrase_t *extractor, const char *text);
+
+void milkcat_keyphrase_destroy(milkcat_keyphrase_t *extractor);
+
+// -------------------------- Keyphrase end ~!! -------------------------------
 
 #ifdef __cplusplus
 }

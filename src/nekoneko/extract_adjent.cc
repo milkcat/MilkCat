@@ -31,12 +31,13 @@
 #include <map>
 #include <vector>
 #include <utility>
+#include "common/model_factory.h"
+#include "include/milkcat.h"
+#include "milkcat/libmilkcat.h"
 #include "utils/readable_file.h"
 #include "utils/status.h"
 #include "utils/thread.h"
 #include "utils/utils.h"
-#include "milkcat/milkcat.h"
-#include "milkcat/libmilkcat.h"
 
 namespace milkcat {
 
@@ -304,7 +305,7 @@ void ExtractAdjacent(
   }
 
   if (status->ok()) {
-    int thread_num = utils::ProcessorNumber();
+    int thread_num = utils::HardwareConcurrency();
     std::vector<Status> status_vec(thread_num);
     std::vector<utils::Thread *> thread_pool;
     utils::Mutex vocab_mutex, adjent_mutex, fd_mutex;

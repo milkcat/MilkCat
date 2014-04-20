@@ -51,7 +51,7 @@ char *trim(char *str);
 void Sleep(double seconds);
 
 // Get number of processors/cores in current machine
-int ProcessorNumber();
+int HardwareConcurrency();
 
 #if defined(HAVE_UNORDERED_MAP)
 using std::unordered_map;

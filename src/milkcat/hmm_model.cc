@@ -41,13 +41,14 @@
 // HMMEmitRecord[emit_num] emits
 
 #include "milkcat/hmm_model.h"
+
 #include <stdio.h>
 #include <stdint.h>
 #include <string.h>
 #include <map>
 #include <string>
-#include "milkcat/milkcat_config.h"
-#include "milkcat/trie_tree.h"
+#include "common/milkcat_config.h"
+#include "common/trie_tree.h"
 #include "utils/utils.h"
 #include "utils/readable_file.h"
 #include "utils/writable_file.h"

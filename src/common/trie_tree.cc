@@ -28,11 +28,10 @@
 #include <vector>
 #include <algorithm>
 #include <map>
+#include "common/darts.h"
+#include "common/trie_tree.h"
 #include "utils/utils.h"
 #include "utils/readable_file.h"
-#include "milkcat/darts.h"
-#include "milkcat/trie_tree.h"
-#include "milkcat/milkcat_config.h"
 
 namespace milkcat {
 

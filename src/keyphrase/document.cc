@@ -21,20 +21,48 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 //
-// token_instance.cc --- Created at 2013-10-20
+// document.cc --- Created at 2014-03-26
 //
 
-#include "common/milkcat_config.h"
-#include "milkcat/token_instance.h"
+#define ENABLE_LOG
+
+#include "keyphrase/document.h"
+
+#include "common/trie_tree.h"
+#include "include/milkcat.h"
+#include "utils/utils.h"
 
 namespace milkcat {
 
-TokenInstance::TokenInstance() {
-  instance_data_ = new InstanceData(1, 1, kTokenMax);
+Document::Document(const TrieTree *stopword_index):
+    stopword_index_(stopword_index) {
 }
 
-TokenInstance::~TokenInstance() {
-  delete instance_data_;
+void Document::Add(const char *word_str, int word_type) {
+  int word = string_table_.GetOrInsertId(word_str);
+  document_.push_back(word);
+  
+  bool is_stopword = false;
+  if (word_type != MC_CHINESE_WORD && word_type != MC_ENGLISH_WORD) {
+    is_stopword = true;
+  } else if (stopword_index_->Search(word_str) >= 0) {
+    is_stopword = true;
+  }
+
+  // If a new word arraived
+  if (word == inverted_index_.size()) {
+    inverted_index_.push_back(std::vector<int>());
+    is_stopword_.push_back(is_stopword);
+  }
+
+  inverted_index_[word].push_back(document_.size() - 1);
+}
+
+void Document::Clear() {
+  string_table_.Clear();
+  document_.clear();
+  is_stopword_.clear();
+  inverted_index_.clear();
 }
 
 }  // namespace milkcat

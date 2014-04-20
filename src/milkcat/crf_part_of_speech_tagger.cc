@@ -26,10 +26,11 @@
 //
 
 #include "milkcat/crf_part_of_speech_tagger.h"
+
 #include <string.h>
+#include "common/milkcat_config.h"
 #include "utils/utils.h"
 #include "milkcat/feature_extractor.h"
-#include "milkcat/milkcat_config.h"
 
 namespace milkcat {
 

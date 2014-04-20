@@ -25,12 +25,14 @@
 // get_vocabulary.cc --- Created at 2014-02-21
 //
 
+#include "common/get_vocabulary.h"
+
 #include <stdio.h>
 #include <assert.h>
 #include <stdint.h>
 #include <string>
 #include <vector>
-#include "milkcat/milkcat.h"
+#include "include/milkcat.h"
 #include "utils/mutex.h"
 #include "utils/readable_file.h"
 #include "utils/status.h"

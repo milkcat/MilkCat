@@ -28,8 +28,8 @@
 #define SRC_MILKCAT_TOKEN_INSTANCE_H_
 
 #include <assert.h>
+#include "common/milkcat_config.h"
 #include "utils/utils.h"
-#include "milkcat/milkcat_config.h"
 #include "milkcat/instance_data.h"
 
 namespace milkcat {

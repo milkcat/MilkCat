@@ -26,18 +26,19 @@
 //
 
 #include "milkcat/bigram_segmenter.h"
+
 #include <stdio.h>
 #include <stdint.h>
 #include <algorithm>
 #include <vector>
 #include <string>
+#include "common/milkcat_config.h"
+#include "common/model_factory.h"
+#include "common/trie_tree.h"
 #include "utils/utils.h"
-#include "milkcat/darts.h"
 #include "milkcat/libmilkcat.h"
-#include "milkcat/milkcat_config.h"
 #include "milkcat/term_instance.h"
 #include "milkcat/token_instance.h"
-#include "milkcat/trie_tree.h"
 
 namespace milkcat {
 
@@ -100,7 +101,7 @@ BigramSegmenter *BigramSegmenter::New(ModelFactory *model_factory,
   BigramSegmenter *self = new BigramSegmenter();
 
   self->beam_size_ = use_bigram? kDefaultBeamSize: 1;
-  self->node_pool_ = new NodePool<Node>();
+  self->node_pool_ = new utils::Pool<Node>();
 
   // Initialize the beams_
   for (int i = 0; i < sizeof(self->beams_) / sizeof(Beam<Node> *); ++i) {
@@ -154,7 +155,7 @@ inline int BigramSegmenter::GetTermIdAndUnigramCost(
     if (term_id == TrieTree::kNone) *system_flag = false;
     if (term_id >= 0) {
       *right_cost = unigram_cost_->get(term_id);
-      LOG("system unigram find %d %lf\n", term_id, *right_cost);
+      LOG("System unigram find %d %lf", term_id, *right_cost);
     }
   }
 
@@ -164,7 +165,7 @@ inline int BigramSegmenter::GetTermIdAndUnigramCost(
 
     if (uterm_id >= 0) {
       double cost = user_cost_->get(uterm_id - kUserTermIdStart);
-      LOG("user unigram find %d %lf\n", uterm_id, cost);
+      LOG("User unigram find %d %lf", uterm_id, cost);
 
       if (term_id < 0) {
         *right_cost = cost;
@@ -207,7 +208,9 @@ inline double BigramSegmenter::CalculateBigramCost(int left_id,
   if (it != NULL) {
     // if have bigram data use p(x_n+1|x_n) = p(x_n+1, x_n) / p(x_n)
     cost = left_cost + (*it - unigram_cost_->get(left_id));
-    LOG("bigram find %d %d %lf\n", left_id, right_id, cost - left_cost);
+    LOG("bigram find %d %d %lf\n",
+        left_id,
+        right_id, cost - left_cost);
   } else {
     cost = left_cost + right_cost;
   }
@@ -244,7 +247,7 @@ void BigramSegmenter::BuildBeamFromPosition(TokenInstance *token_instance,
   const char *token_str = NULL;
   int length_end = token_instance->size() - position;
   for (int length = 0; length < length_end; ++length) {
-    LOG("Position: [%d, %d)\n", position, position + length + 1);
+    LOG("Position: [%d, %d)", position, position + length + 1);
 
     // Get current term-id from system and user dictionary
     token_str = token_instance->token_text_at(position + length);
@@ -270,7 +273,7 @@ void BigramSegmenter::BuildBeamFromPosition(TokenInstance *token_instance,
                                           term_id,
                                           node->cost,
                                           right_cost);
-        LOG("final cost is %lf\n", cost - node->cost);
+        LOG("Cost: %lf, total: %lf", cost - node->cost, cost);
         if (cost < min_cost) {
           min_cost = cost;
           min_node = node;

@@ -29,8 +29,8 @@
 
 #include <string>
 #include <vector>
+#include "common/darts.h"
 #include "utils/status.h"
-#include "milkcat/darts.h"
 
 namespace milkcat {
 

@@ -28,7 +28,7 @@
 #include <unistd.h>
 #include <string.h>
 #include <stdlib.h>
-#include "milkcat/milkcat.h"
+#include "include/milkcat.h"
 
 int print_usage() {
   fprintf(stderr, "Usage: milkcat [-m hmm_crf|crf|crf_seg] [-d model_directory] [-i] [-t] [file]\n");

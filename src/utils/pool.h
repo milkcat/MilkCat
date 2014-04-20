@@ -21,20 +21,48 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 //
-// token_instance.cc --- Created at 2013-10-20
+// pool.h --- Created at 2014-04-19
 //
 
-#include "common/milkcat_config.h"
-#include "milkcat/token_instance.h"
+#ifndef SRC_UTILS_POOL_H_
+#define SRC_UTILS_POOL_H_
+
+#include <vector>
 
 namespace milkcat {
+namespace utils {
 
-TokenInstance::TokenInstance() {
-  instance_data_ = new InstanceData(1, 1, kTokenMax);
-}
+template<class T>
+class Pool {
+ public:
+  Pool(): alloc_index_(0) {}
 
-TokenInstance::~TokenInstance() {
-  delete instance_data_;
-}
+  ~Pool() {
+    for (typename std::vector<T *>::iterator
+         it = nodes_.begin(); it < nodes_.end(); ++it) {
+      delete *it;
+    }
+  }
 
+  // Alloc a node
+  T *Alloc() {
+    if (alloc_index_ == nodes_.size()) {
+      nodes_.push_back(new T());
+    }
+    return nodes_[alloc_index_++];
+  }
+
+  // Release all node alloced before
+  void ReleaseAll() {
+    alloc_index_ = 0;
+  }
+
+ private:
+  std::vector<T *> nodes_;
+  int alloc_index_;
+};
+
+}  // namespace utils
 }  // namespace milkcat
+
+#endif  // SRC_UTILS_POOL_H_

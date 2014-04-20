@@ -25,17 +25,19 @@
 // libmilkcat.cc --- Created at 2013-09-03
 //
 
+#include "include/milkcat.h"
 #include "milkcat/libmilkcat.h"
+
 #include <stdio.h>
 #include <string.h>
 #include <string>
 #include <utility>
 #include <vector>
+#include "common/model_factory.h"
 #include "milkcat/bigram_segmenter.h"
 #include "milkcat/crf_part_of_speech_tagger.h"
 #include "milkcat/crf_tagger.h"
 #include "milkcat/hmm_part_of_speech_tagger.h"
-#include "milkcat/milkcat.h"
 #include "milkcat/mixed_segmenter.h"
 #include "milkcat/out_of_vocabulary_word_recognition.h"
 #include "milkcat/part_of_speech_tag_instance.h"
@@ -45,16 +47,6 @@
 #include "utils/utils.h"
 
 namespace milkcat {
-
-// Model filenames
-const char *UNIGRAM_INDEX = "unigram.idx";
-const char *UNIGRAM_DATA = "unigram.bin";
-const char *BIGRAM_DATA = "bigram.bin";
-const char *HMM_PART_OF_SPEECH_MODEL = "ctb_pos.hmm";
-const char *CRF_PART_OF_SPEECH_MODEL = "ctb_pos.crf";
-const char *CRF_SEGMENTER_MODEL = "ctb_seg.crf";
-const char *DEFAULT_TAG = "default_tag.cfg";
-const char *OOV_PROPERTY = "oov_property.idx";
 
 Tokenization *TokenizerFactory(int analyzer_type) {
   int tokenizer_type = analyzer_type & kTokenizerMask;
@@ -137,195 +129,6 @@ PartOfSpeechTagger *PartOfSpeechTaggerFactory(ModelFactory *factory,
 // The global state saves the current of model and analyzer.
 // If any errors occured, global_status != Status::OK()
 Status global_status;
-
-// ---------- ModelFactory ----------
-
-ModelFactory::ModelFactory(const char *model_dir_path):
-    model_dir_path_(model_dir_path),
-    unigram_index_(NULL),
-    user_index_(NULL),
-    unigram_cost_(NULL),
-    user_cost_(NULL),
-    bigram_cost_(NULL),
-    seg_model_(NULL),
-    crf_pos_model_(NULL),
-    hmm_pos_model_(NULL),
-    oov_property_(NULL) {
-}
-
-ModelFactory::~ModelFactory() {
-  delete user_index_;
-  user_index_ = NULL;
-
-  delete unigram_index_;
-  unigram_index_ = NULL;
-
-  delete unigram_cost_;
-  unigram_cost_ = NULL;
-
-  delete user_cost_;
-  user_cost_ = NULL;
-
-  delete bigram_cost_;
-  bigram_cost_ = NULL;
-
-  delete seg_model_;
-  seg_model_ = NULL;
-
-  delete crf_pos_model_;
-  crf_pos_model_ = NULL;
-
-  delete hmm_pos_model_;
-  hmm_pos_model_ = NULL;
-
-  delete oov_property_;
-  oov_property_ = NULL;
-}
-
-const TrieTree *ModelFactory::Index(Status *status) {
-  mutex.Lock();
-  if (unigram_index_ == NULL) {
-    std::string model_path = model_dir_path_ + UNIGRAM_INDEX;
-    unigram_index_ = DoubleArrayTrieTree::New(model_path.c_str(), status);
-  }
-  mutex.Unlock();
-  return unigram_index_;
-}
-
-void ModelFactory::LoadUserDictionary(Status *status) {
-  char line[1024], word[1024];
-  std::string errmsg;
-  ReadableFile *fd;
-  float default_cost = kDefaultCost, cost;
-  std::vector<float> user_costs;
-  std::map<std::string, int> term_ids;
-
-  if (user_dictionary_path_ == "") {
-    *status = Status::RuntimeError("No user dictionary.");
-    return;
-  }
-
-  if (status->ok()) fd = ReadableFile::New(user_dictionary_path_.c_str(),
-                                           status);
-  while (status->ok() && !fd->Eof()) {
-    fd->ReadLine(line, sizeof(line), status);
-    if (status->ok()) {
-      char *p = strchr(line, ' ');
-
-      // Checks if the entry has a cost
-      if (p != NULL) {
-        utils::strlcpy(word, line, p - line + 1);
-        utils::trim(word);
-        utils::trim(p);
-        cost = static_cast<float>(atof(p));
-      } else {
-        utils::strlcpy(word, line, sizeof(word));
-        utils::trim(word);
-        cost = default_cost;
-      }
-      term_ids.insert(std::pair<std::string, int>(
-          word, 
-          kUserTermIdStart + term_ids.size()));
-      user_costs.push_back(cost);
-    }
-  }
-
-  if (status->ok() && term_ids.size() == 0) {
-    errmsg = std::string("User dictionary ") +
-             user_dictionary_path_ +
-             " is empty.";
-    *status = Status::Corruption(errmsg.c_str());
-  }
-
-
-  // Build the index and the cost array from user dictionary
-  if (status->ok()) user_index_ = DoubleArrayTrieTree::NewFromMap(term_ids);
-  if (status->ok())
-    user_cost_ = StaticArray<float>::NewFromArray(user_costs.data(),
-                                                  user_costs.size());
-
-  delete fd;
-}
-
-const TrieTree *ModelFactory::UserIndex(Status *status) {
-  mutex.Lock();
-  if (user_index_ == NULL) {
-    LoadUserDictionary(status);
-  }
-  mutex.Unlock();
-  return user_index_;
-}
-
-const StaticArray<float> *ModelFactory::UserCost(Status *status) {
-  mutex.Lock();
-  if (user_cost_ == NULL) {
-    LoadUserDictionary(status);
-  }
-  mutex.Unlock();
-  return user_cost_;
-}
-
-const StaticArray<float> *ModelFactory::UnigramCost(Status *status) {
-  mutex.Lock();
-  if (unigram_cost_ == NULL) {
-    std::string model_path = model_dir_path_ + UNIGRAM_DATA;
-    unigram_cost_ = StaticArray<float>::New(model_path.c_str(), status);
-  }
-  mutex.Unlock();
-  return unigram_cost_;
-}
-
-const StaticHashTable<int64_t, float> *ModelFactory::BigramCost(
-    Status *status) {
-  mutex.Lock();
-  if (bigram_cost_ == NULL) {
-    std::string model_path = model_dir_path_ + BIGRAM_DATA;
-    bigram_cost_ = StaticHashTable<int64_t, float>::New(model_path.c_str(),
-                                                        status);
-  }
-  mutex.Unlock();
-  return bigram_cost_;
-}
-
-const CRFModel *ModelFactory::CRFSegModel(Status *status) {
-  mutex.Lock();
-  if (seg_model_ == NULL) {
-    std::string model_path = model_dir_path_ + CRF_SEGMENTER_MODEL;
-    seg_model_ = CRFModel::New(model_path.c_str(), status);
-  }
-  mutex.Unlock();
-  return seg_model_;
-}
-
-const CRFModel *ModelFactory::CRFPosModel(Status *status) {
-  mutex.Lock();
-  if (crf_pos_model_ == NULL) {
-    std::string model_path = model_dir_path_ + CRF_PART_OF_SPEECH_MODEL;
-    crf_pos_model_ = CRFModel::New(model_path.c_str(), status);
-  }
-  mutex.Unlock();
-  return crf_pos_model_;
-}
-
-const HMMModel *ModelFactory::HMMPosModel(Status *status) {
-  mutex.Lock();
-  if (hmm_pos_model_ == NULL) {
-    std::string model_path = model_dir_path_ + HMM_PART_OF_SPEECH_MODEL;
-    hmm_pos_model_ = HMMModel::New(model_path.c_str(), status);
-  }
-  mutex.Unlock();
-  return hmm_pos_model_;
-}
-
-const TrieTree *ModelFactory::OOVProperty(Status *status) {
-  mutex.Lock();
-  if (oov_property_ == NULL) {
-    std::string model_path = model_dir_path_ + OOV_PROPERTY;
-    oov_property_ = DoubleArrayTrieTree::New(model_path.c_str(), status);
-  }
-  mutex.Unlock();
-  return oov_property_;
-}
 
 // ---------- Cursor ----------
 

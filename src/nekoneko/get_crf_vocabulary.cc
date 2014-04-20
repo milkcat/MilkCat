@@ -28,7 +28,7 @@
 #include "nekoneko/libnekoneko.h"
 
 #include <string>
-#include "milkcat/milkcat.h"
+#include "include/milkcat.h"
 #include "utils/readable_file.h"
 #include "utils/status.h"
 #include "utils/utils.h"
@@ -54,7 +54,7 @@ void GetCrfVocabulary(
       path,
       model,
       CRF_SEGMENTER,
-      utils::ProcessorNumber(),
+      utils::HardwareConcurrency(),
       crf_vocab,
       progress,
       status);

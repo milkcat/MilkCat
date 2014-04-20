@@ -26,10 +26,11 @@
 //
 
 #include "milkcat/out_of_vocabulary_word_recognition.h"
+
 #include <stdio.h>
 #include <string.h>
+#include "common/model_factory.h"
 #include "milkcat/crf_segmenter.h"
-#include "milkcat/darts.h"
 #include "milkcat/libmilkcat.h"
 #include "milkcat/token_instance.h"
 #include "utils/utils.h"

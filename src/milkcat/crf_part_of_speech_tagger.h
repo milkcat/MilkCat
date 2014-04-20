@@ -30,10 +30,10 @@
 #ifndef SRC_MILKCAT_CRF_PART_OF_SPEECH_TAGGER_H_
 #define SRC_MILKCAT_CRF_PART_OF_SPEECH_TAGGER_H_
 
+#include "common/milkcat_config.h"
 #include "milkcat/term_instance.h"
 #include "milkcat/part_of_speech_tag_instance.h"
 #include "milkcat/crf_tagger.h"
-#include "milkcat/milkcat_config.h"
 #include "milkcat/part_of_speech_tagger.h"
 
 namespace milkcat {

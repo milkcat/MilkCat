@@ -25,8 +25,9 @@
 // libnekoneko.cc --- Created at 2014-03-20
 //
 
-#include "nekoneko/nekoneko.h"
+#include "include/milkcat.h"
 #include "nekoneko/libnekoneko.h"
+
 #include <stdio.h>
 #include <string.h>
 #include <vector>

@@ -21,43 +21,51 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 //
-// mixed_segmenter.h --- Created at 2013-11-25
+// phrase_ranker.h --- Created at 2014-04-03
 //
 
-#ifndef SRC_MILKCAT_MIXED_SEGMENTER_H_
-#define SRC_MILKCAT_MIXED_SEGMENTER_H_
+#ifndef SRC_KEYPHRASE_PHRASE_RANKER_H_
+#define SRC_KEYPHRASE_PHRASE_RANKER_H_
 
-#include "milkcat/segmenter.h"
-#include "milkcat/static_hashtable.h"
-#include "milkcat/crf_model.h"
-#include "utils/utils.h"
+#include <vector>
 
 namespace milkcat {
 
-class OutOfVocabularyWordRecognition;
-class BigramSegmenter;
-class TermInstance;
-class TokenInstance;
 class ModelFactory;
+class Status;
+class Document;
+class Phrase;
+template<typename T> class StringValue;
 
-// Mixed Bigram segmenter and CRF Segmenter of OOV recognition
-class MixedSegmenter: public Segmenter {
+// PhraseRanker ranks the phrases extracted from document by importance, top N
+// will be the keyphrases of the document
+class PhraseRanker {
  public:
-  ~MixedSegmenter();
+  PhraseRanker();
+  ~PhraseRanker();
 
-  static MixedSegmenter *New(ModelFactory *model_factory, Status *status);
+  // Creates the PhraseRanker instance. On success, return the pointer to
+  // PhraseRanker. On failed, return NULL and set status != Status::OK()
+  static PhraseRanker *New(ModelFactory *model_factory, Status *status);
 
-  // Segment a token instance into term instance
-  void Segment(TermInstance *term_instance, TokenInstance *token_instance);
+  // Ranks the phrases vector by the weight of phrases
+  void Rank(const Document &document, std::vector<Phrase *> *phrases);
 
  private:
-  TermInstance *bigram_result_;
-  BigramSegmenter *bigram_;
-  OutOfVocabularyWordRecognition *oov_recognizer_;
+  static const float kDefaultIDF;
+  static const double kWeightThreshold;
 
-  MixedSegmenter();
+  const StringValue<float> *idf_model_;
+
+  // Calculate the final score of phrases. Final socre is the combination of
+  // each value of the phrase.
+  void CalcScore(const Document &document, std::vector<Phrase *> *phrases);
+
+  // Check the weight of the phrase. If the weight larger than kWeightThreshold
+  // return false else return true
+  static bool NotKeyphrase(Phrase *phrase);
 };
 
 }  // namespace milkcat
 
-#endif  // SRC_MILKCAT_MIXED_SEGMENTER_H_
+#endif  // SRC_KEYPHRASE_PHRASE_RANKER_H_

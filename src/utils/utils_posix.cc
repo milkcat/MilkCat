@@ -35,7 +35,7 @@ void Sleep(double seconds) {
   usleep(usec);
 }
 
-int ProcessorNumber() {
+int HardwareConcurrency() {
   return sysconf(_SC_NPROCESSORS_ONLN);
 }
 

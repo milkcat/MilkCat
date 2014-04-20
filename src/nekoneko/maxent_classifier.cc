@@ -25,16 +25,17 @@
 //
 
 #include "nekoneko/maxent_classifier.h"
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
 #include <algorithm>
 #include <map>
+#include "common/darts.h"
 #include "utils/readable_file.h"
 #include "utils/writable_file.h"
 #include "utils/status.h"
 #include "utils/utils.h"
-#include "milkcat/darts.h"
 
 namespace milkcat {
 

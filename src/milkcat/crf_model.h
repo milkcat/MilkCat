@@ -34,8 +34,8 @@
 #define SRC_MILKCAT_CRF_MODEL_H_
 
 #include <vector>
+#include "common/darts.h"
 #include "utils/utils.h"
-#include "milkcat/darts.h"
 
 namespace milkcat {
 

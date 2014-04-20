@@ -34,16 +34,11 @@
 #include <map>
 #include <string>
 #include <vector>
-#include "milkcat/hmm_model.h"
-#include "milkcat/crf_model.h"
-#include "milkcat/trie_tree.h"
-#include "milkcat/static_array.h"
-#include "milkcat/static_hashtable.h"
-#include "milkcat/milkcat.h"
+#include "common/milkcat_config.h"
+#include "include/milkcat.h"
 #include "milkcat/segmenter.h"
 #include "milkcat/part_of_speech_tagger.h"
 #include "milkcat/tokenizer.h"
-#include "milkcat/milkcat_config.h"
 #include "milkcat/term_instance.h"
 #include "milkcat/part_of_speech_tag_instance.h"
 #include "utils/mutex.h"
@@ -51,7 +46,11 @@
 #include "utils/status.h"
 #include "utils/readable_file.h"
 
+
 namespace milkcat {
+  
+// The global status
+extern milkcat::Status global_status;
 
 class ModelFactory;
 class Cursor;
@@ -77,61 +76,6 @@ namespace milkcat {
 const int kTokenizerMask = 0x0000000f;
 const int kSegmenterMask = 0x00000ff0;
 const int kPartOfSpeechTaggerMask = 0x000ff000;
-
-class Cursor;
-class ModelFactory;
-
-// A factory class that can obtain any model data class needed by MilkCat
-// in singleton mode. All the getXX fucnctions are thread safe
-class ModelFactory {
- public:
-  explicit ModelFactory(const char *model_dir_path);
-  ~ModelFactory();
-
-  // Get the index for word which were used in unigram cost, bigram cost
-  // hmm pos model and oov property
-  const TrieTree *Index(Status *status);
-
-  void SetUserDictionary(const char *path) { user_dictionary_path_ = path; }
-
-  bool HasUserDictionary() const { return user_dictionary_path_.size() != 0; }
-
-  const TrieTree *UserIndex(Status *status);
-  const StaticArray<float> *UserCost(Status *status);
-
-  const StaticArray<float> *UnigramCost(Status *status);
-  const StaticHashTable<int64_t, float> *BigramCost(Status *status);
-
-  // Get the CRF word segmenter model
-  const CRFModel *CRFSegModel(Status *status);
-
-  // Get the CRF word part-of-speech model
-  const CRFModel *CRFPosModel(Status *status);
-
-  // Get the HMM word part-of-speech model
-  const HMMModel *HMMPosModel(Status *status);
-
-  // Get the character's property in out-of-vocabulary word recognition
-  const TrieTree *OOVProperty(Status *status);
-
- private:
-  std::string model_dir_path_;
-  std::string user_dictionary_path_;
-  utils::Mutex mutex;
-
-  const TrieTree *unigram_index_;
-  const TrieTree *user_index_;
-  const StaticArray<float> *unigram_cost_;
-  const StaticArray<float> *user_cost_;
-  const StaticHashTable<int64_t, float> *bigram_cost_;
-  const CRFModel *seg_model_;
-  const CRFModel *crf_pos_model_;
-  const HMMModel *hmm_pos_model_;
-  const TrieTree *oov_property_;
-
-  // Load and set the user dictionary data specified by path
-  void LoadUserDictionary(Status *status);
-};
 
 // A factory function to create tokenizers
 Tokenization *TokenizerFactory(int tokenizer_id);

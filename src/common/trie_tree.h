@@ -24,13 +24,13 @@
 // trie_tree.h --- Created at 2013-12-05
 //
 
-#ifndef SRC_MILKCAT_TRIE_TREE_H_
-#define SRC_MILKCAT_TRIE_TREE_H_
+#ifndef SRC_COMMON_TRIE_TREE_H_
+#define SRC_COMMON_TRIE_TREE_H_
 
 #include <map>
 #include <string>
+#include "common/darts.h"
 #include "utils/utils.h"
-#include "milkcat/darts.h"
 
 namespace milkcat {
 

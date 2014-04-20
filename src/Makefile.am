@@ -5,11 +5,30 @@ AM_CXXFLAGS = -I$(top_srcdir)/src -DMODEL_PATH=\"$(pkgdatadir)/\" -fno-rtti \
 
 ACLOCAL_AMFLAGS = -I m4
 
-include_HEADERS = milkcat/milkcat.h
+include_HEADERS = include/milkcat.h
 
 lib_LTLIBRARIES = libmilkcat.la
 libmilkcat_la_LIBADD = -lpthread
-libmilkcat_la_SOURCES = milkcat/beam.h \
+libmilkcat_la_SOURCES = common/darts.h \
+                        common/get_vocabulary.cc \
+                        common/get_vocabulary.h \
+                        common/milkcat_config.h \
+                        common/model_factory.cc \
+                        common/model_factory.h \
+                        common/trie_tree.cc \
+                        common/trie_tree.h \
+                        include/milkcat.h \
+                        keyphrase/document.cc \
+                        keyphrase/document.h \
+                        keyphrase/libkeyphrase.cc \
+                        keyphrase/phrase.h \
+                        keyphrase/phrase_ranker.h \
+                        keyphrase/phrase_ranker.cc \
+                        keyphrase/phrase_extractor.h \
+                        keyphrase/phrase_extractor.cc \
+                        keyphrase/string_table.h \
+	                  keyphrase/string_value.h \
+                        milkcat/beam.h \
                         milkcat/bigram_segmenter.cc \
                         milkcat/bigram_segmenter.h \
                         milkcat/crf_model.cc \
@@ -20,7 +39,6 @@ libmilkcat_la_SOURCES = milkcat/beam.h \
                         milkcat/crf_segmenter.h \
                         milkcat/crf_tagger.cc \
                         milkcat/crf_tagger.h \
-                        milkcat/darts.h \
                         milkcat/feature_extractor.h \
                         milkcat/hmm_model.cc \
                         milkcat/hmm_model.h \
@@ -30,7 +48,6 @@ libmilkcat_la_SOURCES = milkcat/beam.h \
                         milkcat/instance_data.h \
                         milkcat/libmilkcat.cc \
                         milkcat/libmilkcat.h \
-                        milkcat/milkcat.h \
                         milkcat/milkcat_config.h \
                         milkcat/mixed_segmenter.cc \
                         milkcat/mixed_segmenter.h \
@@ -47,8 +64,6 @@ libmilkcat_la_SOURCES = milkcat/beam.h \
                         milkcat/token_lex.h \
                         milkcat/tokenizer.cc \
                         milkcat/tokenizer.h \
-                        milkcat/trie_tree.h \
-                        milkcat/trie_tree.cc \
                         milkcat/segmenter.h \
                         milkcat/static_array.h \
                         milkcat/static_hashtable.h \
@@ -69,7 +84,6 @@ libmilkcat_la_SOURCES = milkcat/beam.h \
                         nekoneko/extract_adjent.cc \
                         nekoneko/final_rank.cc \
                         nekoneko/get_crf_vocabulary.cc \
-                        nekoneko/get_vocabulary.cc \
                         nekoneko/libnekoneko.cc \
                         nekoneko/libnekoneko.h \
                         nekoneko/maxent_classifier.cc \

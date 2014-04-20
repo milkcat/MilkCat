@@ -30,6 +30,7 @@
 #include <stdint.h>
 #include <algorithm>
 #include <string>
+#include "common/model_factory.h"
 #include "milkcat/beam.h"
 #include "milkcat/hmm_model.h"
 #include "milkcat/libmilkcat.h"
@@ -256,7 +257,7 @@ HMMPartOfSpeechTagger *HMMPartOfSpeechTagger::New(
     bool use_crf,
     Status *status) {
   HMMPartOfSpeechTagger *self = new HMMPartOfSpeechTagger();
-  self->node_pool_ = new NodePool<Node>(); 
+  self->node_pool_ = new utils::Pool<Node>(); 
 
   for (int i = 0; i < kMaxBeams; ++i) {
     self->beams_[i] = new Beam<Node>(kBeamSize,

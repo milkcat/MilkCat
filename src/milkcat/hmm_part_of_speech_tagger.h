@@ -34,14 +34,13 @@
 #ifndef SRC_MILKCAT_HMM_PART_OF_SPEECH_TAGGER_H_
 #define SRC_MILKCAT_HMM_PART_OF_SPEECH_TAGGER_H_
 
+#include "common/trie_tree.h"
+#include "common/milkcat_config.h"
 #include "milkcat/beam.h"
 #include "milkcat/crf_part_of_speech_tagger.h"
-#include "milkcat/darts.h"
 #include "milkcat/hmm_model.h"
 #include "milkcat/libmilkcat.h"
-#include "milkcat/milkcat_config.h"
 #include "milkcat/part_of_speech_tagger.h"
-#include "milkcat/trie_tree.h"
 #include "utils/status.h"
 #include "utils/utils.h"
 
@@ -110,7 +109,7 @@ class HMMPartOfSpeechTagger: public PartOfSpeechTagger {
 
  private:
   Beam<Node> *beams_[kMaxBeams];
-  NodePool<Node> *node_pool_;
+  utils::Pool<Node> *node_pool_;
 
   const HMMModel *model_;
   const TrieTree *index_;

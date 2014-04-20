@@ -25,8 +25,8 @@
 // milkcat_config.h --- Created at 2013-09-17
 //
 
-#ifndef SRC_MILKCAT_MILKCAT_CONFIG_H_
-#define SRC_MILKCAT_MILKCAT_CONFIG_H_
+#ifndef SRC_COMMON_MILKCAT_CONFIG_H_
+#define SRC_COMMON_MILKCAT_CONFIG_H_
 
 #include <stdlib.h>
 
@@ -42,6 +42,7 @@ const double kDefaultCost = 16.0;
 
 
 const int kHmmModelMagicNumber = 0x3322;
+const int kDFModelMagicNumber = 0xdfdf;
 
 }  // namespace milkcat
 

@@ -28,7 +28,7 @@
 #define SRC_MILKCAT_FEATURE_EXTRACTOR_H_
 
 #include <stdlib.h>
-#include "milkcat/milkcat_config.h"
+#include "common/milkcat_config.h"
 
 namespace milkcat {
 

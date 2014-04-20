@@ -30,8 +30,8 @@
 
 #include <assert.h>
 #include <string.h>
+#include "common/milkcat_config.h"
 #include "utils/utils.h"
-#include "milkcat/milkcat_config.h"
 
 namespace milkcat {
 

@@ -21,20 +21,31 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 //
-// token_instance.cc --- Created at 2013-10-20
+// get_vocabulary.h --- Created at 2014-04-02
 //
 
-#include "common/milkcat_config.h"
-#include "milkcat/token_instance.h"
+#ifndef SRC_COMMON_GET_VOCABULARY_H_
+#define SRC_COMMON_GET_VOCABULARY_H_
+
+#include <stdint.h>
+#include "include/milkcat.h"
+#include "utils/utils.h"
 
 namespace milkcat {
 
-TokenInstance::TokenInstance() {
-  instance_data_ = new InstanceData(1, 1, kTokenMax);
-}
-
-TokenInstance::~TokenInstance() {
-  delete instance_data_;
-}
+// Segment the corpus from path and return the number of vocabularies of chinese
+// words. If any errors occured, status is not Status::OK()
+int GetVocabularyFromFile(
+    const char *path,
+    milkcat_model_t *model,
+    int analyzer_type,
+    int n_threads,
+    utils::unordered_map<std::string, int> *vocab,
+    void (* progress)(int64_t bytes_processed,
+                      int64_t file_size,
+                      int64_t bytes_per_second),
+    Status *status);
 
 }  // namespace milkcat
+
+#endif  // SRC_COMMON_GET_VOCABULARY_H_

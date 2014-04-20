@@ -24,13 +24,14 @@
 // static_array.h --- Created at 2013-12-06
 //
 
-#ifndef SRC_MILKCAT_STATIC_ARRAY_H_
-#define SRC_MILKCAT_STATIC_ARRAY_H_
+#ifndef SRC_COMMON_STATIC_ARRAY_H_
+#define SRC_COMMON_STATIC_ARRAY_H_
 
 #include <assert.h>
 #include <stdio.h>
 #include "utils/utils.h"
 #include "utils/readable_file.h"
+#include "utils/writable_file.h"
 
 namespace milkcat {
 
@@ -87,6 +88,17 @@ class StaticArray {
 
   int size() const { return size_; }
 
+  // Save the static_array into file. On success, set status = Status::OK().
+  // On failed, set status to other values
+  void Save(const char *filename, Status *status) const {
+    WritableFile *fd = WritableFile::New(filename, status);
+    if (status->ok()) {
+      fd->Write(data_, sizeof(T) * size_, status);
+    }
+
+    delete fd;
+  }
+
  private:
   T *data_;
   int size_;
@@ -96,4 +108,4 @@ class StaticArray {
 
 }  // namespace milkcat
 
-#endif  // SRC_MILKCAT_STATIC_ARRAY_H_
+#endif  // SRC_COMMON_STATIC_ARRAY_H_

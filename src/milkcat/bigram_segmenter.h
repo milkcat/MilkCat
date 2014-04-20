@@ -30,12 +30,12 @@
 
 #include <stdint.h>
 #include <set>
+#include "common/milkcat_config.h"
+#include "common/static_array.h"
 #include "milkcat/beam.h"
-#include "milkcat/darts.h"
-#include "milkcat/milkcat_config.h"
 #include "milkcat/segmenter.h"
-#include "milkcat/static_array.h"
 #include "milkcat/static_hashtable.h"
+#include "utils/pool.h"
 
 namespace milkcat {
 
@@ -91,7 +91,7 @@ class BigramSegmenter: public Segmenter {
   Beam<Node> *beams_[kTokenMax + 1];
 
   // NodePool instance to alloc and release node
-  NodePool<Node> *node_pool_;
+  utils::Pool<Node> *node_pool_;
 
   // Costs for unigram and bigram.
   const StaticArray<float> *unigram_cost_;

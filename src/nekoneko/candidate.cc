@@ -30,7 +30,8 @@
 #include <math.h>
 #include <vector>
 #include <string>
-#include "milkcat/milkcat_config.h"
+#include "common/milkcat_config.h"
+#include "common/model_factory.h"
 #include "milkcat/libmilkcat.h"
 #include "nekoneko/maxent_classifier.h"
 #include "nekoneko/utf8.h"

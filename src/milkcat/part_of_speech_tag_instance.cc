@@ -24,8 +24,8 @@
 // part_of_speech_tag_instance.cc --- Created at 2013-10-20
 //
 
+#include "common/milkcat_config.h"
 #include "milkcat/part_of_speech_tag_instance.h"
-#include "milkcat/milkcat_config.h"
 
 namespace milkcat {
 

@@ -28,43 +28,15 @@
 #define SRC_MILKCAT_BEAM_H_
 
 #include <algorithm>
-#include <vector>
+#include "utils/pool.h"
 
-template<class Node>
-class NodePool {
- public:
-  NodePool(): alloc_index_(0) {}
-
-  ~NodePool() {
-    typename std::vector<Node *>::iterator it;
-    for (it = nodes_.begin(); it < nodes_.end(); ++it) {
-      delete *it;
-    }
-  }
-
-  // Alloc a node
-  Node *Alloc() {
-    if (alloc_index_ == nodes_.size()) {
-      nodes_.push_back(new Node());
-    }
-    return nodes_[alloc_index_++];
-  }
-
-  // Release all node alloced before
-  void ReleaseAll() {
-    alloc_index_ = 0;
-  }
-
- private:
-  std::vector<Node *> nodes_;
-  int alloc_index_;
-};
+namespace milkcat {
 
 template<class Node>
 class Beam {
  public:
   Beam(int n_best, 
-       NodePool<Node> *node_pool, 
+       utils::Pool<Node> *node_pool, 
        int beam_id,
        bool (* node_ptr_cmp)(Node *n1, Node *n2)):
       capability_(n_best * 10),
@@ -111,10 +83,12 @@ class Beam {
   Node **nodes_;
   int capability_;
   int beam_id_;
-  NodePool<Node> *node_pool_;
+  utils::Pool<Node> *node_pool_;
   bool (* node_ptr_cmp_)(Node *n1, Node *n2);
   int n_best_;
   int size_;
 };
+
+}  // namespace milkcat
 
 #endif  // SRC_MILKCAT_BEAM_H_

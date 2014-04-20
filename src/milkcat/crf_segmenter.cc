@@ -29,12 +29,13 @@
 #include <stdio.h>
 #include <string.h>
 #include <string>
-#include "utils/utils.h"
+#include "common/model_factory.h"
 #include "milkcat/crf_segmenter.h"
+#include "milkcat/feature_extractor.h"
 #include "milkcat/libmilkcat.h"
 #include "milkcat/term_instance.h"
 #include "milkcat/token_instance.h"
-#include "milkcat/feature_extractor.h"
+#include "utils/utils.h"
 
 namespace milkcat {
 

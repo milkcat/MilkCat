@@ -32,16 +32,15 @@
 #include <stdint.h>
 #include <stdio.h>
 #include "utils/utils.h"
-#include "milkcat/darts.h"
 #include "milkcat/crf_segmenter.h"
 #include "milkcat/part_of_speech_tag_instance.h"
 #include "milkcat/crf_model.h"
-#include "milkcat/trie_tree.h"
 #include "milkcat/token_instance.h"
 
 namespace milkcat {
 
 class ModelFactory;
+class TrieTree;
 
 class OutOfVocabularyWordRecognition {
  public:

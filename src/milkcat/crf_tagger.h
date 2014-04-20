@@ -35,7 +35,7 @@
 #define SRC_MILKCAT_CRF_TAGGER_H_
 
 #include <string>
-#include "milkcat/milkcat_config.h"
+#include "common/milkcat_config.h"
 #include "milkcat/feature_extractor.h"
 #include "milkcat/crf_model.h"
 

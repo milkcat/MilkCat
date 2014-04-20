@@ -21,20 +21,55 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 //
-// token_instance.cc --- Created at 2013-10-20
+// keyphrase.c --- Created at 2014-04-19
 //
 
-#include "common/milkcat_config.h"
-#include "milkcat/token_instance.h"
+#include <stdbool.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include "include/milkcat.h"
 
-namespace milkcat {
+// Max buffer size 1s 10MB
+const int kBufferSize = 10 * 1024 * 1024;
 
-TokenInstance::TokenInstance() {
-  instance_data_ = new InstanceData(1, 1, kTokenMax);
+int main(int argc, char **argv) {
+  char *buf = NULL;
+  FILE *fd = NULL;
+  milkcat_keyphrase_t *keyphrase = NULL;
+  milkcat_model_t *model = NULL;
+  keyphrase_item_t *item = NULL;
+  bool success = true;
+  int text_size;
+
+  if (argc != 2) {
+    fprintf(stderr, "Usage: milkcat-keyphrase TEXT-FILE\n");
+    return 1;
+  }
+
+  model = milkcat_model_new(NULL);
+  keyphrase = milkcat_keyphrase_new(model, MILKCAT_KEYPHRASE_DEFAULT);
+
+  if (!keyphrase) {
+    fprintf(stderr, "%s\n", milkcat_last_error());
+    return 1;
+  }
+
+  buf = (char *)malloc(kBufferSize);
+  fd = fopen(argv[1], "r");
+  if (fd) {
+    text_size = fread(buf, 1, kBufferSize - 1, fd);
+    buf[text_size] = '\0';
+
+    item = milkcat_keyphrase_extract(keyphrase, buf);
+    while (item) {
+      printf("%s %lf\n", item->keyphrase, item->weight);
+      item = milkcat_keyphrase_extract(keyphrase, NULL);
+    }
+  }
+
+  free(buf);
+  milkcat_keyphrase_destroy(keyphrase);
+  milkcat_model_destroy(model);
+
+  return 0;
 }
-
-TokenInstance::~TokenInstance() {
-  delete instance_data_;
-}
-
-}  // namespace milkcat

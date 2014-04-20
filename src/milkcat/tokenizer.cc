@@ -26,10 +26,11 @@
 //
 
 #include "milkcat/tokenizer.h"
+
 #include <stdio.h>
+#include "common/milkcat_config.h"
 #include "milkcat/token_instance.h"
 #include "milkcat/token_lex.h"
-#include "milkcat/milkcat_config.h"
 
 namespace milkcat {
 

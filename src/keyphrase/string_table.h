@@ -21,20 +21,61 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 //
-// token_instance.cc --- Created at 2013-10-20
+// string_table.h --- Created at 2014-03-24
 //
 
-#include "common/milkcat_config.h"
-#include "milkcat/token_instance.h"
+#ifndef SRC_KEYPHRASE_STRING_TABLE_H_
+#define SRC_KEYPHRASE_STRING_TABLE_H_
+
+#include <assert.h>
+#include <vector>
+#include "utils/utils.h"
 
 namespace milkcat {
 
-TokenInstance::TokenInstance() {
-  instance_data_ = new InstanceData(1, 1, kTokenMax);
-}
+class StringTable {
+ public:
+  StringTable(): size_(0) {
+  }
 
-TokenInstance::~TokenInstance() {
-  delete instance_data_;
-}
+  // Get the id of string. Insert it if the string doesn't exists in
+  // StringTable.
+  int GetOrInsertId(const char *str) {
+    utils::unordered_map<std::string, int>::iterator
+    it = string_table_.find(str);
+
+    if (it != string_table_.end()) {
+      return it->second;
+    } else {
+      string_table_[str] = size_;
+      string_vector_.push_back(str);
+      size_++;
+      return size_ - 1;
+    }
+  }
+
+  // Get string specified by id
+  const char *GetStringById(int id) const {
+    return string_vector_[id].c_str();
+  }
+
+  // Clean all the items in StringTable
+  void Clear() {
+    string_table_.clear();
+    string_vector_.clear();
+    size_ = 0;
+  }
+
+  int size() const { return size_; }
+
+ private:
+  utils::unordered_map<std::string, int> string_table_;
+  std::vector<std::string> string_vector_;
+  int size_;
+
+  DISALLOW_COPY_AND_ASSIGN(StringTable);
+};
 
 }  // namespace milkcat
+
+#endif  // SRC_KEYPHRASE_STRING_TABLE_H_

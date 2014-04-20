@@ -29,25 +29,13 @@
 
 #include <stdint.h>
 #include <vector>
-#include "milkcat/milkcat.h"
+#include "common/get_vocabulary.h"
+#include "include/milkcat.h"
 #include "utils/utils.h"
 
 namespace milkcat {
 
 const int kUseDefaultThresFreq = -1;
-
-// Segment the corpus from path and return the number of vocabularies of chinese
-// words. If any errors occured, status is not Status::OK()
-int GetVocabularyFromFile(
-    const char *path,
-    milkcat_model_t *model,
-    int analyzer_type,
-    int n_threads,
-    utils::unordered_map<std::string, int> *vocab,
-    void (* progress)(int64_t bytes_processed,
-                      int64_t file_size,
-                      int64_t bytes_per_second),
-    Status *status);
 
 // Segment the corpus from path and return the vocabulary of chinese words.
 // If any errors occured, status is not Status::OK()

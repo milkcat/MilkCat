@@ -6,4 +6,5 @@ dist_pkgdata_DATA = bigram.bin \
                     unigram.bin \
                     person_name.maxent \
                     unigram.idx \
-                    default_tag.cfg
+                    stopword.idx \
+                    tfidf.bin

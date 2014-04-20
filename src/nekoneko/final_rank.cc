@@ -93,7 +93,11 @@ void FinalRank(
     if (mutinf_new.find(it->first) != mutinf_new.end()) {
       final[it->first] = alpha * it->second +
                          (1 - alpha) * mutinf_new[it->first];
-      LOG("Word:%s Weight:%lf", it->first.c_str(), it->second);
+      LOG("Word:%s Weight:%lf Adjent:%lf, MI: %lf",
+          it->first.c_str(),
+          final[it->first],
+          it->second,
+          mutinf_new[it->first]);
     }
   }
 

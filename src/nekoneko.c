@@ -25,7 +25,7 @@
 //
 
 #include <stdio.h>
-#include "nekoneko/nekoneko.h"
+#include "include/milkcat.h"
 
 void display_progress(int64_t bytes_processed,
                       int64_t file_size,
