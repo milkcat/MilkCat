@@ -94,34 +94,22 @@ typedef struct {
 } milkcat_item_t;
 
 
-EXPORT_API milkcat_t *milkcat_new(milkcat_model_t *model, int analyzer_type);
+milkcat_t *milkcat_new(milkcat_model_t *model, int analyzer_type);
 
 // Delete the MilkCat Process Instance and release its resources
-EXPORT_API void milkcat_destroy(milkcat_t *m);
+void milkcat_destroy(milkcat_t *analyzer);
 
-// Start to Process a text
-EXPORT_API void milkcat_analyze(milkcat_t *m, 
-                                milkcat_cursor_t *cursor,
-                                const char *text);
+// Start to analyze a text
+milkcat_item_t *milkcat_analyze(milkcat_t *analyzer, const char *text);
 
-EXPORT_API milkcat_cursor_t *milkcat_cursor_new();
+milkcat_model_t *milkcat_model_new(const char *model_path);
 
-EXPORT_API void milkcat_cursor_destroy(milkcat_cursor_t *cursor);
+void milkcat_model_destroy(milkcat_model_t *model);
 
-// Goto the next word in the text, if end of the text reached return 0 else
-// return 1
-EXPORT_API int milkcat_cursor_get_next(milkcat_cursor_t *c,
-                                       milkcat_item_t *next_item);
-
-EXPORT_API milkcat_model_t *milkcat_model_new(const char *model_path);
-
-EXPORT_API void milkcat_model_destroy(milkcat_model_t *model);
-
-EXPORT_API void milkcat_model_set_userdict(milkcat_model_t *model,
-                                           const char *path);
+void milkcat_model_set_userdict(milkcat_model_t *model, const char *path);
 
 // Get the error message if an error occurred
-EXPORT_API const char *milkcat_last_error();
+const char *milkcat_last_error();
 
 // -------------------------- MilkCat end ~!! ---------------------------------
 

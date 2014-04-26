@@ -59,7 +59,6 @@ class Keyphrase {
   PhraseExtractor *phrase_extractor_;
   PhraseRanker *phrase_ranker_;
   milkcat_t *analyzer_;
-  milkcat_cursor_t *cursor_;
 
   Document *document_;
   std::vector<Phrase *> keyphrases_;
@@ -74,7 +73,6 @@ class Keyphrase {
 Keyphrase::Keyphrase(): phrase_extractor_(NULL),
                         phrase_ranker_(NULL),
                         analyzer_(NULL),
-                        cursor_(NULL),
                         document_(NULL),
                         keyphrases_pos_(0) {
 }
@@ -88,9 +86,6 @@ Keyphrase::~Keyphrase() {
 
   milkcat_destroy(analyzer_);
   analyzer_ = NULL;
-
-  milkcat_cursor_destroy(cursor_);
-  cursor_ = NULL;
 
   delete document_;
   document_ = NULL;
@@ -112,7 +107,6 @@ Keyphrase *Keyphrase::New(milkcat_model_t *model, Status *status) {
   // Create the segmenter
   if (status->ok()) {
     self->analyzer_ = milkcat_new(model, DEFAULT_SEGMENTER);
-    self->cursor_ = milkcat_cursor_new();
     if (self->analyzer_ == NULL) {
       *status = Status::Info(milkcat_last_error());
     }
@@ -129,10 +123,10 @@ Keyphrase *Keyphrase::New(milkcat_model_t *model, Status *status) {
 void Keyphrase::SegmentTextToDocument(const char *text) {
   document_->Clear();
 
-  milkcat_item_t item;
-  milkcat_analyze(analyzer_, cursor_, text);
-  while (milkcat_cursor_get_next(cursor_, &item)) {
-    document_->Add(item.word, item.word_type);
+  milkcat_item_t *item = milkcat_analyze(analyzer_, text);
+  while (item) {
+    document_->Add(item->word, item->word_type);
+    item = milkcat_analyze(analyzer_, NULL);
   }
 }
 

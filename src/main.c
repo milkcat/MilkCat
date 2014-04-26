@@ -142,7 +142,6 @@ int main(int argc, char **argv) {
 
   char *input_buffer = (char *)malloc(1048576);
   milkcat_model_t *model = milkcat_model_new(*model_path == '\0'? NULL: model_path);
-  milkcat_cursor_t *cursor = milkcat_cursor_new();
 
   if (*user_dict) {
     milkcat_model_set_userdict(model, user_dict);
@@ -160,37 +159,38 @@ int main(int argc, char **argv) {
   int i;
   char ch;
 
-  milkcat_item_t item;
+  milkcat_item_t *item;
   while (NULL != fgets(input_buffer, 1048576, fp)) {
-    milkcat_analyze(m, cursor, input_buffer);
-    while (MC_OK == milkcat_cursor_get_next(cursor, &item)) {
-      // printf("22222222\n");
-      switch (item.word[0]) {
-       case '\r':
-       case '\n':
-       case ' ':
-        continue;
+    item = milkcat_analyze(m, input_buffer);
+    while (item) {
+      switch (item->word[0]) {
+        case '\r':
+        case '\n':
+        case ' ':
+          // Skip to next word
+          item = milkcat_analyze(m, NULL);
+          continue;
       }
 
-      fputs(item.word, stdout);
+      fputs(item->word, stdout);
 
       if (display_type == 1) {
         fputs("_", stdout);
-        fputs(word_type_str(item.word_type), stdout);
+        fputs(word_type_str(item->word_type), stdout);
       }
 
       if (display_tag == 1) {
         fputs("/", stdout);
-        fputs(item.part_of_speech_tag, stdout);
+        fputs(item->part_of_speech_tag, stdout);
       }
 
       fputs("  ", stdout);
+      item = milkcat_analyze(m, NULL);
     }
     printf("\n");
   }
 
   milkcat_destroy(m);
-  milkcat_cursor_destroy(cursor);
   milkcat_model_destroy(model);
   free(input_buffer);
   if (use_stdin_flag == 0)

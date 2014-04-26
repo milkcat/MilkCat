@@ -61,12 +61,10 @@ struct milkcat_model_t {
   milkcat::ModelFactory *model_factory;
 };
 
-struct milkcat_cursor_t {
-  milkcat::Cursor *internal_cursor;
-};
-
 struct milkcat_t {
   milkcat_model_t *model;
+  milkcat_item_t item;
+  milkcat::Cursor *cursor;
   milkcat::Segmenter *segmenter;
   milkcat::PartOfSpeechTagger *part_of_speech_tagger;
 };

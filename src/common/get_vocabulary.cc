@@ -68,8 +68,7 @@ class SegmentThread: public utils::Thread {
 
     // Creates an analyzer from model
     milkcat_t *analyzer = milkcat_new(model_, analyzer_type_);
-    milkcat_cursor_t *cursor = milkcat_cursor_new();
-    milkcat_item_t item;
+    milkcat_item_t *item;
     if (analyzer == NULL) *status_ = Status::Corruption(milkcat_last_error());
 
     bool eof = false;
@@ -84,12 +83,13 @@ class SegmentThread: public utils::Thread {
       // Segment the line and store the results into words
       if (status_->ok() && !eof) {
         words.clear();
-        milkcat_analyze(analyzer, cursor, buf);
-        while (milkcat_cursor_get_next(cursor, &item)) {
-          if (item.word_type == MC_CHINESE_WORD)
-            words.push_back(item.word);
+        item = milkcat_analyze(analyzer, buf);
+        while (item != NULL) {
+          if (item->word_type == MC_CHINESE_WORD)
+            words.push_back(item->word);
           else
             words.push_back("-NOT-CJK-");
+          item = milkcat_analyze(analyzer, NULL);
         }
       }
 
@@ -111,7 +111,6 @@ class SegmentThread: public utils::Thread {
       }
     }
     
-    milkcat_cursor_destroy(cursor);
     milkcat_destroy(analyzer);
     delete[] buf;
   }

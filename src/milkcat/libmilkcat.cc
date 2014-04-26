@@ -208,6 +208,7 @@ milkcat_t *milkcat_new(milkcat_model_t *model, int analyzer_type) {
   memset(analyzer, 0, sizeof(milkcat_t));
 
   analyzer->model = model;
+  analyzer->cursor = new milkcat::Cursor();
 
   if (milkcat::global_status.ok())
     analyzer->segmenter = milkcat::SegmenterFactory(
@@ -248,6 +249,9 @@ void milkcat_destroy(milkcat_t *analyzer) {
   delete analyzer->part_of_speech_tagger;
   analyzer->part_of_speech_tagger = NULL;
 
+  delete analyzer->cursor;
+  analyzer->cursor = NULL;
+
   delete analyzer;
 }
 
@@ -255,48 +259,27 @@ void milkcat_model_set_userdict(milkcat_model_t *model, const char *path) {
   model->model_factory->SetUserDictionary(path);
 }
 
-void milkcat_analyze(milkcat_t *analyzer, 
-                     milkcat_cursor_t *cursor,
-                     const char *text) {
-  milkcat::Cursor *internal_cursor = cursor->internal_cursor;
+milkcat_item_t *milkcat_analyze(milkcat_t *analyzer, const char *text) {
+  // Check parameters
+  if (analyzer == NULL) return NULL;
 
-  internal_cursor->set_analyzer(analyzer);
-  internal_cursor->Scan(text);
-}
+  milkcat::Cursor *cursor = analyzer->cursor;
 
-int milkcat_cursor_get_next(milkcat_cursor_t *cursor,
-                            milkcat_item_t *next_item) {
-  milkcat::Cursor *internal_cursor = cursor->internal_cursor;
+  if (text) {
+    // text != NULL, analyze new text
+    cursor->set_analyzer(analyzer);
+    cursor->Scan(text);    
+  }
 
-  // If the cursor has not used or already reaches the end
-  if (internal_cursor->analyzer() == NULL) return MC_NONE;
+  cursor->MoveToNext();
+  // If reached the end of text, collect back the cursor then return NULL
+  if (cursor->end()) return NULL;
 
-  internal_cursor->MoveToNext();
+  analyzer->item.word = cursor->word();
+  analyzer->item.part_of_speech_tag = cursor->part_of_speech_tag();
+  analyzer->item.word_type = cursor->word_type();  
 
-  // If reached the end of text, collect back the cursor then return
-  // MC_NONE
-  if (internal_cursor->end()) return MC_NONE;
-
-  next_item->word = internal_cursor->word();
-  next_item->part_of_speech_tag = internal_cursor->part_of_speech_tag();
-  next_item->word_type = internal_cursor->word_type();
-
-  return MC_OK;
-}
-
-milkcat_cursor_t *milkcat_cursor_new() {
-  milkcat_cursor_t *cursor = new milkcat_cursor_t;
-  cursor->internal_cursor = new milkcat::Cursor();
-  return cursor;
-}
-
-void milkcat_cursor_destroy(milkcat_cursor_t *cursor) {
-  if (cursor == NULL) return;
-
-  delete cursor->internal_cursor;
-  cursor->internal_cursor = NULL;
-
-  delete cursor;
+  return &(analyzer->item);
 }
 
 const char *milkcat_last_error() {

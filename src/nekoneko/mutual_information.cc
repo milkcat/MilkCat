@@ -75,12 +75,11 @@ void GetMutualInformation(
   milkcat_model_t *model;
   milkcat_t *analyzer;
   milkcat_cursor_t *cursor;
-  milkcat_item_t item;
+  
   if (status->ok()) {
     model = milkcat_model_new(NULL);
     milkcat_model_set_userdict(model, "bigram_vocab.txt");
     analyzer = milkcat_new(model, BIGRAM_SEGMENTER);
-    cursor = milkcat_cursor_new();
     if (analyzer == NULL)
       *status = Status::RuntimeError(milkcat_last_error());
   }
@@ -97,8 +96,10 @@ void GetMutualInformation(
       segmenter->ClearAllDisabledTermIds();
       segmenter->AddDisabledTermId(term_id);
 
-      milkcat_analyze(analyzer, cursor, word);
-      while (milkcat_cursor_get_next(cursor, &item)) {}
+      milkcat_item_t *item = milkcat_analyze(analyzer, word);
+      while (item) {
+        item = milkcat_analyze(analyzer, NULL);
+      }
 
       double word_cost = -log(
           static_cast<double>(it->second) / total_frequency);
@@ -111,7 +112,6 @@ void GetMutualInformation(
   }
 
   milkcat_destroy(analyzer);
-  milkcat_cursor_destroy(cursor);
   milkcat_model_destroy(model);
 }
 

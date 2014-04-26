@@ -75,18 +75,20 @@ int GetWordId(const utils::unordered_map<std::string, int> &candidate_id,
 void SegmentText(
       const char *text,
       milkcat_t *analyzer,
-      milkcat_cursor_t *cursor,
       std::vector<std::string> *segment_result) {
   segment_result->clear();
-  milkcat_analyze(analyzer, cursor, text);
-  milkcat_item_t item;
 
-  while (milkcat_cursor_get_next(cursor, &item) == MC_OK) {
-    if (item.word_type == MC_CHINESE_WORD) {
-      segment_result->push_back(item.word);
+
+  milkcat_item_t *item = milkcat_analyze(analyzer, text);
+
+  while (item) {
+    if (item->word_type == MC_CHINESE_WORD) {
+      segment_result->push_back(item->word);
     } else {
       segment_result->push_back("-NOT-CJK-");
     }
+
+    item = milkcat_analyze(analyzer, NULL);
   }
 }
 
@@ -157,7 +159,6 @@ class BigramAnalyzeThread: public utils::Thread {
 
   void Run() {
     milkcat_t *analyzer = milkcat_new(model_, BIGRAM_SEGMENTER);
-    milkcat_cursor_t *cursor = milkcat_cursor_new();
     if (analyzer == NULL) {
       *status_ = Status::Corruption(milkcat_last_error());
     }
@@ -176,7 +177,7 @@ class BigramAnalyzeThread: public utils::Thread {
 
       if (status_->ok() && !eof) {
         // Using bigram model to segment the corpus
-        SegmentText(buf, analyzer, cursor, &words);
+        SegmentText(buf, analyzer, &words);
         vocab_mutex_->Lock();
         for (int i = 0; i < words.size(); ++i) {
           utils::unordered_map<std::string, int>::iterator
@@ -201,7 +202,6 @@ class BigramAnalyzeThread: public utils::Thread {
     }
 
     milkcat_destroy(analyzer);
-    milkcat_cursor_destroy(cursor);
     delete[] buf;
   }
 
