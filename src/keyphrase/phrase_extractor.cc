@@ -125,7 +125,9 @@ void PhraseExtractor::PhraseBeginSet() {
 
       if (IsBoundary(adjacent)) {
         PhraseCandidate *phrase_candidate = candidate_pool_.Alloc();
+        phrase_candidate->words.clear();
         phrase_candidate->words.push_back(word);
+        phrase_candidate->index.clear();
         phrase_candidate->index = index;
         from_set_.push_back(phrase_candidate);
       }
@@ -158,9 +160,10 @@ void PhraseExtractor::DoIteration() {
         document_->tf(adjacent.major_word) > 2 &&
         IsPhrase(adjacent)) {
       // Create the new candidate of phrase
-      PhraseCandidate *to_phrase = new PhraseCandidate();
+      PhraseCandidate *to_phrase = candidate_pool_.Alloc();
       to_phrase->words = from_phrase->words;
       to_phrase->words.push_back(adjacent.major_word);
+      to_phrase->index.clear();
 
       // OK, make the new inversed_index
       for (int i = 0; i < from_phrase->index.size(); ++i) {

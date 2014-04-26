@@ -40,6 +40,7 @@ int main(int argc, char **argv) {
   keyphrase_item_t *item = NULL;
   bool success = true;
   int text_size;
+  int i;
 
   if (argc != 2) {
     fprintf(stderr, "Usage: milkcat-keyphrase TEXT-FILE\n");
@@ -59,13 +60,15 @@ int main(int argc, char **argv) {
   if (fd) {
     text_size = fread(buf, 1, kBufferSize - 1, fd);
     buf[text_size] = '\0';
-
+    
     item = milkcat_keyphrase_extract(keyphrase, buf);
     while (item) {
       printf("%s %lf\n", item->keyphrase, item->weight);
       item = milkcat_keyphrase_extract(keyphrase, NULL);
     }
+
   }
+  fclose(fd);
 
   free(buf);
   milkcat_keyphrase_destroy(keyphrase);
