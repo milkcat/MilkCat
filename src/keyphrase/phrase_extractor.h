@@ -42,7 +42,9 @@ class PhraseExtractor {
  public:
   // Extracts phrases from document and stores into phrases. phrases contains
   // not only multiple word phrases but also the phrases contain only one word.
-  void Extract(const Document &document,
+  // The extracted phrases is allocated by phrase_pool.
+  void Extract(const Document *document,
+               utils::Pool<Phrase> *phrase_pool,
                std::vector<Phrase *> *phrases);
 
  private:
@@ -73,7 +75,6 @@ class PhraseExtractor {
   std::vector<Phrase *> *phrases_;
 
   utils::Pool<PhraseCandidate> candidate_pool_;
-  utils::Pool<Phrase> phrase_pool_;
 
   // PhraseCandidateToString gets the string of an phrase_candidate. Just for
   // debugging
@@ -113,7 +114,7 @@ class PhraseExtractor {
   // Iteration for find phrases from a list of PhraseCandidate specified by
   // from_set_ then release it and put the phrases to phrases and put candidate
   // of phrases into to_set_
-  void DoIteration();
+  void DoIteration(utils::Pool<Phrase> *phrase_pool);
 };
 
 }  // namespace milkcat

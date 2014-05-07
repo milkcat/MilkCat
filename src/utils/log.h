@@ -21,50 +21,48 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 //
-// crf_segmenter.h --- Created at 2013-08-17
+// log.h --- Created at 2014-05-06
 //
 
-#ifndef SRC_MILKCAT_CRF_SEGMENTER_H_
-#define SRC_MILKCAT_CRF_SEGMENTER_H_
+#ifndef SRC_UTILS_LOG_H_
+#define SRC_UTILS_LOG_H_
 
-#include "include/milkcat.h"
-#include "milkcat/crf_tagger.h"
-#include "milkcat/token_instance.h"
-#include "milkcat/segmenter.h"
-#include "utils/utils.h"
+#include <sstream>
+#include <string>
+#include <stdint.h>
 
 namespace milkcat {
 
-class SegmentFeatureExtractor;
-class TermInstance;
-
-class CRFSegmenter: public Segmenter {
+class LogUtil {
  public:
-  static CRFSegmenter *New(Model::Impl *model_factory, Status *status);
-  ~CRFSegmenter();
+  LogUtil();
 
-  // Segment a range [begin, end) of token
-  void SegmentRange(TermInstance *term_instance,
-                    TokenInstance *token_instance,
-                    int begin,
-                    int end);
-
-  void Segment(TermInstance *term_instance, TokenInstance *token_instance) {
-    SegmentRange(term_instance, token_instance, 0, token_instance->size());
+  // The << operators
+  LogUtil &operator<<(int16_t val) { stream_ << val; return *this; }
+  LogUtil &operator<<(uint16_t val) { stream_ << val; return *this; }
+  LogUtil &operator<<(int32_t val) { stream_ << val; return *this; }
+  LogUtil &operator<<(uint32_t val) { stream_ << val; return *this; }
+  LogUtil &operator<<(int64_t val) { stream_ << val; return *this; }
+  LogUtil &operator<<(uint64_t val) { stream_ << val; return *this; }
+  LogUtil &operator<<(float val) { stream_ << val; return *this; }
+  LogUtil &operator<<(double val) { stream_ << val; return *this; }
+  LogUtil &operator<<(const char *val) {\
+    stream_ << val;
+    return *this;
   }
+  LogUtil &operator<<(const std::string *val) {
+    stream_ << val;
+    return *this;
+  }
+  LogUtil &operator<<(char val) { stream_ << val; return *this; }
+
+  // Get the string value of the input data
+  std::string GetString() const;
 
  private:
-  CRFTagger *crf_tagger_;
-
-  SegmentFeatureExtractor *feature_extractor_;
-
-  int S, B, B1, B2, M, E;
-
-  CRFSegmenter();
-
-  DISALLOW_COPY_AND_ASSIGN(CRFSegmenter);
+  std::ostringstream stream_;
 };
 
 }  // namespace milkcat
 
-#endif  // SRC_MILKCAT_CRF_SEGMENTER_H_
+#endif  // SRC_UTILS_LOG_H_

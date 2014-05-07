@@ -25,6 +25,7 @@
 // libmilkcat.h --- Created at 2014-02-06
 // model_factory.h --- Created at 2014-04-02
 //
+#include "include/milkcat.h"
 
 #include <string>
 #include "common/milkcat_config.h"
@@ -43,18 +44,20 @@ namespace milkcat {
 
 // A factory class that can obtain any model data class needed by MilkCat
 // in singleton mode. All the GetXX fucnctions are thread safe
-class ModelFactory {
+class Model::Impl {
  public:
-  explicit ModelFactory(const char *model_dir_path);
-  ~ModelFactory();
+  explicit Impl(const char *model_dir_path);
+  ~Impl();
 
   // Get the index for word which were used in unigram cost, bigram cost
   // hmm pos model and oov property
   const TrieTree *Index(Status *status);
 
-  void SetUserDictionary(const char *path) { user_dictionary_path_ = path; }
+  // Sets the user dictionary for the segmenter
+  bool SetUserDictionary(const char *path);
 
-  bool HasUserDictionary() const { return user_dictionary_path_.size() != 0; }
+  // If the model has loaded the user dictionary
+  bool HasUserDictionary() const { return user_index_ != NULL; }
 
   const TrieTree *UserIndex(Status *status);
   const StaticArray<float> *UserCost(Status *status);
@@ -82,7 +85,6 @@ class ModelFactory {
 
  private:
   std::string model_dir_path_;
-  std::string user_dictionary_path_;
   utils::Mutex mutex;
 
   const TrieTree *unigram_index_;
@@ -98,7 +100,7 @@ class ModelFactory {
   const TrieTree *stopword_;
 
   // Load and set the user dictionary data specified by path
-  void LoadUserDictionary(Status *status);
+  void LoadUserDictionary(const char *userdict_path, Status *status);
 };
 
 }  // namespace milkcat

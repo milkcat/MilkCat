@@ -48,18 +48,20 @@ void GetCrfVocabulary(
     Status *status) {
 
   utils::unordered_map<std::string, int> vocab;
-  milkcat_model_t *model = milkcat_model_new(NULL);
+
+  // TODO: put model dir for this model
+  Model *model = Model::New();
 
   *total_count = GetVocabularyFromFile(
       path,
       model,
-      CRF_SEGMENTER,
+      Parser::kCrfSegmenter | Parser::kNoTagger,
       utils::HardwareConcurrency(),
       crf_vocab,
       progress,
       status);
 
-  milkcat_model_destroy(model);
+  delete model;
 }
 
 }  // namespace milkcat

@@ -35,10 +35,11 @@
 #include "common/milkcat_config.h"
 #include "common/model_factory.h"
 #include "common/trie_tree.h"
-#include "utils/utils.h"
+#include "include/milkcat.h"
 #include "milkcat/libmilkcat.h"
 #include "milkcat/term_instance.h"
 #include "milkcat/token_instance.h"
+#include "utils/utils.h"
 
 namespace milkcat {
 
@@ -95,7 +96,7 @@ BigramSegmenter::~BigramSegmenter() {
   }
 }
 
-BigramSegmenter *BigramSegmenter::New(ModelFactory *model_factory,
+BigramSegmenter *BigramSegmenter::New(Model::Impl *model_factory,
                                       bool use_bigram,
                                       Status *status) {
   BigramSegmenter *self = new BigramSegmenter();
@@ -331,7 +332,7 @@ void BigramSegmenter::FindTheBestResult(TermInstance *term_instance,
     }
 
     term_type = beam_id - from_beam_id > 1?
-        TermInstance::kChineseWord:
+        Parser::kChineseWord:
         TokenTypeToTermType(token_instance->token_type_at(from_beam_id));
 
     int oov_id = TermInstance::kTermIdOutOfVocabulary;

@@ -30,6 +30,7 @@
 #define SRC_UTILS_UTILS_H_
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include "config.h"
 #include "utils/status.h"
@@ -62,11 +63,6 @@ using std::tr1::unordered_map;
 }  // namespace utils
 }  // namespace milkcat
 
-
-#define DISALLOW_COPY_AND_ASSIGN(TypeName) \
-            TypeName(const TypeName&); \
-            void operator=(const TypeName&)
-
 inline const char *_filename(const char *path) {
   int len = strlen(path);
   const char *p = path + len;
@@ -74,6 +70,25 @@ inline const char *_filename(const char *path) {
   while (*(p - 1) != '/' && *(p - 1) != '\\' && p != path) p--;
   return p;
 }
+
+#ifndef NOASSERT
+#define ASSERT(cond, message) \
+        if (!(cond)) { \
+          fprintf(stderr,  \
+          	      "[%s:%d] ASSERT failed: ", \
+          	      _filename(__FILE__), \
+          	      __LINE__); \
+          fputs(message, stderr); \
+          fputs("\n", stderr); \
+          exit(1); \
+        }
+#else
+#define ASSERT(cond, message)
+#endif  // NOASSERT
+
+#define DISALLOW_COPY_AND_ASSIGN(TypeName) \
+        TypeName(const TypeName&); \
+        void operator=(const TypeName&)
 
 #ifdef ENABLE_LOG
 #define LOG(format, ...) \

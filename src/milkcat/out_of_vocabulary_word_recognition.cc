@@ -30,6 +30,7 @@
 #include <stdio.h>
 #include <string.h>
 #include "common/model_factory.h"
+#include "include/milkcat.h"
 #include "milkcat/crf_segmenter.h"
 #include "milkcat/libmilkcat.h"
 #include "milkcat/token_instance.h"
@@ -38,7 +39,7 @@
 namespace milkcat {
 
 OutOfVocabularyWordRecognition *OutOfVocabularyWordRecognition::New(
-    ModelFactory *model_factory,
+    Model::Impl *model_factory,
     Status *status) {
   OutOfVocabularyWordRecognition *self = new OutOfVocabularyWordRecognition();
   self->crf_segmenter_ = CRFSegmenter::New(model_factory, status);
@@ -79,7 +80,7 @@ void OutOfVocabularyWordRecognition::GetOOVProperties(
     int term_type = term_instance->term_type_at(i);
     if (token_number > 1) {
       continue;
-    } else if (term_type != TermInstance::kChineseWord) {
+    } else if (term_type != Parser::kChineseWord) {
       continue;
     } else {
       const char *term_text = term_instance->term_text_at(i);

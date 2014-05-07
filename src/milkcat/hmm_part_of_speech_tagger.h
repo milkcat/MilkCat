@@ -52,7 +52,7 @@ class Configuration;
 
 class CRFEmitGetter {
  public:
-  static CRFEmitGetter *New(ModelFactory *model_factory, Status *status);
+  static CRFEmitGetter *New(Model::Impl *model_factory, Status *status);
   ~CRFEmitGetter();
 
   // Get the emit link list of term specified by position in term_instance
@@ -103,7 +103,7 @@ class HMMPartOfSpeechTagger: public PartOfSpeechTagger {
   void Tag(PartOfSpeechTagInstance *part_of_speech_tag_instance,
            TermInstance *term_instance);
 
-  static HMMPartOfSpeechTagger *New(ModelFactory *model_factory,
+  static HMMPartOfSpeechTagger *New(Model::Impl *model_factory,
                                     bool use_crf,
                                     Status *status);
 

@@ -39,9 +39,9 @@ const char *kOovPropertyFile = "oov_property.idx";
 const char *kIdfModelFile = "tfidf.bin";
 const char *kStopwordFile = "stopword.idx";
 
-// ---------- ModelFactory ----------
+// ---------- Model::Impl ----------
 
-ModelFactory::ModelFactory(const char *model_dir_path):
+Model::Impl::Impl(const char *model_dir_path):
     model_dir_path_(model_dir_path),
     unigram_index_(NULL),
     user_index_(NULL),
@@ -56,7 +56,7 @@ ModelFactory::ModelFactory(const char *model_dir_path):
     stopword_(NULL) {
 }
 
-ModelFactory::~ModelFactory() {
+Model::Impl::~Impl() {
   delete user_index_;
   user_index_ = NULL;
 
@@ -91,7 +91,7 @@ ModelFactory::~ModelFactory() {
   stopword_ = NULL;
 }
 
-const TrieTree *ModelFactory::Index(Status *status) {
+const TrieTree *Model::Impl::Index(Status *status) {
   mutex.Lock();
   if (unigram_index_ == NULL) {
     std::string model_path = model_dir_path_ + kUnigramIndexFile;
@@ -101,7 +101,7 @@ const TrieTree *ModelFactory::Index(Status *status) {
   return unigram_index_;
 }
 
-void ModelFactory::LoadUserDictionary(Status *status) {
+void Model::Impl::LoadUserDictionary(const char *path, Status *status) {
   char line[1024], word[1024];
   std::string errmsg;
   ReadableFile *fd;
@@ -109,13 +109,7 @@ void ModelFactory::LoadUserDictionary(Status *status) {
   std::vector<float> user_costs;
   std::map<std::string, int> term_ids;
 
-  if (user_dictionary_path_ == "") {
-    *status = Status::RuntimeError("No user dictionary.");
-    return;
-  }
-
-  if (status->ok()) fd = ReadableFile::New(user_dictionary_path_.c_str(),
-                                           status);
+  if (status->ok()) fd = ReadableFile::New(path, status);
   while (status->ok() && !fd->Eof()) {
     fd->ReadLine(line, sizeof(line), status);
     if (status->ok()) {
@@ -140,41 +134,57 @@ void ModelFactory::LoadUserDictionary(Status *status) {
   }
 
   if (status->ok() && term_ids.size() == 0) {
-    errmsg = std::string("User dictionary ") +
-             user_dictionary_path_ +
-             " is empty.";
+    errmsg = std::string("User dictionary ") + path + " is empty.";
     *status = Status::Corruption(errmsg.c_str());
   }
 
 
   // Build the index and the cost array from user dictionary
-  if (status->ok()) user_index_ = DoubleArrayTrieTree::NewFromMap(term_ids);
-  if (status->ok())
+  if (status->ok()) {
+    delete user_index_;
+    user_index_ = DoubleArrayTrieTree::NewFromMap(term_ids);
+  }
+  if (status->ok()) {
+    delete user_cost_;
     user_cost_ = StaticArray<float>::NewFromArray(user_costs.data(),
                                                   user_costs.size());
+  }
 
   delete fd;
 }
 
-const TrieTree *ModelFactory::UserIndex(Status *status) {
+bool Model::Impl::SetUserDictionary(const char *path) {
+  Status status;
   mutex.Lock();
-  if (user_index_ == NULL) {
-    LoadUserDictionary(status);
-  }
+  LoadUserDictionary(path, &status);
   mutex.Unlock();
-  return user_index_;
+
+  if (status.ok()) {
+    return true;
+  } else {
+    return false;
+  }
 }
 
-const StaticArray<float> *ModelFactory::UserCost(Status *status) {
-  mutex.Lock();
-  if (user_cost_ == NULL) {
-    LoadUserDictionary(status);
+const TrieTree *Model::Impl::UserIndex(Status *status) {
+  if (user_index_) {
+    return user_index_;
+  } else {
+    *status = Status::RuntimeError("No user dictionary");
+    return NULL;
   }
-  mutex.Unlock();
-  return user_cost_;
 }
 
-const StaticArray<float> *ModelFactory::UnigramCost(Status *status) {
+const StaticArray<float> *Model::Impl::UserCost(Status *status) {
+  if (user_cost_) {
+    return user_cost_;
+  } else {
+    *status = Status::RuntimeError("No user dictionary");
+    return NULL;
+  }
+}
+
+const StaticArray<float> *Model::Impl::UnigramCost(Status *status) {
   mutex.Lock();
   if (unigram_cost_ == NULL) {
     std::string model_path = model_dir_path_ + kUnigramDataFile;
@@ -184,7 +194,7 @@ const StaticArray<float> *ModelFactory::UnigramCost(Status *status) {
   return unigram_cost_;
 }
 
-const StaticHashTable<int64_t, float> *ModelFactory::BigramCost(
+const StaticHashTable<int64_t, float> *Model::Impl::BigramCost(
     Status *status) {
   mutex.Lock();
   if (bigram_cost_ == NULL) {
@@ -196,7 +206,7 @@ const StaticHashTable<int64_t, float> *ModelFactory::BigramCost(
   return bigram_cost_;
 }
 
-const CRFModel *ModelFactory::CRFSegModel(Status *status) {
+const CRFModel *Model::Impl::CRFSegModel(Status *status) {
   mutex.Lock();
   if (seg_model_ == NULL) {
     std::string model_path = model_dir_path_ + kCrfSegModelFile;
@@ -206,7 +216,7 @@ const CRFModel *ModelFactory::CRFSegModel(Status *status) {
   return seg_model_;
 }
 
-const CRFModel *ModelFactory::CRFPosModel(Status *status) {
+const CRFModel *Model::Impl::CRFPosModel(Status *status) {
   mutex.Lock();
   if (crf_pos_model_ == NULL) {
     std::string model_path = model_dir_path_ + kCrfPosModelFile;
@@ -216,7 +226,7 @@ const CRFModel *ModelFactory::CRFPosModel(Status *status) {
   return crf_pos_model_;
 }
 
-const HMMModel *ModelFactory::HMMPosModel(Status *status) {
+const HMMModel *Model::Impl::HMMPosModel(Status *status) {
   mutex.Lock();
   if (hmm_pos_model_ == NULL) {
     std::string model_path = model_dir_path_ + kHmmPosModelFile;
@@ -226,7 +236,7 @@ const HMMModel *ModelFactory::HMMPosModel(Status *status) {
   return hmm_pos_model_;
 }
 
-const TrieTree *ModelFactory::OOVProperty(Status *status) {
+const TrieTree *Model::Impl::OOVProperty(Status *status) {
   mutex.Lock();
   if (oov_property_ == NULL) {
     std::string model_path = model_dir_path_ + kOovPropertyFile;
@@ -236,7 +246,7 @@ const TrieTree *ModelFactory::OOVProperty(Status *status) {
   return oov_property_;
 }
 
-const StringValue<float> *ModelFactory::IDFModel(Status *status) {
+const StringValue<float> *Model::Impl::IDFModel(Status *status) {
   // Load the index file first
   Index(status);
   if (!status->ok()) return NULL;
@@ -253,7 +263,7 @@ const StringValue<float> *ModelFactory::IDFModel(Status *status) {
   return idf_model_;
 }
 
-const TrieTree *ModelFactory::Stopword(Status *status) {
+const TrieTree *Model::Impl::Stopword(Status *status) {
   mutex.Lock();
   if (stopword_ == NULL) {
     std::string model_path = model_dir_path_ + kStopwordFile;

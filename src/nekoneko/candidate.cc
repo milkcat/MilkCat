@@ -82,16 +82,17 @@ void GetCandidate(
     int thres_freq) {
   char msg_text[1024];
 
-  ModelFactory *model_factory = new ModelFactory(MODEL_PATH);
+  // TODO: Add support for user model dir
+  Model::Impl *model_impl = new Model::Impl(MODEL_PATH);
 
   // If vocabulary_path != NULL use vocabulary_path as OOV-filter otherwise
   // use system dictionary as the OOV-word filter 
   const TrieTree *index = NULL;
   if (vocabulary_path) {
-    model_factory->SetUserDictionary(vocabulary_path);
-    index = model_factory->UserIndex(status);
+    model_impl->SetUserDictionary(vocabulary_path);
+    index = model_impl->UserIndex(status);
   } else {
-    index = model_factory->Index(status);
+    index = model_impl->Index(status);
   }
 
   MaxentModel *name_model = NULL;
@@ -150,7 +151,7 @@ void GetCandidate(
 
   delete name_model;
   delete classifier;
-  delete model_factory;
+  delete model_impl;
 }
 
 }  // namespace milkcat

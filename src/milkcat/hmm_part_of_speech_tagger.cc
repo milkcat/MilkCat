@@ -79,7 +79,7 @@ CRFEmitGetter::~CRFEmitGetter() {
   for (it = emit_pool_.begin(); it != emit_pool_.end(); ++it) delete *it;
 }
 
-CRFEmitGetter *CRFEmitGetter::New(ModelFactory *model_factory, Status *status) {
+CRFEmitGetter *CRFEmitGetter::New(Model::Impl *model_factory, Status *status) {
   CRFEmitGetter *self = new CRFEmitGetter();
   self->feature_extractor_ = new PartOfSpeechFeatureExtractor();
 
@@ -253,7 +253,7 @@ void HMMPartOfSpeechTagger::InitEmit(HMMPartOfSpeechTagger *self,
 }
 
 HMMPartOfSpeechTagger *HMMPartOfSpeechTagger::New(
-    ModelFactory *model_factory,
+    Model::Impl *model_factory,
     bool use_crf,
     Status *status) {
   HMMPartOfSpeechTagger *self = new HMMPartOfSpeechTagger();
@@ -306,15 +306,15 @@ HMMModel::Emit *HMMPartOfSpeechTagger::GetEmitAtPosition(int position) {
   if (emit == NULL) {
     int term_type = term_instance_->term_type_at(position);
     switch (term_type) {
-      case TermInstance::kPunction:
-      case TermInstance::kSymbol:
-      case TermInstance::kOther:
+      case Parser::kPunction:
+      case Parser::kSymbol:
+      case Parser::kOther:
         emit = PU_emit_;
         break;
-      case TermInstance::kNumber:
+      case Parser::kNumber:
         emit = CD_emit_;
         break;
-      case TermInstance::kEnglishWord:
+      case Parser::kEnglishWord:
         emit = NN_emit_;
         break;
     }

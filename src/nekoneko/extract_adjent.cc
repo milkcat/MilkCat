@@ -74,22 +74,21 @@ int GetWordId(const utils::unordered_map<std::string, int> &candidate_id,
 // Segment a string specified by text and store it into segment_result.
 void SegmentText(
       const char *text,
-      milkcat_t *analyzer,
+      Parser *parser,
       std::vector<std::string> *segment_result) {
   segment_result->clear();
+  Parser::Iterator *it = parser->Parse(text);
 
-
-  milkcat_item_t *item = milkcat_analyze(analyzer, text);
-
-  while (item) {
-    if (item->word_type == MC_CHINESE_WORD) {
-      segment_result->push_back(item->word);
+  while (it->HasNext()) {
+    if (it->type() == Parser::kChineseWord) {
+      segment_result->push_back(it->word());
     } else {
       segment_result->push_back("-NOT-CJK-");
     }
-
-    item = milkcat_analyze(analyzer, NULL);
+    it->Next();
   }
+
+  parser->Release(it);
 }
 
 // Update the word_adjacent data from words specified by line_words
@@ -133,7 +132,7 @@ double CalculateAdjacentEntropy(const std::map<int, int> &adjacent) {
 class BigramAnalyzeThread: public utils::Thread {
  public:
   BigramAnalyzeThread(
-      milkcat_model_t *model,
+      Model *model,
       const utils::unordered_map<std::string, int> &candidate_id,
       const TrieTree *index,
       ReadableFile *fd,
@@ -158,9 +157,11 @@ class BigramAnalyzeThread: public utils::Thread {
   }
 
   void Run() {
-    milkcat_t *analyzer = milkcat_new(model_, BIGRAM_SEGMENTER);
-    if (analyzer == NULL) {
-      *status_ = Status::Corruption(milkcat_last_error());
+    Parser *parser = Parser::New(
+        model_,
+        Parser::kBigramSegmenter | Parser::kNoTagger);
+    if (parser == NULL) {
+      *status_ = Status::Corruption(LastError());
     }
 
     int buf_size = 1024 * 1024;
@@ -177,7 +178,7 @@ class BigramAnalyzeThread: public utils::Thread {
 
       if (status_->ok() && !eof) {
         // Using bigram model to segment the corpus
-        SegmentText(buf, analyzer, &words);
+        SegmentText(buf, parser, &words);
         vocab_mutex_->Lock();
         for (int i = 0; i < words.size(); ++i) {
           utils::unordered_map<std::string, int>::iterator
@@ -201,12 +202,12 @@ class BigramAnalyzeThread: public utils::Thread {
       }
     }
 
-    milkcat_destroy(analyzer);
+    delete parser;
     delete[] buf;
   }
 
  private:
-  milkcat_model_t *model_;
+  Model *model_;
   const utils::unordered_map<std::string, int> &candidate_id_;
   const TrieTree *index_;
   ReadableFile *fd_;
@@ -277,8 +278,8 @@ void ExtractAdjacent(
     utils::unordered_map<std::string, double> *adjacent_entropy,
     utils::unordered_map<std::string, int> *vocab,
     void (* progress)(int64_t bytes_processed,
-                     int64_t file_size,
-                     int64_t bytes_per_second),
+                      int64_t file_size,
+                      int64_t bytes_per_second),
     Status *status) {
   utils::unordered_map<std::string, int> candidate_id;
 
@@ -294,10 +295,11 @@ void ExtractAdjacent(
   }
 
   // The model file
-  milkcat_model_t *model = milkcat_model_new(NULL);
-  milkcat_model_set_userdict(model, "candidate_cost.txt");
+  // TODO: add model path for this model
+  Model *model = Model::New();
+  model->SetUserDictionary("candidate_cost.txt");
 
-  const TrieTree *index = model->model_factory->Index(status);
+  const TrieTree *index = model->impl()->Index(status);
 
   ReadableFile *fd = NULL;
   if (status->ok()) {
@@ -377,7 +379,7 @@ void ExtractAdjacent(
   }
 
   delete fd;
-  milkcat_model_destroy(model);
+  delete model;
 }
 
 }  // namespace milkcat

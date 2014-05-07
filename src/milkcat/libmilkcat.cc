@@ -52,7 +52,7 @@ Tokenization *TokenizerFactory(int analyzer_type) {
   int tokenizer_type = analyzer_type & kTokenizerMask;
 
   switch (tokenizer_type) {
-    case TOKENIZER_NORMAL:
+    case Parser::kTextTokenizer:
       return new Tokenization();
 
     default:
@@ -60,22 +60,22 @@ Tokenization *TokenizerFactory(int analyzer_type) {
   }
 }
 
-Segmenter *SegmenterFactory(ModelFactory *factory,
+Segmenter *SegmenterFactory(Model::Impl *factory,
                             int analyzer_type,
                             Status *status) {
   int segmenter_type = analyzer_type & kSegmenterMask;
 
   switch (segmenter_type) {
-    case SEGMENTER_BIGRAM:
+    case Parser::kBigramSegmenter:
       return BigramSegmenter::New(factory, true, status);
 
-    case SEGMENTER_UNIGRAM:
+    case Parser::kUnigramSegmenter:
       return BigramSegmenter::New(factory, false, status);
 
-    case SEGMENTER_CRF:
+    case Parser::kCrfSegmenter:
       return CRFSegmenter::New(factory, status);
 
-    case SEGMENTER_MIXED:
+    case Parser::kMixedSegmenter:
       return MixedSegmenter::New(factory, status);
 
     default:
@@ -84,7 +84,7 @@ Segmenter *SegmenterFactory(ModelFactory *factory,
   }
 }
 
-PartOfSpeechTagger *PartOfSpeechTaggerFactory(ModelFactory *factory,
+PartOfSpeechTagger *PartOfSpeechTaggerFactory(Model::Impl *factory,
                                               int analyzer_type,
                                               Status *status) {
   const CRFModel *crf_pos_model;
@@ -93,7 +93,7 @@ PartOfSpeechTagger *PartOfSpeechTaggerFactory(ModelFactory *factory,
   LOG("Tagger type: %x\n", tagger_type);
 
   switch (tagger_type) {
-    case POSTAGGER_CRF:
+    case Parser::kCrfTagger:
       if (status->ok()) crf_pos_model = factory->CRFPosModel(status);
 
       if (status->ok()) {
@@ -102,21 +102,21 @@ PartOfSpeechTagger *PartOfSpeechTaggerFactory(ModelFactory *factory,
         return NULL;
       }
 
-    case POSTAGGER_HMM:
+    case Parser::kHmmTagger:
       if (status->ok()) {
         return HMMPartOfSpeechTagger::New(factory, false, status);
       } else {
         return NULL;
       }
 
-    case POSTAGGER_MIXED:
+    case Parser::kMixedTagger:
       if (status->ok()) {
         return HMMPartOfSpeechTagger::New(factory, true, status);
       } else {
         return NULL;
       }
 
-    case 0:
+    case Parser::kNoTagger:
       return NULL;
 
     default:
@@ -130,20 +130,20 @@ PartOfSpeechTagger *PartOfSpeechTaggerFactory(ModelFactory *factory,
 // If any errors occured, global_status != Status::OK()
 Status global_status;
 
-// ---------- Cursor ----------
+// ----------------------------- Parser::Iterator -----------------------------
 
-Cursor::Cursor():
+Parser::Iterator::Impl::Impl():
     analyzer_(NULL),
-    tokenizer_(TokenizerFactory(TOKENIZER_NORMAL)),
+    tokenizer_(TokenizerFactory(Parser::kTextTokenizer)),
     token_instance_(new TokenInstance()),
     term_instance_(new TermInstance()),
     part_of_speech_tag_instance_(new PartOfSpeechTagInstance()),
     sentence_length_(0),
     current_position_(0),
-    end_(0) {
+    end_(false) {
 }
 
-Cursor::~Cursor() {
+Parser::Iterator::Impl::~Impl() {
   delete tokenizer_;
   tokenizer_ = NULL;
 
@@ -159,14 +159,16 @@ Cursor::~Cursor() {
   analyzer_ = NULL;
 }
 
-void Cursor::Scan(const char *text) {
+void Parser::Iterator::Impl::Scan(const char *text) {
   tokenizer_->Scan(text);
   sentence_length_ = 0;
   current_position_ = 0;
   end_ = false;
 }
 
-void Cursor::MoveToNext() {
+void Parser::Iterator::Impl::Next() {
+  if (!HasNext()) return ;
+  
   current_position_++;
   if (current_position_ > sentence_length_ - 1) {
     // If reached the end of current sentence
@@ -174,12 +176,12 @@ void Cursor::MoveToNext() {
     if (tokenizer_->GetSentence(token_instance_) == false) {
       end_ = true;
     } else {
-      analyzer_->segmenter->Segment(term_instance_, token_instance_);
+      analyzer_->segmenter()->Segment(term_instance_, token_instance_);
 
       // If the analyzer have part of speech tagger, tag the term_instance
-      if (analyzer_->part_of_speech_tagger) {
-        analyzer_->part_of_speech_tagger->Tag(part_of_speech_tag_instance_,
-                                              term_instance_);
+      if (analyzer_->part_of_speech_tagger()) {
+        analyzer_->part_of_speech_tagger()->Tag(part_of_speech_tag_instance_,
+                                                term_instance_);
       }
       sentence_length_ = term_instance_->size();
       current_position_ = 0;
@@ -187,102 +189,164 @@ void Cursor::MoveToNext() {
   }
 }
 
-}  // namespace milkcat
 
-// ---------- Fucntions in milkcat.h ----------
-
-
-milkcat_model_t *milkcat_model_new(const char *model_path) {
-  if (model_path == NULL) model_path = MODEL_PATH;
-
-  milkcat_model_t *model = new milkcat_model_t;
-  model->model_factory = new milkcat::ModelFactory(model_path);
-
-  return model;
+Parser::Iterator::Iterator() {
+  impl_ = new Parser::Iterator::Impl();
 }
 
-milkcat_t *milkcat_new(milkcat_model_t *model, int analyzer_type) {
-  milkcat::global_status = milkcat::Status::OK();
+Parser::Iterator::~Iterator() {
+  delete impl_;
+  impl_ = NULL;
+}
 
-  milkcat_t *analyzer = new milkcat_t;
-  memset(analyzer, 0, sizeof(milkcat_t));
+bool Parser::Iterator::HasNext() {
+  return impl_->HasNext();
+}
 
-  analyzer->model = model;
-  analyzer->cursor = new milkcat::Cursor();
+void Parser::Iterator::Next() {
+  impl_->Next();
+}
 
-  if (milkcat::global_status.ok())
-    analyzer->segmenter = milkcat::SegmenterFactory(
-        analyzer->model->model_factory,
-        analyzer_type,
-        &milkcat::global_status);
-  if (milkcat::global_status.ok())
-    analyzer->part_of_speech_tagger = milkcat::PartOfSpeechTaggerFactory(
-        analyzer->model->model_factory,
-        analyzer_type,
-        &milkcat::global_status);
+const char *Parser::Iterator::word() const {
+  return impl_->word();
+}
 
-  if (!milkcat::global_status.ok()) {
-    milkcat_destroy(analyzer);
+const char *Parser::Iterator::part_of_speech_tag() const {
+  return impl_->part_of_speech_tag();
+}
+
+int Parser::Iterator::type() const {
+  return impl_->type();
+}
+
+
+// ----------------------------- Parser --------------------------------------
+
+Parser::Impl::Impl(): segmenter_(NULL),
+                      part_of_speech_tagger_(NULL),
+                      model_impl_(NULL),
+                      own_model_(false),
+                      iterator_alloced_(0) {
+}
+
+Parser::Impl::~Impl() {
+  delete segmenter_;
+  segmenter_ = NULL;
+
+  delete part_of_speech_tagger_;
+  part_of_speech_tagger_ = NULL;
+
+  if (own_model_) delete model_impl_;
+  model_impl_ = NULL;
+
+  for (std::vector<Parser::Iterator *>::iterator
+       it = iterator_pool_.begin(); it != iterator_pool_.end(); ++it) {
+    delete *it;
+  }
+}
+
+Parser::Impl *Parser::Impl::New(Model::Impl *model_impl, int type) {
+  global_status = Status::OK();
+  Impl *self = new Parser::Impl();
+
+  if (model_impl == NULL) {
+    self->model_impl_ = new Model::Impl(MODEL_PATH);
+    self->own_model_ = true;
+  } else {
+    self->model_impl_ = model_impl;
+    self->own_model_ = false;
+  }
+
+  if (global_status.ok())
+    self->segmenter_ = SegmenterFactory(
+        self->model_impl_,
+        type,
+        &global_status);
+
+  if (global_status.ok())
+    self->part_of_speech_tagger_ = PartOfSpeechTaggerFactory(
+        self->model_impl_,
+        type,
+        &global_status);
+
+  if (!global_status.ok()) {
+    delete self;
     return NULL;
   } else {
-    return analyzer;
+    return self;
   }
 }
 
-void milkcat_model_destroy(milkcat_model_t *model) {
-  if (model == NULL) return;
-
-  delete model->model_factory;
-  model->model_factory = NULL;
-
-  delete model;
-}
-
-void milkcat_destroy(milkcat_t *analyzer) {
-  if (analyzer == NULL) return;
-
-  analyzer->model = NULL;
-
-  delete analyzer->segmenter;
-  analyzer->segmenter = NULL;
-
-  delete analyzer->part_of_speech_tagger;
-  analyzer->part_of_speech_tagger = NULL;
-
-  delete analyzer->cursor;
-  analyzer->cursor = NULL;
-
-  delete analyzer;
-}
-
-void milkcat_model_set_userdict(milkcat_model_t *model, const char *path) {
-  model->model_factory->SetUserDictionary(path);
-}
-
-milkcat_item_t *milkcat_analyze(milkcat_t *analyzer, const char *text) {
-  // Check parameters
-  if (analyzer == NULL) return NULL;
-
-  milkcat::Cursor *cursor = analyzer->cursor;
-
-  if (text) {
-    // text != NULL, analyze new text
-    cursor->set_analyzer(analyzer);
-    cursor->Scan(text);    
+Parser::Iterator *Parser::Impl::Parse(const char *text) {
+  Parser::Iterator *cursor;
+  if (iterator_pool_.size() == 0) {
+    ASSERT(iterator_alloced_ < 1024,
+           "Too many Parser::Iterator allocated without Parser::Release.");
+    cursor = new Parser::Iterator();
+    iterator_alloced_++;
+  } else {
+    cursor = iterator_pool_.back();
+    iterator_pool_.pop_back();
   }
 
-  cursor->MoveToNext();
-  // If reached the end of text, collect back the cursor then return NULL
-  if (cursor->end()) return NULL;
+  cursor->impl()->set_analyzer(this);
+  cursor->impl()->Scan(text);
+  cursor->Next();
 
-  analyzer->item.word = cursor->word();
-  analyzer->item.part_of_speech_tag = cursor->part_of_speech_tag();
-  analyzer->item.word_type = cursor->word_type();  
-
-  return &(analyzer->item);
+  return cursor;
 }
 
-const char *milkcat_last_error() {
-  return milkcat::global_status.what();
+Parser::Parser(): impl_(NULL) {
 }
 
+Parser::~Parser() {
+  delete impl_;
+  impl_ = NULL;
+}
+
+Parser *Parser::New(Model *model, int type) {
+  Parser *self = new Parser();
+  self->impl_ = Impl::New(model? model->impl(): NULL, type);
+
+  if (self->impl_) {
+    return self;
+  } else {
+    delete self;
+    return NULL;
+  }
+}
+
+void Parser::Release(Parser::Iterator *it) {
+  return impl_->Release(it);
+}
+
+Parser::Iterator *Parser::Parse(const char *text) {
+  return impl_->Parse(text);
+}
+
+// ------------------------------- Model -------------------------------------
+
+Model::Model(): impl_(NULL) {
+}
+
+Model::~Model() {
+  delete impl_;
+  impl_ = NULL;
+}
+
+Model *Model::New(const char *model_dir) {
+  Model *self = new Model();
+  self->impl_ = new Model::Impl(model_dir? model_dir: MODEL_PATH);
+
+  return self;
+}
+
+bool Model::SetUserDictionary(const char *userdict_path) {
+  return impl_->SetUserDictionary(userdict_path);
+}
+
+const char *LastError() {
+  return global_status.what();
+}
+
+}  // namespace milkcat

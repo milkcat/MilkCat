@@ -43,9 +43,9 @@ PhraseRanker::PhraseRanker(): idf_model_(NULL) {
 PhraseRanker::~PhraseRanker() {
 }
 
-PhraseRanker *PhraseRanker::New(ModelFactory *model_factory, Status *status) {
+PhraseRanker *PhraseRanker::New(Model::Impl *model_impl, Status *status) {
   PhraseRanker *self = new PhraseRanker();
-  self->idf_model_ = model_factory->IDFModel(status);
+  self->idf_model_ = model_impl->IDFModel(status);
 
   if (status->ok()) {
     return self;
@@ -55,7 +55,7 @@ PhraseRanker *PhraseRanker::New(ModelFactory *model_factory, Status *status) {
   }
 }
 
-// Compare two phrase pointers by the weight of the phrase it points
+// Compare two phrase pointers by the weight of the phrase
 inline bool PhraseScoreCmp(const Phrase *phrase1, const Phrase *phrase2) {
   return phrase1->weight() > phrase2->weight();
 }
@@ -64,7 +64,7 @@ inline bool PhraseRanker::NotKeyphrase(Phrase *phrase) {
   return phrase->weight() < kWeightThreshold;
 }
 
-void PhraseRanker::Rank(const Document &document,
+void PhraseRanker::Rank(const Document *document,
                         std::vector<Phrase *> *phrases) {
   CalcScore(document, phrases);
   
@@ -76,7 +76,7 @@ void PhraseRanker::Rank(const Document &document,
 
 const float PhraseRanker::kDefaultIDF = 8.0f;
 const double PhraseRanker::kWeightThreshold = 0.01;
-void PhraseRanker::CalcScore(const Document &document,
+void PhraseRanker::CalcScore(const Document *document,
                              std::vector<Phrase *> *phrases) {
   double tfidf_sum, alpha;
   float idf;

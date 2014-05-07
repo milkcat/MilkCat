@@ -43,7 +43,7 @@ void Document::Add(const char *word_str, int word_type) {
   document_.push_back(word);
   
   bool is_stopword = false;
-  if (word_type != MC_CHINESE_WORD && word_type != MC_ENGLISH_WORD) {
+  if (word_type != Parser::kChineseWord && word_type != Parser::kEnglishWord) {
     is_stopword = true;
   } else if (stopword_index_->Search(word_str) >= 0) {
     is_stopword = true;

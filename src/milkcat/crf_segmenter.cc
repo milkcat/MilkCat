@@ -65,7 +65,7 @@ class SegmentFeatureExtractor: public FeatureExtractor {
   const TokenInstance *token_instance_;
 };
 
-CRFSegmenter *CRFSegmenter::New(ModelFactory *model_factory, Status *status) {
+CRFSegmenter *CRFSegmenter::New(Model::Impl *model_factory, Status *status) {
   CRFSegmenter *self = new CRFSegmenter();
   const CRFModel *model = model_factory->CRFSegModel(status);
   
@@ -131,7 +131,7 @@ void CRFSegmenter::SegmentRange(TermInstance *term_instance,
         term_type = TokenTypeToTermType(
           token_instance->token_type_at(begin + i));
       } else {
-        term_type = TermInstance::kChineseWord;
+        term_type = Parser::kChineseWord;
       }
 
       term_instance->set_value_at(term_count,
@@ -148,7 +148,7 @@ void CRFSegmenter::SegmentRange(TermInstance *term_instance,
     term_instance->set_value_at(term_count,
                                 buffer.c_str(),
                                 token_count,
-                                TermInstance::kChineseWord);
+                                Parser::kChineseWord);
     term_count++;
   }
 

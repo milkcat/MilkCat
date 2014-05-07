@@ -72,22 +72,22 @@ void GetMutualInformation(
 
   // Start to calculate the mutual information for candidates
   BigramSegmenter *segmenter;
-  milkcat_model_t *model;
-  milkcat_t *analyzer;
-  milkcat_cursor_t *cursor;
+  Model *model;
+  Parser *parser;
   
   if (status->ok()) {
-    model = milkcat_model_new(NULL);
-    milkcat_model_set_userdict(model, "bigram_vocab.txt");
-    analyzer = milkcat_new(model, BIGRAM_SEGMENTER);
-    if (analyzer == NULL)
-      *status = Status::RuntimeError(milkcat_last_error());
+    // TODO: Add support for user model path
+    model = Model::New();
+    model->SetUserDictionary("bigram_vocab.txt");
+    parser = Parser::New(model, Parser::kBigramSegmenter | Parser::kNoTagger);
+    if (parser == NULL)
+      *status = Status::RuntimeError(LastError());
   }
 
   if (status->ok()) {
-    segmenter = static_cast<BigramSegmenter *>(analyzer->segmenter);
-    typedef utils::unordered_map<std::string, int>::iterator msi_iter;
-    for (msi_iter it = candidate_frequencies.begin(); 
+    segmenter = static_cast<BigramSegmenter *>(parser->impl()->segmenter());
+    for (utils::unordered_map<std::string, int>::iterator 
+         it = candidate_frequencies.begin();
          it != candidate_frequencies.end();
          ++it) {
       const char *word = it->first.c_str();
@@ -96,10 +96,9 @@ void GetMutualInformation(
       segmenter->ClearAllDisabledTermIds();
       segmenter->AddDisabledTermId(term_id);
 
-      milkcat_item_t *item = milkcat_analyze(analyzer, word);
-      while (item) {
-        item = milkcat_analyze(analyzer, NULL);
-      }
+      Parser::Iterator *pit = parser->Parse(word);
+      while (pit->HasNext()) pit->Next();
+      parser->Release(pit);
 
       double word_cost = -log(
           static_cast<double>(it->second) / total_frequency);
@@ -111,8 +110,8 @@ void GetMutualInformation(
     }
   }
 
-  milkcat_destroy(analyzer);
-  milkcat_model_destroy(model);
+  delete parser;
+  delete model;
 }
 
 }  // namespace milkcat

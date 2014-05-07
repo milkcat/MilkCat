@@ -32,6 +32,7 @@
 #include <set>
 #include "common/milkcat_config.h"
 #include "common/static_array.h"
+#include "include/milkcat.h"
 #include "milkcat/beam.h"
 #include "milkcat/segmenter.h"
 #include "milkcat/static_hashtable.h"
@@ -42,7 +43,7 @@ namespace milkcat {
 class TrieTree;
 class TokenInstance;
 class TermInstance;
-class ModelFactory;
+class Model;
 class Status;
 
 class BigramSegmenter: public Segmenter {
@@ -53,7 +54,7 @@ class BigramSegmenter: public Segmenter {
   // Create the bigram segmenter from a model factory. On success, return an
   // instance of BigramSegmenter. On failed, return NULL and set status
   // a failed value
-  static BigramSegmenter *New(ModelFactory *model_factory,
+  static BigramSegmenter *New(Model::Impl *model_factory,
                               bool use_bigram,
                               Status *status);
 

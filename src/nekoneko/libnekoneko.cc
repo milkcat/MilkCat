@@ -32,6 +32,10 @@
 #include <string.h>
 #include <vector>
 #include <string>
+#include <sstream>
+#include "milkcat/libmilkcat.h"
+#include "utils/log.h"
+#include "utils/status.h"
 #include "utils/utils.h"
 #include "utils/writable_file.h"
 
@@ -40,70 +44,126 @@ namespace milkcat {
 const char *MUTUALINFO_DEBUG_FILE = "mi.txt";
 const char *ADJENT_DEBUG_FILE = "adjent.txt";
 
-bool ExtractNewWord(
-    const char *corpus_path,
-    const char *vocabulary_word_file,
-    std::vector<std::pair<std::string, double> > *result,
-    void (* log_func)(const char *msg),
-    void (* progress_func)(int64_t bytes_processed,
-                           int64_t file_size,
-                           int64_t bytes_per_second)) {
+class Newword::Impl {
+ public:
+  Impl(const char *model_dir);
+  ~Impl();
+
+  Iterator *Extract(const char *filename);
+  void Release(Iterator *it);
+
+  void set_vocabulary_file(const char *vocabulary_filename) {
+    vocabulary_filename_ = vocabulary_filename;
+  }
+  void set_log_function(LogFunction log_func) {
+    log_function_ = log_func;
+  }
+  void set_progress_function(ProgressFunction progress_func) {
+    progress_function_ = progress_func;
+  }
+
+ private:
+  std::string vocabulary_filename_;
+  std::string model_dir_;
+  std::vector<Iterator *> iterator_pool_;
+  int iterator_alloced_;
+
+  LogFunction log_function_;
+  ProgressFunction progress_function_;
+
+  // Using log_function_ to display an message
+  void Log(const LogUtil &message);
+};
+
+class Newword::Iterator::Impl {
+ public:
+  Impl();
+
+  bool HasNext() { return result_pos_ < internal_result_.size(); }
+  void Next() { if (HasNext()) ++result_pos_; }
+
+  const char *word() {
+    return internal_result_[result_pos_].first.c_str();
+  }
+
+  double weight() {
+    return internal_result_[result_pos_].second;
+  }
+
+  std::vector<std::pair<std::string, double> > *
+  result() { return &internal_result_; }
+
+  // Reset the iterator
+  void Reset() {
+    internal_result_.clear();
+    result_pos_ = 0;
+  }
+
+ private:
+  std::vector<std::pair<std::string, double> > internal_result_;
+  int result_pos_;
+};
+
+Newword::Impl::Impl(const char *model_dir):
+    model_dir_(model_dir? model_dir: MODEL_PATH),
+    vocabulary_filename_(""),
+    log_function_(NULL),
+    progress_function_(NULL),
+    iterator_alloced_(0) {
+}
+
+Newword::Impl::~Impl() {
+  for (std::vector<Iterator *>::iterator
+       it = iterator_pool_.begin(); it != iterator_pool_.end(); ++it) {
+    delete *it;
+  }
+}
+
+inline void Newword::Impl::Log(const LogUtil &message) {
+  if (log_function_) log_function_(message.GetString().c_str());
+}
+
+Newword::Iterator *Newword::Impl::Extract(const char *filename) {
   Status status;
   int total_count = 0;
-  char logmsg[1024],
-       vocabulary_file[1024] = "",
-       output_file[1024] = "";
-  int c;
 
-  if (log_func) {
-    snprintf(logmsg,
-             sizeof(logmsg),
-             "Segment corpus %s with CRF model.",
-             corpus_path);
-    log_func(logmsg);
-  }
+  Log(LogUtil() << "Segment corpus " << filename << " with CRF model.");
 
   utils::unordered_map<std::string, int> vocab;
-  if (status.ok()) {
-    GetCrfVocabulary(
-        corpus_path,
-        &total_count,
-        &vocab,
-        progress_func,
-        &status);    
-  }
+  if (status.ok()) 
+    GetCrfVocabulary(filename,
+                     &total_count,
+                     &vocab,
+                     progress_function_,
+                     &status);    
 
-  if (status.ok() && log_func) {
-    snprintf(logmsg,
-             sizeof(logmsg),
-             "OK, %d words in corpus, vocabulary size is %d",
-             total_count,
-             static_cast<int>(vocab.size()));
-    log_func(logmsg);
-    log_func("Get candidates from vocabulary.");
+
+  if (status.ok()) {
+    Log(LogUtil() << "OK, " << total_count
+                  << " words in corpus, vocabulary size is " << vocab.size());
+    Log(LogUtil() << "Get candidates from vocabulary.");
   }
 
   utils::unordered_map<std::string, float> candidates;
   if (status.ok()) {
     std::string model_path = MODEL_PATH;
     model_path += "person_name.maxent";
+
+    // TODO: Add support for vocabulary_filename_ here
     GetCandidate(
         model_path.c_str(),
-        *vocabulary_file != '\0' ? vocabulary_file : NULL,
+        NULL,
         vocab,
         total_count,
         &candidates,
-        log_func,
+        log_function_,
         &status,
         kUseDefaultThresFreq);
   }
 
-  if (status.ok() && log_func) {
-    snprintf(logmsg,
-             sizeof(logmsg),
-             "Get %d candidates. Write to candidate_cost.txt",
-             static_cast<int>(candidates.size()));
-    log_func(logmsg);
+  if (status.ok()) {
+    Log(LogUtil() << "Get " << candidates.size() << "candidates. "
+                  << " Write to candidate_cost.txt");
   }
 
   WritableFile *fd = NULL;
@@ -126,29 +186,22 @@ bool ExtractNewWord(
   utils::unordered_map<std::string, double> adjacent_entropy;
   utils::unordered_map<std::string, double> mutual_information;
 
-  if (status.ok() && log_func) {
-    snprintf(logmsg,
-             sizeof(logmsg),
-             "Analyze %s with bigram segmentation.",
-             corpus_path);
-    log_func(logmsg);
+  if (status.ok()) {
+    Log(LogUtil() << "Parse " << filename << " with bigram segmenter.");
   }
 
   if (status.ok()) {
     ExtractAdjacent(candidates,
-                    corpus_path,
+                    filename,
                     &adjacent_entropy,
                     &vocab,
-                    progress_func,
+                    progress_function_,
                     &status);
   }
 
   if (status.ok()) {
-    snprintf(logmsg,
-             sizeof(logmsg),
-             "Write adjacent entropy to %s",
-             ADJENT_DEBUG_FILE);
-    log_func(logmsg);
+    Log(LogUtil() << "Write adjacent entropy to " << ADJENT_DEBUG_FILE);
+
     WritableFile *wf = WritableFile::New(ADJENT_DEBUG_FILE, &status);
     for (utils::unordered_map<std::string, double>::iterator
          it = adjacent_entropy.begin(); it != adjacent_entropy.end(); ++it) {
@@ -161,16 +214,13 @@ bool ExtractNewWord(
   }
 
   if (status.ok()) {
-    log_func("Calculate mutual information.");
-     GetMutualInformation(vocab, candidates, &mutual_information, &status);
+    Log(LogUtil() << "Calculate mutual information.");
+    GetMutualInformation(vocab, candidates, &mutual_information, &status);
   }
 
   if (status.ok()) {
-    snprintf(logmsg,
-             sizeof(logmsg),
-             "Write mutual information to %s",
-             MUTUALINFO_DEBUG_FILE);
-    log_func(logmsg);
+    Log(LogUtil() << "Write mutual information to " << MUTUALINFO_DEBUG_FILE);
+
     WritableFile *wf = WritableFile::New(MUTUALINFO_DEBUG_FILE, &status);
     for (utils::unordered_map<std::string, double>::iterator
          it = mutual_information.begin(); it != mutual_information.end();
@@ -183,62 +233,84 @@ bool ExtractNewWord(
     delete wf;
   }
 
+  Newword::Iterator *it;
+  if (iterator_pool_.size() == 0) {
+    ASSERT(iterator_alloced_ < 1024,
+           "Too many Newword::Iterator allocated without Newword::Release.");
+    it = new Newword::Iterator();
+    iterator_alloced_++;
+  } else {
+    it = iterator_pool_.back();
+    iterator_pool_.pop_back();
+  }
+
+  it->impl()->Reset();
+
   if (status.ok()) {
-    log_func("Calculate final rank.");
-     FinalRank(adjacent_entropy, mutual_information, result);
+    Log(LogUtil() << "Calculate final rank.");
+    FinalRank(adjacent_entropy, mutual_information, it->impl()->result());
   }
 
   if (!status.ok()) {
-    log_func(status.what());
+    Log(LogUtil() << status.what());
+    global_status = status;
+    Release(it);
+    return NULL;
   } else {
-    log_func("Success!");
+    Log(LogUtil() << "Success!");
+    return it;
   }
-
-  return status.ok();
 }
+
+void Newword::Impl::Release(Newword::Iterator *it) {
+  iterator_pool_.push_back(it);
+}
+
+Newword::Iterator::Impl::Impl(): result_pos_(0) {
+}
+
+
+Newword::Newword(): impl_(NULL) {
+  
+}
+Newword::~Newword() {
+  delete impl_;
+  impl_ = NULL;
+}
+Newword *Newword::New(const char *model_dir) {
+  Newword *self = new Newword();
+  self->impl_ = new Newword::Impl(model_dir);
+
+  if (!self->impl_) {
+    delete self;
+    return NULL;
+  } else {
+    return self;
+  }
+}
+Newword::Iterator *Newword::Extract(const char *filename) {
+  return impl_->Extract(filename);
+}
+void Newword::Release(Iterator *it) { return impl_->Release(it); }
+void Newword::set_vocabulary_file(const char *vocabulary_filename) {
+  impl_->set_vocabulary_file(vocabulary_filename);
+}
+void Newword::set_log_function(LogFunction log_func) {
+  impl_->set_log_function(log_func);
+}
+void Newword::set_progress_function(ProgressFunction progress_func) {
+  impl_->set_progress_function(progress_func);
+}
+
+Newword::Iterator::Iterator(): impl_(new Impl()) {
+}
+Newword::Iterator::~Iterator() {
+  delete impl_;
+  impl_ = NULL;
+}
+bool Newword::Iterator::HasNext() { return impl_->HasNext(); }
+void Newword::Iterator::Next() { impl_->Next(); }
+const char *Newword::Iterator::word() { return impl_->word(); }
+double Newword::Iterator::weight() { return impl_->weight(); }
 
 }  // namespace milkcat
-
-struct nekoneko_result_t {
-  std::vector<std::pair<std::string, double> > internal_result;
-};
-
-nekoneko_result_t *nekoneko_extract(
-    const char *corpus_path,
-    const char *vocabulary_word_file,
-    void (* log_func)(const char *msg),
-    void (* progress_func)(int64_t bytes_processed,
-                           int64_t file_size,
-                           int64_t bytes_per_second)) {
-  nekoneko_result_t *result = new nekoneko_result_t;
-
-  bool success = milkcat::ExtractNewWord(
-      corpus_path,
-      vocabulary_word_file,
-      &result->internal_result,
-      log_func,
-      progress_func);
-
-  if (success) {
-    return result;
-  } else {
-    delete result;
-    return NULL;
-  }
-}
-
-int nekoneko_result_size(nekoneko_result_t *result) {
-  return result->internal_result.size();
-}
-
-const char *nekoneko_result_get_word_at(nekoneko_result_t *result, int pos) {
-  return result->internal_result[pos].first.c_str();
-}
-
-double nekoneko_result_get_weight_at(nekoneko_result_t *result, int pos) {
-  return result->internal_result[pos].second;
-}
-
-void nekoneko_result_destroy(nekoneko_result_t *result) {
-  delete result;
-}

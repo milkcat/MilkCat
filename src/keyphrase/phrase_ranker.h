@@ -28,10 +28,10 @@
 #define SRC_KEYPHRASE_PHRASE_RANKER_H_
 
 #include <vector>
+#include "include/milkcat.h"
 
 namespace milkcat {
 
-class ModelFactory;
 class Status;
 class Document;
 class Phrase;
@@ -46,10 +46,10 @@ class PhraseRanker {
 
   // Creates the PhraseRanker instance. On success, return the pointer to
   // PhraseRanker. On failed, return NULL and set status != Status::OK()
-  static PhraseRanker *New(ModelFactory *model_factory, Status *status);
+  static PhraseRanker *New(Model::Impl *model_impl, Status *status);
 
   // Ranks the phrases vector by the weight of phrases
-  void Rank(const Document &document, std::vector<Phrase *> *phrases);
+  void Rank(const Document *document, std::vector<Phrase *> *phrases);
 
  private:
   static const float kDefaultIDF;
@@ -59,7 +59,7 @@ class PhraseRanker {
 
   // Calculate the final score of phrases. Final socre is the combination of
   // each value of the phrase.
-  void CalcScore(const Document &document, std::vector<Phrase *> *phrases);
+  void CalcScore(const Document *document, std::vector<Phrase *> *phrases);
 
   // Check the weight of the phrase. If the weight larger than kWeightThreshold
   // return false else return true

@@ -38,81 +38,99 @@
 
 namespace milkcat {
 
-class Keyphrase {
+class Keyphrase::Impl {
  public:
-  static Keyphrase *New(milkcat_model_t *model, Status *status);
-  ~Keyphrase();
+  static Keyphrase::Impl *New(Model *model);
+  ~Impl();
 
-  // Extract keyphrase from text
-  void Extract(const char *text);
-
-  // Get next keyphrase and step the current cursor
-  Phrase *NextKeyPhrase() {
-    if (keyphrases_pos_ < keyphrases_.size()) {
-      return keyphrases_[keyphrases_pos_++];
-    } else {
-      return NULL;
-    }
-  }
+  Iterator *Extract(const char *text);
+  void Release(Iterator *it);
 
  private:
   PhraseExtractor *phrase_extractor_;
   PhraseRanker *phrase_ranker_;
-  milkcat_t *analyzer_;
+  Parser *parser_;
 
-  Document *document_;
+  std::vector<Phrase *> keyphrases_;
+  std::vector<Iterator *> iterator_pool_;
+  int iterator_alloced_;
+
+  const TrieTree *stopwords_;
+
+  Impl();
+
+  // Segment the text and save them into the document_ in it_impl
+  void SegmentTextToDocument(const char *text, Document *document);
+};
+
+class Keyphrase::Iterator::Impl {
+ public:
+  ~Impl();
+  Impl();
+
+  bool HasNext() {
+    return keyphrases_pos_ < keyphrases_.size();
+  }
+
+  void Next() { if (HasNext()) keyphrases_pos_++; }
+
+  const char *phrase() { return keyphrases_[keyphrases_pos_]->PhraseString(); }
+  double weight() { return keyphrases_[keyphrases_pos_]->weight();}
+
+  std::vector<Phrase *> *keyphrases() { return &keyphrases_; }
+  Document *document() { return document_; }
+  utils::Pool<Phrase> *phrase_pool() { return &phrase_pool_; }
+
+  void Reset() { keyphrases_pos_ = 0; }
+
+ private:
   std::vector<Phrase *> keyphrases_;
   int keyphrases_pos_;
 
-  Keyphrase();
+  Document *document_;
+  utils::Pool<Phrase> phrase_pool_;
 
-  // Segment the text and save them into the document_
-  void SegmentTextToDocument(const char *text);
+
+  friend class Keyphrase::Impl;
 };
 
-Keyphrase::Keyphrase(): phrase_extractor_(NULL),
-                        phrase_ranker_(NULL),
-                        analyzer_(NULL),
-                        document_(NULL),
-                        keyphrases_pos_(0) {
+Keyphrase::Impl::Impl(): phrase_extractor_(NULL),
+                         phrase_ranker_(NULL),
+                         parser_(NULL),
+                         stopwords_(NULL),
+                         iterator_alloced_(0) {
 }
 
-Keyphrase::~Keyphrase() {
+Keyphrase::Impl::~Impl() {
   delete phrase_extractor_;
   phrase_extractor_ = NULL;
 
   delete phrase_ranker_;
   phrase_ranker_ = NULL;
 
-  milkcat_destroy(analyzer_);
-  analyzer_ = NULL;
-
-  delete document_;
-  document_ = NULL;
+  delete parser_;
+  parser_ = NULL;
 }
 
-Keyphrase *Keyphrase::New(milkcat_model_t *model, Status *status) {
-  Keyphrase *self = new Keyphrase();
-
-  // Extract model factory instance from model
-  ModelFactory *model_factory = model->model_factory;
+Keyphrase::Impl *Keyphrase::Impl::New(Model *model) {
+  Keyphrase::Impl *self = new Keyphrase::Impl();
+  global_status = Status::OK();
 
   self->phrase_extractor_ = new PhraseExtractor();
-  self->phrase_ranker_ = PhraseRanker::New(model_factory, status);
+  self->phrase_ranker_ = PhraseRanker::New(model->impl(), &global_status);
 
-  const TrieTree *stopword = NULL;
-  if (status->ok()) stopword = model_factory->Stopword(status);
-  if (status->ok()) self->document_ = new Document(stopword);
+  if (global_status.ok()) 
+    self->stopwords_ = model->impl()->Stopword(&global_status);
 
   // Create the segmenter
-  if (status->ok()) {
-    self->analyzer_ = milkcat_new(model, DEFAULT_SEGMENTER);
-    if (self->analyzer_ == NULL) {
-      *status = Status::Info(milkcat_last_error());
+  if (global_status.ok()) {
+    self->parser_ = Parser::New(model, Parser::kSegmenter);
+    if (self->parser_ == NULL) {
+      global_status = Status::Info(LastError());
     }
   }
 
-  if (status->ok()) {
+  if (global_status.ok()) {
     return self;
   } else {
     delete self;
@@ -120,65 +138,98 @@ Keyphrase *Keyphrase::New(milkcat_model_t *model, Status *status) {
   }
 }
 
-void Keyphrase::SegmentTextToDocument(const char *text) {
-  document_->Clear();
+void Keyphrase::Impl::SegmentTextToDocument(const char *text,
+                                            Document *document) {
+  document->Clear();
 
-  milkcat_item_t *item = milkcat_analyze(analyzer_, text);
-  while (item) {
-    document_->Add(item->word, item->word_type);
-    item = milkcat_analyze(analyzer_, NULL);
+  Parser::Iterator *it = parser_->Parse(text);
+  while (it->HasNext()) {
+    document->Add(it->word(), it->type());
+    it->Next();
+  }
+  parser_->Release(it);
+}
+
+Keyphrase::Iterator *Keyphrase::Impl::Extract(const char *text) {
+  Iterator *iterator;
+  if (iterator_pool_.size() == 0) {
+    ASSERT(iterator_alloced_ < 1024,
+           "Too many Keyphrase::Iterator allocated without "
+           "Keyphrase::Release.");
+    iterator = new Iterator();
+    iterator->impl()->document_ = new Document(stopwords_);
+    iterator_alloced_++;
+  } else {
+    iterator = iterator_pool_.back();
+    iterator_pool_.pop_back();
+  }
+  
+  SegmentTextToDocument(text, iterator->impl()->document());
+  
+  // Extract phrases from the document
+  phrase_extractor_->Extract(iterator->impl()->document(),
+                             iterator->impl()->phrase_pool(),
+                             iterator->impl()->keyphrases());
+
+  // Rank the phrases by its weight
+  phrase_ranker_->Rank(iterator->impl()->document(),
+                       iterator->impl()->keyphrases());
+  
+  iterator->impl()->Reset();
+  return iterator;
+}
+
+void Keyphrase::Impl::Release(Iterator *it) {
+  iterator_pool_.push_back(it);
+}
+
+Keyphrase::Iterator::Impl::Impl():
+    keyphrases_pos_(0),
+    document_(NULL) {
+}
+
+Keyphrase::Iterator::Impl::~Impl() {
+  delete document_;
+  document_ = NULL;
+}
+
+
+Keyphrase *Keyphrase::New(Model *model) {
+  Keyphrase *self = new Keyphrase();
+  self->impl_ = Keyphrase::Impl::New(model);
+  if (self->impl_) {
+    return self;
+  } else {
+    delete self;
+    return NULL;
   }
 }
 
-void Keyphrase::Extract(const char *text) {
-  SegmentTextToDocument(text);
-
-  phrase_extractor_->Extract(*document_, &keyphrases_);
-  phrase_ranker_->Rank(*document_, &keyphrases_);
-
-  keyphrases_pos_ = 0;
+Keyphrase::Keyphrase(): impl_(NULL) {
 }
+
+Keyphrase::~Keyphrase() {
+  delete impl_;
+  impl_ = NULL;
+}
+
+Keyphrase::Iterator *Keyphrase::Extract(const char *text) {
+  return impl_->Extract(text);
+}
+
+void Keyphrase::Release(Iterator *it) { impl_->Release(it); }
+
+Keyphrase::Iterator::Iterator(): impl_(new Keyphrase::Iterator::Impl()) {
+}
+
+Keyphrase::Iterator::~Iterator() {
+  delete impl_;
+  impl_ = NULL;
+}
+
+bool Keyphrase::Iterator::HasNext() { return impl_->HasNext(); }
+void Keyphrase::Iterator::Next() { impl_->Next(); }
+const char *Keyphrase::Iterator::phrase() { return impl_->phrase(); }
+double Keyphrase::Iterator::weight() { return impl_->weight(); }
 
 }  // namespace milkcat
-
-struct milkcat_keyphrase_t {
-  milkcat::Keyphrase *keyphrase;
-  keyphrase_item_t item;
-};
-
-milkcat_keyphrase_t *milkcat_keyphrase_new(milkcat_model_t *model, int method) {
-  milkcat_keyphrase_t *keyphrase_handler = new milkcat_keyphrase_t;
-
-  keyphrase_handler->keyphrase = milkcat::Keyphrase::New(
-      model,
-      &milkcat::global_status);
-  
-  if (milkcat::global_status.ok()) {
-    return keyphrase_handler;
-  } else {
-    delete keyphrase_handler;
-    return NULL;
-  }
-}
-
-keyphrase_item_t *
-milkcat_keyphrase_extract(milkcat_keyphrase_t *keyphrase, const char *text) {
-  if (text) {
-    keyphrase->keyphrase->Extract(text);
-  }
-
-  milkcat::Phrase *phrase = keyphrase->keyphrase->NextKeyPhrase();
-
-  if (phrase) {
-    keyphrase->item.keyphrase = phrase->PhraseString();
-    keyphrase->item.weight = phrase->weight();
-    return &(keyphrase->item);
-  } else {
-    return NULL;
-  }
-}
-
-void milkcat_keyphrase_destroy(milkcat_keyphrase_t *keyphrase) {
-  delete keyphrase->keyphrase;
-  delete keyphrase;
-}

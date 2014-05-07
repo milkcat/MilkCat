@@ -44,7 +44,7 @@ void PartOfSpeechFeatureExtractor::ExtractFeatureAt(
   size_t term_length = strlen(term_text);
 
   switch (term_type) {
-   case TermInstance::kChineseWord:
+   case Parser::kChineseWord:
     // term itself
     utils::strlcpy(feature_list[0], term_text, kFeatureLengthMax);
 
@@ -57,14 +57,14 @@ void PartOfSpeechFeatureExtractor::ExtractFeatureAt(
                    kFeatureLengthMax);
     break;
 
-   case TermInstance::kEnglishWord:
-   case TermInstance::kSymbol:
+   case Parser::kEnglishWord:
+   case Parser::kSymbol:
     utils::strlcpy(feature_list[0], "A", kFeatureLengthMax);
     utils::strlcpy(feature_list[1], "A", kFeatureLengthMax);
     utils::strlcpy(feature_list[2], "A", kFeatureLengthMax);
     break;
 
-   case TermInstance::kNumber:
+   case Parser::kNumber:
     utils::strlcpy(feature_list[0], "1", kFeatureLengthMax);
     utils::strlcpy(feature_list[1], "1", kFeatureLengthMax);
     utils::strlcpy(feature_list[2], "1", kFeatureLengthMax);

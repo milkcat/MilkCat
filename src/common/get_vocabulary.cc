@@ -44,8 +44,8 @@ namespace milkcat {
 class SegmentThread: public utils::Thread {
  public:
   SegmentThread(
-    milkcat_model_t *model,
-    int analyzer_type,
+    Model *model,
+    int parser_type,
     ReadableFile *fd,
     utils::Mutex *fd_mutex,
     utils::unordered_map<std::string, int> *vocab,
@@ -53,7 +53,7 @@ class SegmentThread: public utils::Thread {
     utils::Mutex *vocab_mutex,
     Status *status): 
       model_(model),
-      analyzer_type_(analyzer_type),
+      parser_type_(parser_type),
       fd_(fd),
       fd_mutex_(fd_mutex),
       vocab_(vocab),
@@ -66,10 +66,9 @@ class SegmentThread: public utils::Thread {
     int buf_size = 1024 * 1024;
     char *buf = new char[buf_size];
 
-    // Creates an analyzer from model
-    milkcat_t *analyzer = milkcat_new(model_, analyzer_type_);
-    milkcat_item_t *item;
-    if (analyzer == NULL) *status_ = Status::Corruption(milkcat_last_error());
+    // Creates an parser from model
+    Parser *parser = Parser::New(model_, parser_type_);
+    if (parser == NULL) *status_ = Status::Corruption(LastError());
 
     bool eof = false;
     std::vector<std::string> words;
@@ -83,14 +82,15 @@ class SegmentThread: public utils::Thread {
       // Segment the line and store the results into words
       if (status_->ok() && !eof) {
         words.clear();
-        item = milkcat_analyze(analyzer, buf);
-        while (item != NULL) {
-          if (item->word_type == MC_CHINESE_WORD)
-            words.push_back(item->word);
+        Parser::Iterator *it = parser->Parse(buf);
+        while (it->HasNext()) {
+          if (it->type() == Parser::kChineseWord)
+            words.push_back(it->word());
           else
             words.push_back("-NOT-CJK-");
-          item = milkcat_analyze(analyzer, NULL);
+          it->Next();
         }
+        parser->Release(it);
       }
 
       // Update vocab and total_count with words
@@ -111,13 +111,13 @@ class SegmentThread: public utils::Thread {
       }
     }
     
-    milkcat_destroy(analyzer);
+    delete parser;
     delete[] buf;
   }
 
  private:
-  milkcat_model_t *model_;
-  int analyzer_type_;
+  Model *model_;
+  int parser_type_;
   ReadableFile *fd_;
   utils::Mutex *fd_mutex_;
   utils::unordered_map<std::string, int> *vocab_;
@@ -183,8 +183,8 @@ class ProgressUpdateThread: public utils::Thread {
 // words. If any errors occured, status is not Status::OK()
 int GetVocabularyFromFile(
     const char *path,
-    milkcat_model_t *model,
-    int analyzer_type,
+    Model *model,
+    int parser_type,
     int n_threads,
     utils::unordered_map<std::string, int> *vocab,
     void (* progress)(int64_t bytes_processed,
@@ -208,7 +208,7 @@ int GetVocabularyFromFile(
     for (int i = 0; i < n_threads; ++i) {
       utils::Thread *worker_thread = new SegmentThread(
           model,
-          analyzer_type,
+          parser_type,
           fd,
           &fd_mutex,
           vocab,

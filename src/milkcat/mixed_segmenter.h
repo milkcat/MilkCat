@@ -27,6 +27,7 @@
 #ifndef SRC_MILKCAT_MIXED_SEGMENTER_H_
 #define SRC_MILKCAT_MIXED_SEGMENTER_H_
 
+#include "include/milkcat.h"
 #include "milkcat/segmenter.h"
 #include "milkcat/static_hashtable.h"
 #include "milkcat/crf_model.h"
@@ -38,14 +39,13 @@ class OutOfVocabularyWordRecognition;
 class BigramSegmenter;
 class TermInstance;
 class TokenInstance;
-class ModelFactory;
 
 // Mixed Bigram segmenter and CRF Segmenter of OOV recognition
 class MixedSegmenter: public Segmenter {
  public:
   ~MixedSegmenter();
 
-  static MixedSegmenter *New(ModelFactory *model_factory, Status *status);
+  static MixedSegmenter *New(Model::Impl *model_factory, Status *status);
 
   // Segment a token instance into term instance
   void Segment(TermInstance *term_instance, TokenInstance *token_instance);

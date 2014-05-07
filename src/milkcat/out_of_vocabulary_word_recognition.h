@@ -31,20 +31,20 @@
 
 #include <stdint.h>
 #include <stdio.h>
-#include "utils/utils.h"
+#include "include/milkcat.h"
 #include "milkcat/crf_segmenter.h"
 #include "milkcat/part_of_speech_tag_instance.h"
 #include "milkcat/crf_model.h"
 #include "milkcat/token_instance.h"
+#include "utils/utils.h"
 
 namespace milkcat {
 
-class ModelFactory;
 class TrieTree;
 
 class OutOfVocabularyWordRecognition {
  public:
-  static OutOfVocabularyWordRecognition *New(ModelFactory *model_factory,
+  static OutOfVocabularyWordRecognition *New(Model::Impl *model_factory,
                                              Status *status);
   ~OutOfVocabularyWordRecognition();
   void Recognize(TermInstance *term_instance,

@@ -135,7 +135,7 @@ void PhraseExtractor::PhraseBeginSet() {
   }
 }
 
-void PhraseExtractor::DoIteration() {
+void PhraseExtractor::DoIteration(utils::Pool<Phrase> *phrase_pool) {
   Adjacent adjacent;
 
   while (from_set_.size()) {
@@ -186,7 +186,7 @@ void PhraseExtractor::DoIteration() {
       // Ensure adjacent entropy of every phrase larger than kBoundaryThreshold
       if (from_phrase->index.size() > 1 && 
           adjacent.entropy > kBoundaryThreshold) {
-        Phrase *phrase = phrase_pool_.Alloc();
+        Phrase *phrase = phrase_pool->Alloc();
         phrase->set_document(document_);
         phrase->set_words(from_phrase->words);
         double tf = from_phrase->index.size() / (1e-38 + document_->size());
@@ -198,14 +198,15 @@ void PhraseExtractor::DoIteration() {
   }
 }
 
-void PhraseExtractor::Extract(const Document &document,
+void PhraseExtractor::Extract(const Document *document,
+                              utils::Pool<Phrase> *phrase_pool,
                               std::vector<Phrase *> *phrases) {
-  document_ = &document;
+  document_ = document;
   phrases_ = phrases;
 
   // Clean the previous data
   candidate_pool_.ReleaseAll();
-  phrase_pool_.ReleaseAll();
+  phrase_pool->ReleaseAll();
   from_set_.clear();
   to_set_.clear();
   phrases_->clear();
@@ -216,7 +217,7 @@ void PhraseExtractor::Extract(const Document &document,
 
   // Extract the phrases until the size of from_set reaches 0
   while (from_set_.size() != 0) {
-    DoIteration();
+    DoIteration(phrase_pool);
     from_set_.clear();
     from_set_.swap(to_set_);
   }

@@ -29,9 +29,10 @@
 #define SRC_MILKCAT_TERM_INSTANCE_H_
 
 #include <stdio.h>
-#include "utils/utils.h"
+#include "include/milkcat.h"
 #include "milkcat/instance_data.h"
 #include "milkcat/token_instance.h"
+#include "utils/utils.h"
 
 namespace milkcat {
 
@@ -49,15 +50,6 @@ class TermInstance {
 
   static const int kTermIdNone = -2;
   static const int kTermIdOutOfVocabulary = -1;
-
-  enum {
-    kChineseWord = 0,
-    kEnglishWord = 1,
-    kNumber = 2,
-    kSymbol = 3,
-    kPunction = 4,
-    kOther = 5
-  };
 
   // Get the term's string value at position
   const char *term_text_at(int position) const {
@@ -111,22 +103,22 @@ class TermInstance {
 inline int TokenTypeToTermType(int token_type) {
   switch (token_type) {
     case TokenInstance::kChineseChar:
-      return TermInstance::kChineseWord;
+      return Parser::kChineseWord;
     case TokenInstance::kSpace:
     case TokenInstance::kCrLf:
-      return TermInstance::kOther;
+      return Parser::kOther;
     case TokenInstance::kPeriod:
     case TokenInstance::kPunctuation:
     case TokenInstance::kOther:
-      return TermInstance::kPunction;
+      return Parser::kPunction;
     case TokenInstance::kEnglishWord:
-      return TermInstance::kEnglishWord;
+      return Parser::kEnglishWord;
     case TokenInstance::kSymbol:
-      return TermInstance::kSymbol;
+      return Parser::kSymbol;
     case TokenInstance::kNumber:
-      return TermInstance::kNumber;
+      return Parser::kNumber;
     default:
-      return TermInstance::kOther;
+      return Parser::kOther;
   }
 }
 

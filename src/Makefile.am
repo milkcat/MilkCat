@@ -10,8 +10,8 @@ include_HEADERS = include/milkcat.h
 lib_LTLIBRARIES = libmilkcat.la
 libmilkcat_la_LIBADD = -lpthread
 libmilkcat_la_SOURCES = common/darts.h \
-                        common/get_vocabulary.cc \
                         common/get_vocabulary.h \
+                        common/get_vocabulary.cc \
                         common/milkcat_config.h \
                         common/model_factory.cc \
                         common/model_factory.h \
@@ -27,7 +27,7 @@ libmilkcat_la_SOURCES = common/darts.h \
                         keyphrase/phrase_extractor.h \
                         keyphrase/phrase_extractor.cc \
                         keyphrase/string_table.h \
-	                  keyphrase/string_value.h \
+                        keyphrase/string_value.h \
                         milkcat/beam.h \
                         milkcat/bigram_segmenter.cc \
                         milkcat/bigram_segmenter.h \
@@ -67,6 +67,8 @@ libmilkcat_la_SOURCES = common/darts.h \
                         milkcat/segmenter.h \
                         milkcat/static_array.h \
                         milkcat/static_hashtable.h \
+                        utils/log.h \
+                        utils/log.cc \
                         utils/readable_file.cc \
                         utils/readable_file.h \
                         utils/status.h \

@@ -52,25 +52,6 @@ namespace milkcat {
 // The global status
 extern milkcat::Status global_status;
 
-class ModelFactory;
-class Cursor;
-
-}  // namespace milkcat
-
-struct milkcat_model_t {
-  milkcat::ModelFactory *model_factory;
-};
-
-struct milkcat_t {
-  milkcat_model_t *model;
-  milkcat_item_t item;
-  milkcat::Cursor *cursor;
-  milkcat::Segmenter *segmenter;
-  milkcat::PartOfSpeechTagger *part_of_speech_tagger;
-};
-
-namespace milkcat {
-
 const int kTokenizerMask = 0x0000000f;
 const int kSegmenterMask = 0x00000ff0;
 const int kPartOfSpeechTaggerMask = 0x000ff000;
@@ -80,23 +61,53 @@ Tokenization *TokenizerFactory(int tokenizer_id);
 
 // A factory function to create segmenters. On success, return the instance of
 // Segmenter, on failed, set status != Status::OK()
-Segmenter *SegmenterFactory(ModelFactory *factory,
-                           int segmenter_id,
-                           Status *status);
+Segmenter *SegmenterFactory(Model::Impl *factory,
+                            int segmenter_id,
+                            Status *status);
 
 // A factory function to create part-of-speech taggers. On success, return the
 // instance of part-of-speech tagger, on failed, set status != Status::OK()
-PartOfSpeechTagger *PartOfSpeechTaggerFactory(ModelFactory *factory,
+PartOfSpeechTagger *PartOfSpeechTaggerFactory(Model::Impl *factory,
                                               int part_of_speech_tagger_id,
                                               Status *status);
 
 
+class Parser::Impl {
+ public:
+  static Impl *New(Model::Impl *model_impl, int type);
+  ~Impl();
+
+  Iterator *Parse(const char *text);
+
+  Segmenter *segmenter() const { return segmenter_; }
+  PartOfSpeechTagger *part_of_speech_tagger() const {
+    return part_of_speech_tagger_;
+  }
+
+  void Release(Parser::Iterator *it) {
+    iterator_pool_.push_back(it);
+  }
+
+  // Get the segmenter for the parser
+  Segmenter *segmenter() { return segmenter_; }
+
+ private:
+  Impl();
+
+  Segmenter *segmenter_;
+  PartOfSpeechTagger *part_of_speech_tagger_;
+  Model::Impl *model_impl_;
+  std::vector<Parser::Iterator *> iterator_pool_;
+  bool own_model_;
+  int iterator_alloced_;
+};
+
 // Cursor class save the internal state of the analyzing result, such as
 // the current word and current sentence.
-class Cursor {
+class Parser::Iterator::Impl {
  public:
-  explicit Cursor();
-  ~Cursor();
+  Impl();
+  ~Impl();
 
   // Start to scan a text and use this->analyzer_ to analyze it
   // the result saved in its current state, use MoveToNext() to
@@ -105,33 +116,33 @@ class Cursor {
 
   // Move the cursor to next position, if end of text is reached
   // set end() to true
-  void MoveToNext();
+  void Next();
+
+  // If reaches the end of text
+  bool HasNext() const { return !end_; }
 
   // These function return the data of current position
   const char *word() const {
     return term_instance_->term_text_at(current_position_);
   }
   const char *part_of_speech_tag() const {
-    if (analyzer_->part_of_speech_tagger != NULL)
+    if (analyzer_->part_of_speech_tagger() != NULL)
       return part_of_speech_tag_instance_->part_of_speech_tag_at(
           current_position_);
     else
       return "NONE";
   }
-  const int word_type() const {
+  int type() const {
     return term_instance_->term_type_at(current_position_);
   }
 
-  // If reaches the end of text
-  bool end() const { return end_; }
-
-  milkcat_t *analyzer() const { return analyzer_; }
-  void set_analyzer(milkcat_t *analyzer) {
+  Parser::Impl *analyzer() const { return analyzer_; }
+  void set_analyzer(Parser::Impl *analyzer) {
     analyzer_ = analyzer;
   }
 
  private:
-  milkcat_t *analyzer_;
+  Parser::Impl *analyzer_;
 
   Tokenization *tokenizer_;
   TokenInstance *token_instance_;

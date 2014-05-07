@@ -21,35 +21,18 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 //
-// nekoneko.c --- Created at 2014-03-21
+// log.cc --- Created at 2014-05-07
 //
 
-#include <stdio.h>
-#include "include/milkcat.h"
+#include "utils/log.h"
 
-void display_progress(int64_t bytes_processed,
-                      int64_t file_size,
-                      int64_t bytes_per_second) {
-  printf("\rprogress %dMB/%dMB -- %2.1f%% %.3fMB/s",
-         (int)(bytes_processed / (1024 * 1024)),
-         (int)(file_size / (1024 * 1024)),
-         100.0 * bytes_processed / file_size,
-         bytes_per_second / (double)(1024 * 1024));
-  if (bytes_processed == file_size) puts("");
-  fflush(stdout);
+namespace milkcat {
+
+std::string LogUtil::GetString() const {
+  return stream_.str();
 }
 
-int main(int argc, char **argv) {
-  nekoneko_result_t *r = NULL;
-  int i;
-
-  r = nekoneko_extract(argv[1], NULL, puts, display_progress);
-  for (i = 0; i < nekoneko_result_size(r); ++i) {
-    printf("%s %lf\n",
-           nekoneko_result_get_word_at(r, i),
-           nekoneko_result_get_weight_at(r, i));
-  }
-
-  return 0;
+LogUtil::LogUtil() {
 }
 
+}  // namespace milkcat
