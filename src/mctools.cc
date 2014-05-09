@@ -377,7 +377,7 @@ int CorpusVocabulary(int argc, char **argv) {
        model_path[1024] = "",
        user_dict[1024] = "";
   int c = '\0';
-  int analyzer_type = BIGRAM_SEGMENTER;
+  int analyzer_type = Parser::kBigramSegmenter | Parser::kNoTagger;
 
   while ((c = getopt(argc, argv, "u:d:m:o:")) != -1 && status.ok()) {
     switch (c) {
@@ -397,9 +397,9 @@ int CorpusVocabulary(int argc, char **argv) {
 
       case 'm':
         if (strcmp(optarg, "crf_seg") == 0) {
-          analyzer_type = CRF_SEGMENTER;
+          analyzer_type = Parser::kCrfSegmenter | Parser::kNoTagger;
         } else if (strcmp(optarg, "bigram_seg") == 0) {
-          analyzer_type = BIGRAM_SEGMENTER;
+          analyzer_type = Parser::kBigramSegmenter | Parser::kNoTagger;
         } else {
           status = Status::Info("Option -m: invalid method");
         }
@@ -427,12 +427,12 @@ int CorpusVocabulary(int argc, char **argv) {
          "[-u userdict] -o output_file corpus_file");
   }
 
-  milkcat_model_t *model = NULL;
+  Model *model = NULL;
   utils::unordered_map<std::string, int> vocab;
   if (status.ok()) {
     const char *corpus_path = argv[optind];
-    model = milkcat_model_new(*model_path == '\0'? NULL: model_path);
-    if (*user_dict) milkcat_model_set_userdict(model, user_dict);
+    model = Model::New(*model_path == '\0'? NULL: model_path);
+    if (*user_dict) model->SetUserDictionary(user_dict);
     int n_threads = utils::HardwareConcurrency();
     GetVocabularyFromFile(corpus_path,
                           model,
@@ -458,7 +458,7 @@ int CorpusVocabulary(int argc, char **argv) {
   }
 
   delete fd;
-  milkcat_model_destroy(model);
+  delete model;
 
   if (status.ok()) {
     puts("Success!");

@@ -331,18 +331,19 @@ int KeyphraseMain(int argc, char **argv) {
 void DisplayProgress(int64_t bytes_processed,
                      int64_t file_size,
                      int64_t bytes_per_second) {
-  printf("\rprogress %dMB/%dMB -- %2.1f%% %.3fMB/s",
-         (int)(bytes_processed / (1024 * 1024)),
-         (int)(file_size / (1024 * 1024)),
-         100.0 * bytes_processed / file_size,
-         bytes_per_second / (double)(1024 * 1024));
-  if (bytes_processed == file_size) puts("");
-  fflush(stdout);
+  fprintf(stderr,
+          "\rprogress %dMB/%dMB -- %2.1f%% %.3fMB/s",
+          (int)(bytes_processed / (1024 * 1024)),
+          (int)(file_size / (1024 * 1024)),
+          100.0 * bytes_processed / file_size,
+          bytes_per_second / (double)(1024 * 1024));
+  if (bytes_processed == file_size) fputs("\n", stderr);
+  fflush(stderr);
 }
 
 // Display current status of newword extraction
 void DisplayLog(const char *str) {
-  puts(str);
+  fprintf(stderr, "%s\n", str);
 }
 
 int NekonkeoMain(int argc, char **argv) {
