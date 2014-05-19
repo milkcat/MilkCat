@@ -9,6 +9,7 @@ include_HEADERS = include/milkcat.h include/milkcat-c.h
 
 lib_LTLIBRARIES = libmilkcat.la
 libmilkcat_la_LIBADD = -lpthread
+libmilkcat_la_LDFLAGS = -version-info 0:3:0
 libmilkcat_la_SOURCES = common/darts.h \
                         common/get_vocabulary.h \
                         common/get_vocabulary.cc \
