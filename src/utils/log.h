@@ -38,12 +38,12 @@ class LogUtil {
   LogUtil();
 
   // The << operators
-  LogUtil &operator<<(int16_t val) { stream_ << val; return *this; }
-  LogUtil &operator<<(uint16_t val) { stream_ << val; return *this; }
-  LogUtil &operator<<(int32_t val) { stream_ << val; return *this; }
-  LogUtil &operator<<(uint32_t val) { stream_ << val; return *this; }
-  LogUtil &operator<<(int64_t val) { stream_ << val; return *this; }
-  LogUtil &operator<<(uint64_t val) { stream_ << val; return *this; }
+  LogUtil &operator<<(int val) { stream_ << val; return *this; }
+  LogUtil &operator<<(unsigned int val) { stream_ << val; return *this; }
+  LogUtil &operator<<(short val) { stream_ << val; return *this; }
+  LogUtil &operator<<(unsigned short val) { stream_ << val; return *this; }
+  LogUtil &operator<<(long val) { stream_ << val; return *this; }
+  LogUtil &operator<<(unsigned long val) { stream_ << val; return *this; }
   LogUtil &operator<<(float val) { stream_ << val; return *this; }
   LogUtil &operator<<(double val) { stream_ << val; return *this; }
   LogUtil &operator<<(const char *val) {\

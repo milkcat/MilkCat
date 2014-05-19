@@ -26,13 +26,11 @@
 
 
 
-#ifndef SRC_MILKCAT_MILKCAT_H_
-#define SRC_MILKCAT_MILKCAT_H_
+#ifndef MILKCAT_H_
+#define MILKCAT_H_
 
 #include <stdint.h>
 #include <stdlib.h>
-
-#ifdef __cplusplus
 
 namespace milkcat {
 
@@ -159,6 +157,10 @@ class Parser::Iterator {
 
 // ---------------------------- Keyphrase ------------------------------------
 
+// Keyphrase extracts keyphrases from an text. 'Extract phrase' means it would
+// contains not only words but alse the phrase that contains several words.
+// Use Extract to extract the keyphrases and it returns an Keyphrase::Iterator.
+// After interating, using Release to free the iterator.
 class Keyphrase {
  public:
   class Impl;
@@ -280,7 +282,4 @@ const char *LastError();
 
 }  // namespace milkcat
 
-#endif  // __cplusplus
-
-
-#endif  // SRC_MILKCAT_MILKCAT_H_
+#endif  // MILKCAT_H_

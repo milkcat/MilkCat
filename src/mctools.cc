@@ -82,7 +82,7 @@ void LoadUnigramFile(const char *unigram_file,
     fd->ReadLine(line, sizeof(line), status);
     if (status->ok()) {
       sscanf(line, "%s %lf", word, &count);
-      unigram_data->at(std::string(word)) += count;
+      (*unigram_data)[std::string(word)] += count;
       sum += count;
     }
   }
@@ -114,8 +114,7 @@ void LoadBigramFile(const char *bigram_file,
     fd->ReadLine(line, sizeof(line), status);
     if (status->ok()) {
       sscanf(line, "%s %s %d", left, right, &count);
-      bigram_data->at(
-          std::pair<std::string, std::string>(left, right)) += count;
+      (*bigram_data)[std::pair<std::string, std::string>(left, right)] += count;
       *total_count += count;
     }
   }
