@@ -119,7 +119,7 @@ class Parser::Iterator::Impl {
   void Next();
 
   // If reaches the end of text
-  bool HasNext() const { return !end_; }
+  bool End() const { return end_; }
 
   // These function return the data of current position
   const char *word() const {

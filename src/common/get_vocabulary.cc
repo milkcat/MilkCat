@@ -83,7 +83,7 @@ class SegmentThread: public utils::Thread {
       if (status_->ok() && !eof) {
         words.clear();
         Parser::Iterator *it = parser->Parse(buf);
-        while (it->HasNext()) {
+        while (!it->End()) {
           if (it->type() == Parser::kChineseWord)
             words.push_back(it->word());
           else

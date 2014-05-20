@@ -97,7 +97,7 @@ void GetMutualInformation(
       segmenter->AddDisabledTermId(term_id);
 
       Parser::Iterator *pit = parser->Parse(word);
-      while (pit->HasNext()) pit->Next();
+      while (!pit->End()) pit->Next();
       parser->Release(pit);
 
       double word_cost = -log(

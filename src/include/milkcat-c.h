@@ -123,7 +123,7 @@ milkcat_parser_iterator_type(milkcat_parser_iterator_t it);
 // Returns a value > 0 if the the iterator has an next item. Returns 0 when the
 // end of iterator is reached.
 EXPORT_API int
-milkcat_parser_iterator_has_next(milkcat_parser_iterator_t it);
+milkcat_parser_iterator_end(milkcat_parser_iterator_t it);
 
 // Moves to the next item of the iterator.
 EXPORT_API void milkcat_parser_iterator_next(milkcat_parser_iterator_t it);

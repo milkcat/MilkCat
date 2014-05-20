@@ -79,8 +79,8 @@ class Newword::Iterator::Impl {
  public:
   Impl();
 
-  bool HasNext() { return result_pos_ < internal_result_.size(); }
-  void Next() { if (HasNext()) ++result_pos_; }
+  bool End() { return result_pos_ >= internal_result_.size(); }
+  void Next() { if (!End()) ++result_pos_; }
 
   const char *word() {
     return internal_result_[result_pos_].first.c_str();
@@ -308,7 +308,7 @@ Newword::Iterator::~Iterator() {
   delete impl_;
   impl_ = NULL;
 }
-bool Newword::Iterator::HasNext() { return impl_->HasNext(); }
+bool Newword::Iterator::End() { return impl_->End(); }
 void Newword::Iterator::Next() { impl_->Next(); }
 const char *Newword::Iterator::word() { return impl_->word(); }
 double Newword::Iterator::weight() { return impl_->weight(); }

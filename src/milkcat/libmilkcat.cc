@@ -167,7 +167,7 @@ void Parser::Iterator::Impl::Scan(const char *text) {
 }
 
 void Parser::Iterator::Impl::Next() {
-  if (!HasNext()) return ;
+  if (End()) return ;
   
   current_position_++;
   if (current_position_ > sentence_length_ - 1) {
@@ -199,8 +199,8 @@ Parser::Iterator::~Iterator() {
   impl_ = NULL;
 }
 
-bool Parser::Iterator::HasNext() {
-  return impl_->HasNext();
+bool Parser::Iterator::End() {
+  return impl_->End();
 }
 
 void Parser::Iterator::Next() {

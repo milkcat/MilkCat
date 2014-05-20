@@ -232,7 +232,7 @@ int ParserMain(int argc, char **argv) {
 
   while (NULL != fgets(input_buffer, 1048576, fd)) {
     Parser::Iterator *it = parser->Parse(input_buffer);
-    while (it->HasNext()) {
+    while (!it->End()) {
       switch (*it->word()) {
         case '\r':
         case '\n':
@@ -306,7 +306,7 @@ int KeyphraseMain(int argc, char **argv) {
   Keyphrase::Iterator *it = NULL;
   if (status.ok()) {
     it = keyphrase->Extract(text);
-    while (it->HasNext()) {
+    while (!it->End()) {
       printf("%s %lf\n", it->phrase(), it->weight());
       it->Next();
     }
@@ -353,7 +353,7 @@ int NekonkeoMain(int argc, char **argv) {
 
   Newword::Iterator *it = nw->Extract(argv[2]);
 
-  while (it->HasNext()) {
+  while (!it->End()) {
     printf("%s %lf\n", it->word(), it->weight());
     it->Next();
   }

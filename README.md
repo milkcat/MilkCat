@@ -75,7 +75,7 @@ int main() {
   Parser *parser = Parser::New();
   Parser::Iterator *it = parser->Parse("这个是MilkCat的简单测试。");
 
-  while (it->HasNext()) {
+  while (!it->End()) {
     printf("%s/%s  ", it->word(), it->part_of_speech_tag());
     it->Next();
   }

@@ -79,7 +79,7 @@ void SegmentText(
   segment_result->clear();
   Parser::Iterator *it = parser->Parse(text);
 
-  while (it->HasNext()) {
+  while (!it->End()) {
     if (it->type() == Parser::kChineseWord) {
       segment_result->push_back(it->word());
     } else {

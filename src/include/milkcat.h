@@ -136,8 +136,8 @@ class Parser::Iterator {
   Iterator();
   ~Iterator();
 
-  // Returns true if it has the next element
-  bool HasNext();
+  // Returns true if it reaches the end of text
+  bool End();
 
   // Go to the next element
   void Next();
@@ -190,7 +190,7 @@ class Keyphrase::Iterator {
   ~Iterator();
 
   // Returns true if it has the next element
-  bool HasNext();
+  bool End();
 
   // Go to the next element
   void Next();
@@ -260,7 +260,7 @@ class Newword::Iterator {
   ~Iterator();
 
   // Returns true if it has the next element
-  bool HasNext();
+  bool End();
 
   // Go to the next element
   void Next();

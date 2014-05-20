@@ -68,11 +68,11 @@ class Keyphrase::Iterator::Impl {
   ~Impl();
   Impl();
 
-  bool HasNext() {
-    return keyphrases_pos_ < keyphrases_.size();
+  bool End() {
+    return keyphrases_pos_ >= keyphrases_.size();
   }
 
-  void Next() { if (HasNext()) keyphrases_pos_++; }
+  void Next() { if (!End()) keyphrases_pos_++; }
 
   const char *phrase() { return keyphrases_[keyphrases_pos_]->PhraseString(); }
   double weight() { return keyphrases_[keyphrases_pos_]->weight();}
@@ -143,7 +143,7 @@ void Keyphrase::Impl::SegmentTextToDocument(const char *text,
   document->Clear();
 
   Parser::Iterator *it = parser_->Parse(text);
-  while (it->HasNext()) {
+  while (!it->End()) {
     document->Add(it->word(), it->type());
     it->Next();
   }
@@ -227,7 +227,7 @@ Keyphrase::Iterator::~Iterator() {
   impl_ = NULL;
 }
 
-bool Keyphrase::Iterator::HasNext() { return impl_->HasNext(); }
+bool Keyphrase::Iterator::End() { return impl_->End(); }
 void Keyphrase::Iterator::Next() { impl_->Next(); }
 const char *Keyphrase::Iterator::phrase() { return impl_->phrase(); }
 double Keyphrase::Iterator::weight() { return impl_->weight(); }

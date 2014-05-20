@@ -83,9 +83,9 @@ int milkcat_parser_iterator_type(milkcat_parser_iterator_t it) {
   return iterator->type();   
 }
 
-int milkcat_parser_iterator_has_next(milkcat_parser_iterator_t it) {
+int milkcat_parser_iterator_end(milkcat_parser_iterator_t it) {
   Parser::Iterator *iterator = reinterpret_cast<Parser::Iterator *>(it);
-  return iterator->HasNext();  
+  return iterator->End();  
 }
 
 void milkcat_parser_iterator_next(milkcat_parser_iterator_t it) {
