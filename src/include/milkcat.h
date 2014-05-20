@@ -25,7 +25,6 @@
 //
 
 
-
 #ifndef MILKCAT_H_
 #define MILKCAT_H_
 
@@ -62,6 +61,10 @@ class Model {
 
 // ---------------------------- Parser ---------------------------------------
 
+// Parser is the word segmenter and part-of-speech tagger class. Use 'Parse' to
+// parse the text and it returns an Parser::Iterator to iterate each word and
+// its part-of-speech tag. After iterating, you should use Parser::Release to
+// release the iterator
 class Parser {
  public:
   class Impl;
@@ -249,7 +252,7 @@ class Newword {
   Newword();
 };
 
-// Iterator is an iterator to the new words extracted by Newword.
+// An iterator to the new words extracted by Newword.
 class Newword::Iterator {
  public:
   class Impl;

@@ -5,10 +5,11 @@ AM_CXXFLAGS = -I$(top_srcdir)/src -DMODEL_PATH=\"$(pkgdatadir)/\" -fno-rtti \
 
 ACLOCAL_AMFLAGS = -I m4
 
-include_HEADERS = include/milkcat.h
+include_HEADERS = include/milkcat.h include/milkcat-c.h
 
 lib_LTLIBRARIES = libmilkcat.la
 libmilkcat_la_LIBADD = -lpthread
+libmilkcat_la_LDFLAGS = -version-info 0:3:0
 libmilkcat_la_SOURCES = common/darts.h \
                         common/get_vocabulary.h \
                         common/get_vocabulary.cc \
@@ -18,6 +19,7 @@ libmilkcat_la_SOURCES = common/darts.h \
                         common/trie_tree.cc \
                         common/trie_tree.h \
                         include/milkcat.h \
+                        include/milkcat-c.h \
                         keyphrase/document.cc \
                         keyphrase/document.h \
                         keyphrase/libkeyphrase.cc \
@@ -48,6 +50,7 @@ libmilkcat_la_SOURCES = common/darts.h \
                         milkcat/instance_data.h \
                         milkcat/libmilkcat.cc \
                         milkcat/libmilkcat.h \
+                        milkcat/libmilkcat-c.cc \
                         milkcat/milkcat_config.h \
                         milkcat/mixed_segmenter.cc \
                         milkcat/mixed_segmenter.h \
@@ -92,3 +95,9 @@ libmilkcat_la_SOURCES = common/darts.h \
                         nekoneko/maxent_classifier.h \
                         nekoneko/mutual_information.cc \
                         nekoneko/utf8.h
+
+TESTS = milkcat_c_api_test
+check_PROGRAMS = milkcat_c_api_test
+milkcat_c_api_test_SOURCES = test/milkcat_c_api_test.c
+milkcat_c_api_test_CFLAGS = -DMODEL_DIR=\"$(top_srcdir)/data/\"
+milkcat_c_api_test_LDADD = libmilkcat.la

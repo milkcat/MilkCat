@@ -78,7 +78,7 @@ class Document {
     return inverted_index_[word].size();
   }
 
-  const char *word_str(int word) const { 
+  const char *WordString(int word) const { 
     return string_table_.GetStringById(word);
   }
 
