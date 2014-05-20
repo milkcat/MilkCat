@@ -24,8 +24,6 @@
 // phrase_ranker.cc --- Created at 2014-04-04
 //
 
-// #define ENABLE_LOG
-
 #include "keyphrase/phrase_ranker.h"
 
 #include <math.h>
@@ -34,6 +32,7 @@
 #include "common/model_factory.h"
 #include "keyphrase/string_value.h"
 #include "keyphrase/phrase.h"
+#include "utils/log.h"
 
 namespace milkcat {
 
@@ -89,9 +88,7 @@ void PhraseRanker::CalcScore(const Document *document,
  
     tfidf_sum = 0.0;
     for (int i = 0; i < word_num; ++i) {
-      if (!idf_model_->Get(phrase->WordString(i), &idf))
-        idf = kDefaultIDF;
-
+      if (!idf_model_->Get(phrase->WordString(i), &idf)) idf = kDefaultIDF;
       tfidf_sum += phrase->tf() * (idf + 2.0 * std::max(0, word_num - 1));
     }
 

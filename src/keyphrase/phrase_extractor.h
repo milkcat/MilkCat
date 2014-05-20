@@ -61,13 +61,7 @@ class PhraseExtractor {
 
   // This structure represent a candidate of phrase. It stores the words
   // contained by this phrase and the phrase's index in document
-  struct PhraseCandidate {
-    // Words of this phrase
-    std::vector<int> words;
-
-    // The index for last word of phrase
-    std::vector<int> index;
-  };
+  class PhraseCandidate;
 
   const Document *document_;
   std::vector<PhraseCandidate *> from_set_;
@@ -75,11 +69,7 @@ class PhraseExtractor {
   std::vector<Phrase *> *phrases_;
 
   utils::Pool<PhraseCandidate> candidate_pool_;
-
-  // PhraseCandidateToString gets the string of an phrase_candidate. Just for
-  // debugging
-  std::string PhraseCandidateToString(const PhraseCandidate &phrase_candidate);
-
+  
   // Calculate the major term id and its term frequency as well as adjacent
   // entropy from an unordered_map contained term frequency data
   inline void CalcAdjacent(const utils::unordered_map<int, int> &term_freq,
@@ -115,6 +105,35 @@ class PhraseExtractor {
   // from_set_ then release it and put the phrases to phrases and put candidate
   // of phrases into to_set_
   void DoIteration(utils::Pool<Phrase> *phrase_pool);
+};
+
+class PhraseExtractor::PhraseCandidate {
+ public:
+  // Clears the word and the index of the phrase candidate
+  void Clear();
+
+  // Initialize the PhraseCandidate from another PhraseCandidate and the next
+  // word
+  void FromPhraseCandidateAndWord(
+      const Document *document,
+      const PhraseCandidate *phrase_candidate,
+      int word);
+
+  // Initialize the PhraseCandidate from an index and the first word
+  void FromIndexAndWord(const std::vector<int> &index, int word);
+
+  // Returns the string of the PhraseCandidate
+  std::string PhraseString(const Document *ducument);
+
+  const std::vector<int> &index() { return index_; }
+  const std::vector<int> &phrase_words() { return phrase_words_; }
+
+ private:
+  // Words of this phrase
+  std::vector<int> phrase_words_;
+
+  // The index for last word of phrase
+  std::vector<int> index_;
 };
 
 }  // namespace milkcat

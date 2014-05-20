@@ -60,7 +60,7 @@ class Phrase {
   const char *PhraseString() {
     if (phrase_string_.size() == 0) {
       for (int i = 0; i < words_.size(); ++i)
-        phrase_string_ += document_->word_str(words_[i]);
+        phrase_string_ += document_->WordString(words_[i]);
     }
 
     return phrase_string_.c_str();
@@ -71,7 +71,7 @@ class Phrase {
     assert(index < word_count());
     
     int word = words_[index];
-    return document_->word_str(word);
+    return document_->WordString(word);
   }
 
   // Number of words in this phrase

@@ -39,16 +39,48 @@ namespace milkcat {
 const double PhraseExtractor::kShiftThreshold = 2.0;
 const double PhraseExtractor::kBoundaryThreshold = 0.5;
 
-std::string PhraseExtractor::PhraseCandidateToString(
-    const PhraseCandidate &phrase_candidate) {
-  std::string text;
-  const std::vector<int> &words = phrase_candidate.words;
+void PhraseExtractor::PhraseCandidate::Clear() {
+  phrase_words_.clear();
+  index_.clear();
+}
+
+void PhraseExtractor::PhraseCandidate::FromPhraseCandidateAndWord(
+    const Document *document,
+    const PhraseCandidate *from,
+    int word) {
+  Clear();
+  phrase_words_ = from->phrase_words_;
+  phrase_words_.push_back(word);
+
+  // OK, make the new inversed_index
   for (std::vector<int>::const_iterator
-       it = words.begin(); it != words.end(); ++it) {
-    text += document_->word_str(*it);
+       it = from->index_.begin(); it != from->index_.end(); ++it) {
+    int idx = *it;
+
+    // If the word is not the end of document
+    if (idx < document->size() - 1) {
+      if (document->word(idx + 1) == word) index_.push_back(idx + 1);
+    }
+  }
+}
+
+void PhraseExtractor::PhraseCandidate::FromIndexAndWord(
+    const std::vector<int> &index,
+    int word) {
+  Clear();
+  phrase_words_.push_back(word);
+  index_ = index;
+}
+
+std::string PhraseExtractor::PhraseCandidate::PhraseString(
+    const Document *document) {
+  std::string phrase_string;
+  for (std::vector<int>::iterator
+       it = phrase_words_.begin(); it != phrase_words_.end(); ++it) {
+    phrase_string += document->WordString(*it);
   }
 
-  return text;
+  return phrase_string;
 }
 
 inline void PhraseExtractor::CalcAdjacent(
@@ -125,10 +157,7 @@ void PhraseExtractor::PhraseBeginSet() {
 
       if (IsBoundary(adjacent)) {
         PhraseCandidate *phrase_candidate = candidate_pool_.Alloc();
-        phrase_candidate->words.clear();
-        phrase_candidate->words.push_back(word);
-        phrase_candidate->index.clear();
-        phrase_candidate->index = index;
+        phrase_candidate->FromIndexAndWord(index, word);
         from_set_.push_back(phrase_candidate);
       }
     }
@@ -142,10 +171,10 @@ void PhraseExtractor::DoIteration(utils::Pool<Phrase> *phrase_pool) {
     PhraseCandidate *from_phrase = from_set_.back();
     from_set_.pop_back();
 
-    LOG("Check phrase %s", PhraseCandidateToString(*from_phrase).c_str());
+    LOG("Check phrase %s", from_phrase->PhraseString().c_str());
 
     // Get the right adjacent data and check if it is the boundary of phrase
-    RightAdjacent(from_phrase->index, &adjacent);
+    RightAdjacent(from_phrase->index(), &adjacent);
 
     LOG("Right for %s --- major term: %s, cond: %lf",
         document_->word_str(from_phrase->words.back()),
@@ -161,35 +190,26 @@ void PhraseExtractor::DoIteration(utils::Pool<Phrase> *phrase_pool) {
         IsPhrase(adjacent)) {
       // Create the new candidate of phrase
       PhraseCandidate *to_phrase = candidate_pool_.Alloc();
-      to_phrase->words = from_phrase->words;
-      to_phrase->words.push_back(adjacent.major_word);
-      to_phrase->index.clear();
-
-      // OK, make the new inversed_index
-      for (int i = 0; i < from_phrase->index.size(); ++i) {
-        int idx = from_phrase->index[i];
-        if (idx < document_->size() - 1) {
-          if (document_->word(idx + 1) == adjacent.major_word)
-            to_phrase->index.push_back(idx + 1);
-        }
-      }
+      to_phrase->FromPhraseCandidateAndWord(document_,
+                                            from_phrase,
+                                            adjacent.major_word);
       to_set_.push_back(to_phrase);    
     } 
 
     if (IsBoundary(adjacent)) {
       // Recalculate the Left Adjacent Entropy
-      LeftAdjacent(from_phrase->index,
-                   from_phrase->words.size() - 1,
+      LeftAdjacent(from_phrase->index(),
+                   from_phrase->phrase_words().size() - 1,
                    &adjacent);
  
-      LOG("Find phrase %s", PhraseCandidateToString(*from_phrase).c_str());
+      LOG("Find phrase %s", from_phrase->PhraseString().c_str());
       // Ensure adjacent entropy of every phrase larger than kBoundaryThreshold
-      if (from_phrase->index.size() > 1 && 
+      if (from_phrase->index().size() > 1 && 
           adjacent.entropy > kBoundaryThreshold) {
         Phrase *phrase = phrase_pool->Alloc();
         phrase->set_document(document_);
-        phrase->set_words(from_phrase->words);
-        double tf = from_phrase->index.size() / (1e-38 + document_->size());
+        phrase->set_words(from_phrase->phrase_words());
+        double tf = from_phrase->index().size() / (1e-38 + document_->size());
         phrase->set_tf(tf);
         phrases_->push_back(phrase);
         LOG("Phrase added %s", phrase->PhraseString());

@@ -27,9 +27,10 @@
 #ifndef SRC_UTILS_LOG_H_
 #define SRC_UTILS_LOG_H_
 
+#include <stdint.h>
+#include <stdio.h>
 #include <sstream>
 #include <string>
-#include <stdint.h>
 
 namespace milkcat {
 
@@ -46,7 +47,7 @@ class LogUtil {
   LogUtil &operator<<(unsigned long val) { stream_ << val; return *this; }
   LogUtil &operator<<(float val) { stream_ << val; return *this; }
   LogUtil &operator<<(double val) { stream_ << val; return *this; }
-  LogUtil &operator<<(const char *val) {\
+  LogUtil &operator<<(const char *val) {
     stream_ << val;
     return *this;
   }
