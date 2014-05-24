@@ -24,8 +24,6 @@
 // phrase_ranker.cc --- Created at 2014-04-04
 //
 
-#define ENABLE_LOG
-
 #include "keyphrase/phrase_ranker.h"
 
 #include <math.h>
