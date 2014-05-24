@@ -127,10 +127,6 @@ void OutOfVocabularyWordRecognition::Recognize(
   for (int i = 0; i < in_term_instance->size(); ++i) {
     term_token_number = in_term_instance->token_number_at(i);
 
-    LOG("OOV Property for '%s' is: %d", 
-        in_term_instance->term_text_at(i),
-        oov_properties_[i]);
-
     if (oov_properties_[i] == kDoRecognize) {
       oov_token_num++;
 
@@ -193,7 +189,6 @@ void OutOfVocabularyWordRecognition::RecognizeRange(
     TokenInstance *token_instance,
     int begin,
     int end) {
-  LOG("RecognizeRange [%d, %d)", begin, end);
   crf_segmenter_->SegmentRange(term_instance_, token_instance, begin, end);
 }
 

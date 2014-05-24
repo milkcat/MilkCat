@@ -35,6 +35,7 @@
 #include "milkcat/libmilkcat.h"
 #include "nekoneko/maxent_classifier.h"
 #include "nekoneko/utf8.h"
+#include "utils/log.h"
 #include "utils/readable_file.h"
 #include "utils/utils.h"
 
@@ -127,7 +128,7 @@ void GetCandidate(
         if (feature.size() == 0) continue;
         const char *y = classifier->Classify(feature);
 
-        LOG("Person name: %s", y);
+        LOG("Person name: " << y);
 
         // And if it is not a name
         if (strcmp(y, "F") == 0) {

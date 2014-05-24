@@ -32,6 +32,7 @@
 #include <vector>
 #include "keyphrase/string_table.h"
 #include "keyphrase/document.h"
+#include "utils/log.h"
 #include "utils/utils.h"
 
 namespace milkcat {
@@ -150,11 +151,6 @@ void PhraseExtractor::PhraseBeginSet() {
     if (document_->tf(word) > 1 && document_->is_stopword(word) == false) {
       LeftAdjacent(index, 0, &adjacent);
 
-      LOG("Left for %s --- major term: %s, cond: %lf",
-          document_->word_str(word),
-          document_->word_str(adjacent.major_word),
-          adjacent.entropy);
-
       if (IsBoundary(adjacent)) {
         PhraseCandidate *phrase_candidate = candidate_pool_.Alloc();
         phrase_candidate->FromIndexAndWord(index, word);
@@ -171,19 +167,8 @@ void PhraseExtractor::DoIteration(utils::Pool<Phrase> *phrase_pool) {
     PhraseCandidate *from_phrase = from_set_.back();
     from_set_.pop_back();
 
-    LOG("Check phrase %s", from_phrase->PhraseString().c_str());
-
     // Get the right adjacent data and check if it is the boundary of phrase
     RightAdjacent(from_phrase->index(), &adjacent);
-
-    LOG("Right for %s --- major term: %s, cond: %lf",
-        document_->word_str(from_phrase->words.back()),
-        document_->word_str(adjacent.major_word),
-        adjacent.entropy);
-
-    LOG("Is stopword %s: %d",
-        document_->word_str(adjacent.major_word),
-        document_->is_stopword(adjacent.major_word));
 
     if (!document_->is_stopword(adjacent.major_word) &&
         document_->tf(adjacent.major_word) > 2 &&
@@ -202,7 +187,6 @@ void PhraseExtractor::DoIteration(utils::Pool<Phrase> *phrase_pool) {
                    from_phrase->phrase_words().size() - 1,
                    &adjacent);
  
-      LOG("Find phrase %s", from_phrase->PhraseString().c_str());
       // Ensure adjacent entropy of every phrase larger than kBoundaryThreshold
       if (from_phrase->index().size() > 1 && 
           adjacent.entropy > kBoundaryThreshold) {
@@ -212,7 +196,6 @@ void PhraseExtractor::DoIteration(utils::Pool<Phrase> *phrase_pool) {
         double tf = from_phrase->index().size() / (1e-38 + document_->size());
         phrase->set_tf(tf);
         phrases_->push_back(phrase);
-        LOG("Phrase added %s", phrase->PhraseString());
       }
     }
   }
@@ -233,7 +216,6 @@ void PhraseExtractor::Extract(const Document *document,
 
   // Get the phrase candidates' begin set 
   PhraseBeginSet();
-  LOG("Begin set size: %d", from_set_.size());
 
   // Extract the phrases until the size of from_set reaches 0
   while (from_set_.size() != 0) {

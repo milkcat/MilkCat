@@ -29,8 +29,48 @@
 
 #include <stdint.h>
 #include <stdio.h>
+#include <string.h>
 #include <sstream>
 #include <string>
+
+inline const char *_filename(const char *path) {
+  int len = strlen(path);
+  const char *p = path + len;
+
+  while (*(p - 1) != '/' && *(p - 1) != '\\' && p != path) p--;
+  return p;
+}
+
+#ifdef ENABLE_LOG
+#define LOG(x) \
+        puts((LogUtil() << "[" << _filename(__FILE__) << __LINE__ << "] " \
+                        << x).GetString().c_str())
+#else
+#define LOG(x)
+#endif
+
+#ifdef ENABLE_LOG
+#define LOG_IF(cond, x) if (cond) \
+        puts((LogUtil() << "[" << _filename(__FILE__) << __LINE__ << "] " \
+                        << x).GetString().c_str())
+#else
+#define LOG_IF(...)
+#endif
+
+#ifndef NOASSERT
+#define ASSERT(cond, message) \
+        if (!(cond)) { \
+          fprintf(stderr,  \
+                  "[%s:%d] ASSERT failed: ", \
+                  _filename(__FILE__), \
+                  __LINE__); \
+          fputs(message, stderr); \
+          fputs("\n", stderr); \
+          exit(1); \
+        }
+#else
+#define ASSERT(cond, message)
+#endif  // NOASSERT
 
 namespace milkcat {
 

@@ -35,6 +35,7 @@
 #include "utils/readable_file.h"
 #include "utils/writable_file.h"
 #include "utils/status.h"
+#include "utils/log.h"
 #include "utils/utils.h"
 
 namespace milkcat {
@@ -225,7 +226,7 @@ const char *MaxentClassifier::Classify(
     if (x != MaxentModel::kFeatureIdNone) {
       // If this feature exists
       for (int y = 0; y < y_size_; ++y) {
-        LOG("Fearure:%s Cost:%lf", it->c_str(), model_->cost(y, x));
+        LOG("Fearure:" << it->c_str() << " " << "Cost:" << model_->cost(y, x));
         y_cost_[y] += model_->cost(y, x);
       }
     }

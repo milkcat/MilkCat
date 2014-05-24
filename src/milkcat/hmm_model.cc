@@ -49,8 +49,9 @@
 #include <string>
 #include "common/milkcat_config.h"
 #include "common/trie_tree.h"
-#include "utils/utils.h"
+#include "utils/log.h"
 #include "utils/readable_file.h"
+#include "utils/utils.h"
 #include "utils/writable_file.h"
 
 namespace milkcat {
@@ -70,7 +71,7 @@ HMMModel *HMMModel::New(const char *model_path, Status *status) {
   int32_t magic_number = 0;
   if (status->ok()) fd->ReadValue<int32_t>(&magic_number, status);
 
-  LOG_IF(status->ok(), "Magic number is %d\n", magic_number);
+  LOG_IF(status->ok(), "Magic number is " << magic_number);
 
   if (magic_number != kHmmModelMagicNumber) 
     *status = Status::Corruption(model_path);
@@ -82,8 +83,8 @@ HMMModel *HMMModel::New(const char *model_path, Status *status) {
   int32_t emit_num = 0;
   if (status->ok()) fd->ReadValue<int32_t>(&emit_num, status);
 
-  LOG_IF(status->ok(), "Tag number is %d\n", tag_num);
-  LOG_IF(status->ok(), "Emit number is %d\n", emit_num);
+  LOG_IF(status->ok(), "Tag number is " << tag_num);
+  LOG_IF(status->ok(), "Emit number is " << emit_num);
 
   self->tag_str_ = reinterpret_cast<char (*)[kTagStrLenMax]>(
       new char[kTagStrLenMax * tag_num]);
@@ -115,7 +116,7 @@ HMMModel *HMMModel::New(const char *model_path, Status *status) {
     self->emits_[emit_record.term_id] = emit_node;
   }
 
-  LOG_IF(status->ok(), "File size: %ld, Tell: %ld\n", fd->Size(), fd->Tell());
+  LOG_IF(status->ok(), "File size: " << fd->Size() << ", Tell: " << fd->Tell());
 
   if (status->ok() && fd->Tell() != fd->Size())
     *status = Status::Corruption(model_path);
@@ -355,7 +356,7 @@ void HMMModel::Save(const char *model_path, Status *status) {
     }
   }
 
-  LOG_IF(status->ok(), "%d emit record writted\n", emit_num);
+  LOG_IF(status->ok(), emit_num << "emit record writted");
 
   delete fd;
 }

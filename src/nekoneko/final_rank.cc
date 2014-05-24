@@ -27,6 +27,7 @@
 #include <string>
 #include <vector>
 #include <algorithm>
+#include "utils/log.h"
 #include "utils/utils.h"
 
 namespace milkcat {
@@ -70,14 +71,14 @@ void FinalRank(
   int n_remove = adjent_vec.size() * remove_ratio;
   adjent_vec.erase(adjent_vec.end() - n_remove, adjent_vec.end());
   double max_value = adjent_vec[0].second;
-  LOG("Adjent Max: %lf", max_value);
+  LOG("Adjent Max: " << max_value);
   for (int i = 0; i < adjent_vec.size(); ++i) 
     adjent_vec[i].second /= max_value;
 
   n_remove = mutinf_vec.size() * remove_ratio;
   mutinf_vec.erase(mutinf_vec.end() - n_remove, mutinf_vec.end());
   max_value = mutinf_vec[0].second;
-  LOG("MI Max: %lf", max_value);
+  LOG("MI Max: " << max_value);
   for (int i = 0; i < mutinf_vec.size(); ++i) 
     mutinf_vec[i].second /= max_value;
 
@@ -93,11 +94,10 @@ void FinalRank(
     if (mutinf_new.find(it->first) != mutinf_new.end()) {
       final[it->first] = alpha * it->second +
                          (1 - alpha) * mutinf_new[it->first];
-      LOG("Word:%s Weight:%lf Adjent:%lf, MI: %lf",
-          it->first.c_str(),
-          final[it->first],
-          it->second,
-          mutinf_new[it->first]);
+      LOG("Word:" << it->first.c_str() << ", " <<
+          "Weight:" << final[it->first] << ", " << 
+          "Adjent:" << it->second << ", " <<
+          "MI: " << mutinf_new[it->first]);
     }
   }
 

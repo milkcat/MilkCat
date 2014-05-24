@@ -24,6 +24,8 @@
 // phrase_ranker.cc --- Created at 2014-04-04
 //
 
+#define ENABLE_LOG
+
 #include "keyphrase/phrase_ranker.h"
 
 #include <math.h>
@@ -89,6 +91,7 @@ void PhraseRanker::CalcScore(const Document *document,
     tfidf_sum = 0.0;
     for (int i = 0; i < word_num; ++i) {
       if (!idf_model_->Get(phrase->WordString(i), &idf)) idf = kDefaultIDF;
+      LOG("IDF for " << phrase->WordString(i) << " is " << idf);
       tfidf_sum += phrase->tf() * (idf + 2.0 * std::max(0, word_num - 1));
     }
 

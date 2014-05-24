@@ -36,6 +36,7 @@
 #include "milkcat/libmilkcat.h"
 #include "milkcat/part_of_speech_tag_instance.h"
 #include "milkcat/term_instance.h"
+#include "utils/log.h"
 #include "utils/utils.h"
 
 namespace milkcat {
@@ -126,9 +127,8 @@ HMMModel::Emit *CRFEmitGetter::GetEmits(TermInstance *term_instance,
       int hmm_tag = crf_to_hmm_tag_[crf_tag];
       if (hmm_tag < 0) continue;
 
-      LOG("Add emit %s cost(T|W)=%.5lf cost(T)=%.5lf\n",
-          hmm_model_->tag_str(hmm_tag),
-          -log(probabilities_[crf_tag]),
+      LOG("Add emit " << hmm_model_->tag_str(hmm_tag) << " cost(T|W)=" <<
+          -log(probabilities_[crf_tag]) << " cost(T)=%.5lf\n" <<
           hmm_model_->tag_cost(hmm_tag));
 
       p = AllocEmit();
@@ -414,16 +414,12 @@ void HMMPartOfSpeechTagger::BuildBeam(int position) {
         min_left_node = left_node;
       }
 
-      LOG("%s %s %s %s "
-          "total_cost = %lf cost = %lf trans_cost = %lf emit_cost = %lf\n",
-          term_instance_->term_text_at(position),
-          model_->tag_str(leftleft_tag), 
-          model_->tag_str(left_tag),
-          model_->tag_str(emit->tag),
-          cost,
-          trans_cost + emit_cost,
-          trans_cost,
-          emit_cost);
+      LOG(term_instance_->term_text_at(position) << " " <<
+          model_->tag_str(leftleft_tag) << " " <<
+          model_->tag_str(left_tag) << " " <<
+          model_->tag_str(emit->tag) << " " << "total_cost = " <<
+          cost << " cost = " << trans_cost + emit_cost << " trans_cost = " <<
+          trans_cost << " emit_cost = " << emit_cost);
     }
 
     Node *node = node_pool_->Alloc();
