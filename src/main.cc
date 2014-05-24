@@ -274,7 +274,7 @@ int KeyphraseMain(int argc, char **argv) {
 
   if (argc != 3) {
     PrintUsage();
-    status = Status::Info("Illegal argument");
+    return 1;
   }
  
   Model *model = NULL;
@@ -347,6 +347,11 @@ void DisplayLog(const char *str) {
 }
 
 int NekonkeoMain(int argc, char **argv) {
+  if (argc != 3) {
+    PrintUsage();
+    return 1;
+  }
+
   Newword *nw = Newword::New();
   nw->set_log_function(DisplayLog);
   nw->set_progress_function(DisplayProgress);
@@ -365,13 +370,13 @@ int NekonkeoMain(int argc, char **argv) {
 
 
 int main(int argc, char **argv) {
-  const char *first_arg = argv[1];
-
-  if (strcmp(first_arg, "keyphrase") == 0) {
+  if (argc == 1) {
+    PrintUsage();
+  } else if (strcmp(argv[1], "keyphrase") == 0) {
     return KeyphraseMain(argc, argv);
-  } else if (strcmp(first_arg, "newword") == 0) {
+  } else if (strcmp(argv[1], "newword") == 0) {
     return NekonkeoMain(argc, argv);
+  } else {
+    return ParserMain(argc, argv);
   }
-
-  return ParserMain(argc, argv);
 }
