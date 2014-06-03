@@ -30,10 +30,10 @@
 #include <math.h>
 #include <vector>
 #include <string>
+#include "common/maxent_classifier.h"
 #include "common/milkcat_config.h"
 #include "common/model_factory.h"
 #include "milkcat/libmilkcat.h"
-#include "nekoneko/maxent_classifier.h"
 #include "nekoneko/utf8.h"
 #include "utils/log.h"
 #include "utils/readable_file.h"
@@ -116,6 +116,7 @@ void GetCandidate(
 
   int person_name = 0;
   std::vector<std::string> feature;
+  std::vector<const char *> feature_array;
   typedef utils::unordered_map<std::string, int>::const_iterator voc_citertype;
   if (status->ok()) {
     for (voc_citertype it = crf_vocab.begin(); it != crf_vocab.end(); ++it) {
@@ -126,7 +127,13 @@ void GetCandidate(
 
         // Filter one character word
         if (feature.size() == 0) continue;
-        const char *y = classifier->Classify(feature);
+        feature_array.clear();
+        for (std::vector<std::string>::iterator
+             it = feature.begin(); it != feature.end(); ++it) {
+          feature_array.push_back(it->c_str());
+        }
+        int yid = classifier->Classify(&feature_array[0], feature_array.size());
+        const char *y = classifier->yname(yid);
 
         LOG("Person name: " << y);
 

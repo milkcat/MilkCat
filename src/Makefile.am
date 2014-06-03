@@ -13,6 +13,8 @@ libmilkcat_la_LDFLAGS = -version-info 0:3:0
 libmilkcat_la_SOURCES = common/darts.h \
                         common/get_vocabulary.h \
                         common/get_vocabulary.cc \
+                        common/maxent_classifier.cc \
+                        common/maxent_classifier.h \
                         common/milkcat_config.h \
                         common/model_factory.cc \
                         common/model_factory.h \
@@ -41,6 +43,10 @@ libmilkcat_la_SOURCES = common/darts.h \
                         milkcat/crf_segmenter.h \
                         milkcat/crf_tagger.cc \
                         milkcat/crf_tagger.h \
+                        milkcat/dependency_instance.h \
+                        milkcat/dependency_parser.h \
+                        milkcat/dependency_parser.cc \
+                        milkcat/dependency_parser_features.cc \
                         milkcat/feature_extractor.h \
                         milkcat/hmm_model.cc \
                         milkcat/hmm_model.h \
@@ -75,6 +81,7 @@ libmilkcat_la_SOURCES = common/darts.h \
                         utils/readable_file.cc \
                         utils/readable_file.h \
                         utils/status.h \
+                        utils/string_builder.h \
                         utils/strlcpy.cc \
                         utils/utils.cc \
                         utils/utils.h \
@@ -91,8 +98,6 @@ libmilkcat_la_SOURCES = common/darts.h \
                         nekoneko/get_crf_vocabulary.cc \
                         nekoneko/libnekoneko.cc \
                         nekoneko/libnekoneko.h \
-                        nekoneko/maxent_classifier.cc \
-                        nekoneko/maxent_classifier.h \
                         nekoneko/mutual_information.cc \
                         nekoneko/utf8.h
 

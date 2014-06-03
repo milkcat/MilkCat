@@ -24,7 +24,7 @@
 // maxent_classifier.cc --- Created at 2014-02-01
 //
 
-#include "nekoneko/maxent_classifier.h"
+#include "common/maxent_classifier.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -204,7 +204,7 @@ MaxentModel::~MaxentModel() {
   index_data_ = NULL;
 }
 
-MaxentClassifier::MaxentClassifier(MaxentModel *model):
+MaxentClassifier::MaxentClassifier(const MaxentModel *model):
     model_(model),
     y_cost_(new double[model->ysize()]),
     y_size_(model->ysize()) {
@@ -215,19 +215,17 @@ MaxentClassifier::~MaxentClassifier() {
   y_cost_ = NULL;
 }
 
-const char *MaxentClassifier::Classify(
-    const std::vector<std::string> &feature_list) const {
+int MaxentClassifier::Classify(const char **x, int xsize) const {
   // Clear the y_cost_ array
   for (int i = 0; i < y_size_; ++i) y_cost_[i] = 0.0;
 
-  for (std::vector<std::string>::const_iterator
-       it = feature_list.begin(); it != feature_list.end(); ++it) {
-    int x = model_->feature_id(it->c_str());
-    if (x != MaxentModel::kFeatureIdNone) {
+  for (int i = 0; i < xsize; ++i) {
+    int xid = model_->feature_id(x[i]);
+    if (xid != MaxentModel::kFeatureIdNone) {
       // If this feature exists
-      for (int y = 0; y < y_size_; ++y) {
-        LOG("Fearure:" << it->c_str() << " " << "Cost:" << model_->cost(y, x));
-        y_cost_[y] += model_->cost(y, x);
+      for (int yid = 0; yid < y_size_; ++yid) {
+        LOG("Fearure:" << x[i] << " " << "Cost:" << model_->cost(yid, xid));
+        y_cost_[yid] += model_->cost(yid, xid);
       }
     }
   }
@@ -235,7 +233,7 @@ const char *MaxentClassifier::Classify(
   // To find the maximum cost of y
   double *maximum_y = std::max_element(y_cost_, y_cost_ + y_size_);
   int maximum_yid = maximum_y - y_cost_;
-  return model_->yname(maximum_yid);
+  return maximum_yid;
 }
 
 }  // namespace milkcat

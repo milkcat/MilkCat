@@ -21,54 +21,49 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 //
-// utils.h --- Created at 2013-08-10
+// string_builder.h --- Created at 2014-06-03
 //
 
-
-
-#ifndef SRC_UTILS_UTILS_H_
-#define SRC_UTILS_UTILS_H_
-
 #include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include "config.h"
-#include "utils/status.h"
-
-#if defined(HAVE_UNORDERED_MAP)
-#include <unordered_map>
-#elif defined(HAVE_TR1_UNORDERED_MAP)
-#include <tr1/unordered_map>
-#endif
+#include "utils/log.h"
+#include "utils/utils.h"
 
 namespace milkcat {
 namespace utils {
 
-/*
- * Copy src to string dst of size siz.  At most siz-1 characters
- * will be copied.  Always NUL terminates (unless siz == 0).
- * Returns strlen(src); if retval >= siz, truncation occurred.
- */
-size_t strlcpy(char *dst, const char *src, size_t siz);
-char *trim(char *str);
+// StringBuilder builds a string with a limited size. It writes to the buffer
+// directly instead of use its own buffer.
+class StringBuilder {
+ public:
+  StringBuilder(): buffer_(NULL), capability_(0), size_(0) {
+  }
 
-// Sleep for seconds
-void Sleep(double seconds);
+  // Changes the buffer writes to
+  void ChangeBuffer(char *buffer, int capability) {
+    buffer_ = buffer;
+    capability_ = capability;
+    size_ = 0;
+  }
 
-// Get number of processors/cores in current machine
-int HardwareConcurrency();
+  // Append functions
+  StringBuilder &operator <<(const char *str) {
+    int len = strlcpy(buffer_ + size_, str, capability_ - size_);
+    size_ += len;
+    return *this;
+  }
+  StringBuilder &operator <<(char ch) {
+    if (capability_ > size_ + 1) {
+      buffer_[size_++] = ch;
+      buffer_[size_++] = '\0';
+    }
+    return *this;
+  }
 
-#if defined(HAVE_UNORDERED_MAP)
-using std::unordered_map;
-#elif defined(HAVE_TR1_UNORDERED_MAP)
-using std::tr1::unordered_map;
-#endif
+ private:
+  char *buffer_;
+  int capability_;
+  int size_;
+};
 
-}  // namespace utils
+}  // utils
 }  // namespace milkcat
-
-#define DISALLOW_COPY_AND_ASSIGN(TypeName) \
-        TypeName(const TypeName&); \
-        void operator=(const TypeName&)
-
-#endif  // SRC_UTILS_UTILS_H_

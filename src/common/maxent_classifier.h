@@ -24,8 +24,8 @@
 // maxent_classifier.h --- Created at 2014-01-31
 //
 
-#ifndef SRC_NEKONEKO_MAXENT_CLASSIFIER_H_
-#define SRC_NEKONEKO_MAXENT_CLASSIFIER_H_
+#ifndef SRC_COMMON_MAXENT_CLASSIFIER_H_
+#define SRC_COMMON_MAXENT_CLASSIFIER_H_
 
 #include <string>
 #include <vector>
@@ -50,7 +50,7 @@ class MaxentModel {
   void Save(const char *model_path, Status *status);
 
   // Get the cost of a feature with its y-tag in maximum entropy model
-  float cost(int yid, int feature_id) {
+  float cost(int yid, int feature_id) const {
     return cost_[feature_id * ysize_ + yid];
   }
 
@@ -83,21 +83,35 @@ class MaxentModel {
   float *cost_;
 };
 
+// MaxentClassifier classifies the data represented by a list of feature
+// strings.
 class MaxentClassifier {
  public:
-  explicit MaxentClassifier(MaxentModel *model);
+  explicit MaxentClassifier(const MaxentModel *model);
   ~MaxentClassifier();
 
-  // Classify an instance of features specified by feature_list and return the
-  // y-tag for the instance
-  const char *Classify(const std::vector<std::string> &feature_list) const;
+  // Classify an instance of features specified by x.
+  // @param x is the array of the features string.
+  // @param xsize is the number of feature strings in x
+  int Classify(const char **x, int xsize) const;
+
+  // Get the number of y-tags in the model
+  int ysize() const { return model_->ysize(); }
+
+  // Get the cost of each y-tag in the last classification
+  int ycost(int y) const { return y_cost_[y]; }
+
+  // Get the string value of the y tag.
+  // @param y the id of result tag
+  // @return the string value of the y tag
+  const char *yname(int y) const { return model_->yname(y); }
 
  private:
-  MaxentModel *model_;
+  const MaxentModel *model_;
   double *y_cost_;
   int y_size_;
 };
 
 }  // namespace milkcat
 
-#endif  // SRC_NEKO_MAXENT_CLASSIFIER_H_
+#endif  // SRC_COMMON_MAXENT_CLASSIFIER_H_

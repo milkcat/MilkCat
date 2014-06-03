@@ -28,6 +28,7 @@
 #include "include/milkcat.h"
 
 #include <string>
+#include "common/maxent_classifier.h"
 #include "common/milkcat_config.h"
 #include "common/trie_tree.h"
 #include "common/static_array.h"
@@ -82,6 +83,9 @@ class Model::Impl {
 
   // Get the stopword list as an trietree index
   const TrieTree *Stopword(Status *status);
+
+  // Get the dependency model
+  const MaxentModel *DependencyModel(Status *status);
 
  private:
   std::string model_dir_path_;
