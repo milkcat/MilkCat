@@ -37,6 +37,8 @@
 #include "milkcat/bigram_segmenter.h"
 #include "milkcat/crf_part_of_speech_tagger.h"
 #include "milkcat/crf_tagger.h"
+#include "milkcat/dependency_instance.h"
+#include "milkcat/dependency_parser.h"
 #include "milkcat/hmm_part_of_speech_tagger.h"
 #include "milkcat/mixed_segmenter.h"
 #include "milkcat/out_of_vocabulary_word_recognition.h"
@@ -126,6 +128,26 @@ PartOfSpeechTagger *PartOfSpeechTaggerFactory(Model::Impl *factory,
   }
 }
 
+DependencyParser *DependencyParserFactory(Model::Impl *factory,
+                                          int parser_type,
+                                          Status *status) {
+  parser_type = kParserMask & parser_type;
+  switch (parser_type) {
+    case Parser::kMaxentParser:
+      if (status->ok()) {
+        return DependencyParser::New(factory, status);
+      } else {
+        return NULL;
+      }
+
+    case Parser::kNoParser:
+      return NULL;
+
+    default:
+      *status = Status::NotImplemented("Invalid parser type");
+      return NULL;    
+  }
+}
 
 // The global state saves the current of model and analyzer.
 // If any errors occured, global_status != Status::OK()
@@ -138,6 +160,7 @@ Parser::Iterator::Impl::Impl():
     tokenizer_(TokenizerFactory(Parser::kTextTokenizer)),
     token_instance_(new TokenInstance()),
     term_instance_(new TermInstance()),
+    dependency_instance_(new DependencyInstance()),
     part_of_speech_tag_instance_(new PartOfSpeechTagInstance()),
     sentence_length_(0),
     current_position_(0),
@@ -156,6 +179,9 @@ Parser::Iterator::Impl::~Impl() {
 
   delete part_of_speech_tag_instance_;
   part_of_speech_tag_instance_ = NULL;
+
+  delete dependency_instance_;
+  dependency_instance_ = NULL;
 
   analyzer_ = NULL;
 }
@@ -184,6 +210,13 @@ void Parser::Iterator::Impl::Next() {
         analyzer_->part_of_speech_tagger()->Tag(part_of_speech_tag_instance_,
                                                 term_instance_);
       }
+
+      // Dependency Parsing
+      if (analyzer_->dependency_parser()) {
+        analyzer_->dependency_parser()->Parse(dependency_instance_,
+                                              part_of_speech_tag_instance_,
+                                              term_instance_);
+      }
       sentence_length_ = term_instance_->size();
       current_position_ = 0;
     }
@@ -211,13 +244,17 @@ void Parser::Iterator::Next() {
 const char *Parser::Iterator::word() const {
   return impl_->word();
 }
-
 const char *Parser::Iterator::part_of_speech_tag() const {
   return impl_->part_of_speech_tag();
 }
-
 int Parser::Iterator::type() const {
   return impl_->type();
+}
+int Parser::Iterator::head_node() const {
+  return impl_->head_node();
+}
+const char *Parser::Iterator::dependency_type() const {
+  return impl_->dependency_type();
 }
 
 
@@ -225,6 +262,7 @@ int Parser::Iterator::type() const {
 
 Parser::Impl::Impl(): segmenter_(NULL),
                       part_of_speech_tagger_(NULL),
+                      dependency_parser_(NULL),
                       model_impl_(NULL),
                       own_model_(false),
                       iterator_alloced_(0) {
@@ -236,6 +274,9 @@ Parser::Impl::~Impl() {
 
   delete part_of_speech_tagger_;
   part_of_speech_tagger_ = NULL;
+
+  delete dependency_parser_;
+  dependency_parser_ = NULL;
 
   if (own_model_) delete model_impl_;
   model_impl_ = NULL;
@@ -266,6 +307,12 @@ Parser::Impl *Parser::Impl::New(Model::Impl *model_impl, int type) {
 
   if (global_status.ok())
     self->part_of_speech_tagger_ = PartOfSpeechTaggerFactory(
+        self->model_impl_,
+        type,
+        &global_status);
+
+  if (global_status.ok())
+    self->dependency_parser_ = DependencyParserFactory(
         self->model_impl_,
         type,
         &global_status);

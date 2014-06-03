@@ -38,6 +38,7 @@ const char *kCrfSegModelFile = "ctb_seg.crf";
 const char *kOovPropertyFile = "oov_property.idx";
 const char *kIdfModelFile = "tfidf.bin";
 const char *kStopwordFile = "stopword.idx";
+const char *kDepengencyFile = "ctb_dep.maxent";
 
 // ---------- Model::Impl ----------
 
@@ -53,7 +54,8 @@ Model::Impl::Impl(const char *model_dir_path):
     hmm_pos_model_(NULL),
     oov_property_(NULL),
     idf_model_(NULL),
-    stopword_(NULL) {
+    stopword_(NULL),
+    depengency_(NULL) {
 }
 
 Model::Impl::~Impl() {
@@ -89,6 +91,9 @@ Model::Impl::~Impl() {
 
   delete stopword_;
   stopword_ = NULL;
+
+  delete depengency_;
+  depengency_ = NULL;
 }
 
 const TrieTree *Model::Impl::Index(Status *status) {
@@ -271,6 +276,16 @@ const TrieTree *Model::Impl::Stopword(Status *status) {
   }
   mutex.Unlock();
   return stopword_;
+}
+
+const MaxentModel *Model::Impl::DependencyModel(Status *status) {
+  mutex.Lock();
+  if (depengency_ == NULL) {
+    std::string model_path = model_dir_path_ + kDepengencyFile;
+    depengency_ = MaxentModel::New(model_path.c_str(), status);
+  }
+  mutex.Unlock();
+  return depengency_;  
 }
 
 }  // namespace milkcat

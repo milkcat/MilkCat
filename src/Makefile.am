@@ -44,6 +44,7 @@ libmilkcat_la_SOURCES = common/darts.h \
                         milkcat/crf_tagger.cc \
                         milkcat/crf_tagger.h \
                         milkcat/dependency_instance.h \
+                        milkcat/dependency_instance.cc \
                         milkcat/dependency_parser.h \
                         milkcat/dependency_parser.cc \
                         milkcat/dependency_parser_features.cc \

@@ -47,6 +47,7 @@ struct Options {
   bool use_stdin;
   bool has_userdict;
   bool use_default_model_dir;
+  bool conll_format;
   std::string model_dir;
   std::string userdict_path;
   std::string filename;
@@ -59,7 +60,8 @@ Options::Options(): method(Parser::kDefault),
                     display_type(false),
                     use_stdin(false),
                     has_userdict(false),
-                    use_default_model_dir(true) {
+                    use_default_model_dir(true),
+                    conll_format(false) {
 }
 
 int PrintUsage() {
@@ -82,6 +84,7 @@ int PrintUsage() {
   printf("        mixed       - Use Mixed CRF and HMM segmenter and Part-Of-Speech\n");
   printf("                      tagger (Default value).\n");
   printf("        mixed_seg   - Use Mixed CRF and HMM segmenter.\n");
+  printf("        dep         - Use mixed segmenter and dependency parser.\n");
   printf("    -t           Display the type of word.\n");
   return 0;
 }
@@ -148,6 +151,9 @@ void GetArgs(int argc, char **argv, Options *options) {
         } else if (strcmp(optarg, "bigram_seg") == 0) {
           options->method = Parser::kBigramSegmenter | Parser::kNoTagger;
           options->display_tag = false;   
+        } else if (strcmp(optarg, "dep") == 0) {
+          options->method = Parser::kParser;
+          options->conll_format = true;   
         } else {
           PrintUsage();
           exit(1);
@@ -186,6 +192,7 @@ void GetArgs(int argc, char **argv, Options *options) {
 int ParserMain(int argc, char **argv) {
   FILE *fd = NULL;
   Options options;
+  char buffer[1024];
 
   GetArgs(argc, argv, &options);
   
@@ -244,19 +251,37 @@ int ParserMain(int argc, char **argv) {
 
       fputs(it->word(), stdout);
 
-      if (options.display_type) {
-        fputs("_", stdout);
-        fputs(WordType(it->type()), stdout);
-      }
+      if (!options.conll_format) {
+        if (options.display_type) {
+          fputs("_", stdout);
+          fputs(WordType(it->type()), stdout);
+        }
 
-      if (options.display_tag) {
-        fputs("/", stdout);
+        if (options.display_tag) {
+          fputs("/", stdout);
+          fputs(it->part_of_speech_tag(), stdout);
+        }
+
+        fputs("  ", stdout);
+      
+      } else {
+        // Use conll format to output the dependdency parsing result
+        fputs("\t", stdout);
         fputs(it->part_of_speech_tag(), stdout);
+
+        fputs("\t", stdout);
+        sprintf(buffer, "%d", it->head_node());
+        fputs(buffer, stdout);
+
+        fputs("\t", stdout);
+        fputs(it->dependency_type(), stdout);
+
+        fputs("\n", stdout);
       }
 
-      fputs("  ", stdout);
-      it->Next();
+      it->Next();    
     }
+
     fputs("\n", stdout);
     parser->Release(it);
   }

@@ -45,7 +45,7 @@ class DependencyInstance {
     return instance_data_->string_at(position, kDependencyTypeS);
   }
 
-  int head_id_at(int position) const {
+  int head_node_at(int position) const {
     return instance_data_->integer_at(position, kHeadIdI);
   }
 

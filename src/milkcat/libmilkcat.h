@@ -36,6 +36,8 @@
 #include <vector>
 #include "common/milkcat_config.h"
 #include "include/milkcat.h"
+#include "milkcat/dependency_instance.h"
+#include "milkcat/dependency_parser.h"
 #include "milkcat/segmenter.h"
 #include "milkcat/part_of_speech_tagger.h"
 #include "milkcat/tokenizer.h"
@@ -55,6 +57,7 @@ extern milkcat::Status global_status;
 const int kTokenizerMask = 0x0000000f;
 const int kSegmenterMask = 0x00000ff0;
 const int kPartOfSpeechTaggerMask = 0x000ff000;
+const int kParserMask = 0x00f00000;
 
 // A factory function to create tokenizers
 Tokenization *TokenizerFactory(int tokenizer_id);
@@ -83,6 +86,9 @@ class Parser::Impl {
   PartOfSpeechTagger *part_of_speech_tagger() const {
     return part_of_speech_tagger_;
   }
+  DependencyParser *dependency_parser() const {
+    return dependency_parser_;
+  }
 
   void Release(Parser::Iterator *it) {
     iterator_pool_.push_back(it);
@@ -96,6 +102,7 @@ class Parser::Impl {
 
   Segmenter *segmenter_;
   PartOfSpeechTagger *part_of_speech_tagger_;
+  DependencyParser *dependency_parser_;
   Model::Impl *model_impl_;
   std::vector<Parser::Iterator *> iterator_pool_;
   bool own_model_;
@@ -135,6 +142,18 @@ class Parser::Iterator::Impl {
   int type() const {
     return term_instance_->term_type_at(current_position_);
   }
+  int head_node() const {
+    if (analyzer_->dependency_parser() != NULL)
+      return dependency_instance_->head_node_at(current_position_);
+    else
+      return 0;
+  }
+  const char *dependency_type() const {
+    if (analyzer_->dependency_parser() != NULL)
+      return dependency_instance_->dependency_type_at(current_position_);
+    else
+      return "NONE";
+  }
 
   Parser::Impl *analyzer() const { return analyzer_; }
   void set_analyzer(Parser::Impl *analyzer) {
@@ -147,6 +166,7 @@ class Parser::Iterator::Impl {
   Tokenization *tokenizer_;
   TokenInstance *token_instance_;
   TermInstance *term_instance_;
+  DependencyInstance *dependency_instance_;
   PartOfSpeechTagInstance *part_of_speech_tag_instance_;
 
   int sentence_length_;

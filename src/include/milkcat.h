@@ -92,8 +92,13 @@ class Parser {
     kCrfTagger = 0x00002000,
     kNoTagger = 0x000ff000,
 
+    // Depengency parser type
+    kMaxentParser = 0x00100000,
+    kNoParser = 0x00000000,
+
     kDefault = 0,
-    kSegmenter = kNoTagger
+    kSegmenter = kNoTagger,
+    kParser = kMaxentParser
   };
 
   // The type of word. If the word is a Chinese word, English word or it's a
@@ -147,6 +152,12 @@ class Parser::Iterator {
 
   // Get the string of current part-of-speech tag
   const char *part_of_speech_tag() const;
+
+  // Get the head of current node (in dependency tree)
+  int head_node() const;
+
+  // Get the depengency type of current node
+  const char *dependency_type() const;
 
   // Get the type of current word (chinese word or english word or ...)
   int type() const;

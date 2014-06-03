@@ -7,4 +7,5 @@ dist_pkgdata_DATA = bigram.bin \
                     person_name.maxent \
                     unigram.idx \
                     stopword.idx \
-                    tfidf.bin
+                    tfidf.bin \
+                    ctb_dep.maxent

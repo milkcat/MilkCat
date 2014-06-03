@@ -102,6 +102,7 @@ class Model::Impl {
   const TrieTree *oov_property_;
   const StringValue<float> *idf_model_;
   const TrieTree *stopword_;
+  const MaxentModel *depengency_;
 
   // Load and set the user dictionary data specified by path
   void LoadUserDictionary(const char *userdict_path, Status *status);
