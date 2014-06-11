@@ -47,6 +47,7 @@ class StringBuilder {
 
   // Append functions
   StringBuilder &operator <<(const char *str) {
+    // LOG("Append string: " << str);
     int len = strlcpy(buffer_ + size_, str, capability_ - size_);
     size_ += len;
     return *this;
@@ -54,7 +55,7 @@ class StringBuilder {
   StringBuilder &operator <<(char ch) {
     if (capability_ > size_ + 1) {
       buffer_[size_++] = ch;
-      buffer_[size_++] = '\0';
+      buffer_[size_] = '\0';
     }
     return *this;
   }

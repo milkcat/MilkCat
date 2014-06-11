@@ -24,6 +24,8 @@
 // dependency_parser.h --- Created at 2013-08-10
 //
 
+#define ENABLE_LOG
+
 #include "milkcat/dependency_parser.h"
 
 #include <assert.h>
@@ -178,6 +180,8 @@ int DependencyParser::NextAction() {
       const_cast<const char **>(feature_buffer_),
       kFeatures);
   
+  LOG("Original action: " << maxent_classifier_->yname(yid));
+
   // If the first candidate action is not allowed
   if (AllowAction(yid) == false) {
     // sort the results by its weight
@@ -193,11 +197,14 @@ int DependencyParser::NextAction() {
     } while (AllowAction(yid) == false);
   }
 
+  LOG("Action: " << maxent_classifier_->yname(yid));
+
   return yid;
 }
 
-void DependencyParser::MakeDepengencyInstance(DependencyInstance *dependency_instance) {
-  DependencyParser::Node *node;
+void DependencyParser::MakeDepengencyInstance(
+    DependencyInstance *dependency_instance) {
+  Node *node;
   for (int i = 0; i < buffer_.size() - 1; ++i) {
     node = buffer_[i + 1];    // ignore the ROOT node
     dependency_instance->set_value_at(i, 
@@ -223,6 +230,7 @@ void DependencyParser::Parse(
   buffer_.push_back(node);
   
   for (int i = 0; i < term_instance->size(); ++i) {
+    // TODO: Remove CR/LF Here
     node = new Node(
         i + 1,    // node_id
         term_instance->term_text_at(i),

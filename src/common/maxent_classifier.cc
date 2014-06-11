@@ -24,6 +24,8 @@
 // maxent_classifier.cc --- Created at 2014-02-01
 //
 
+#define ENABLE_LOG
+
 #include "common/maxent_classifier.h"
 
 #include <stdio.h>
@@ -224,10 +226,15 @@ int MaxentClassifier::Classify(const char **x, int xsize) const {
     if (xid != MaxentModel::kFeatureIdNone) {
       // If this feature exists
       for (int yid = 0; yid < y_size_; ++yid) {
-        LOG("Fearure:" << x[i] << " " << "Cost:" << model_->cost(yid, xid));
+        LOG("Fearure:" << x[i] << " " << yname(yid) << " " << "Cost:" << " "
+            << model_->cost(yid, xid));
         y_cost_[yid] += model_->cost(yid, xid);
       }
     }
+  }
+
+  for (int i = 0; i < y_size_; ++i) {
+    LOG("Y: " << yname(i) << " " << y_cost_[i]);
   }
 
   // To find the maximum cost of y

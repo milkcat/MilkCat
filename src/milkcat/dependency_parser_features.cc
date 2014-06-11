@@ -24,8 +24,11 @@
 // dependency_parser_features.h --- Created at 2014-06-03
 //
 
+#define ENABLE_LOG
+
 #include "milkcat/dependency_parser.h"
 
+#include "utils/log.h"
 #include "utils/string_builder.h"
 
 namespace milkcat {
@@ -33,6 +36,9 @@ namespace milkcat {
 void DependencyParser::BuildFeatureList() {
   Node *node;
   utils::StringBuilder builder;
+
+  LOG("");
+  LOG("Build Feature List:");
 
   // F00: word(buffer[0])
   node = NodeFromBuffer(0);
@@ -42,6 +48,7 @@ void DependencyParser::BuildFeatureList() {
     builder << node->term_str();
   else
     builder << "NULL";
+  LOG(feature_buffer_[0]);
 
   // F01: word(buffer[1])
   node = NodeFromBuffer(1);
@@ -51,6 +58,7 @@ void DependencyParser::BuildFeatureList() {
     builder << node->term_str();
   else
     builder << "NULL";
+  LOG(feature_buffer_[1]);
 
   // F02: word(stack[0])
   node = NodeFromStack(0);
@@ -60,6 +68,7 @@ void DependencyParser::BuildFeatureList() {
     builder << node->term_str();
   else
     builder << "NULL";
+  LOG(feature_buffer_[2]);
 
   // F03: pos(buffer[0])
   node = NodeFromBuffer(0);
@@ -69,6 +78,7 @@ void DependencyParser::BuildFeatureList() {
     builder << node->POS_tag();
   else
     builder << "NULL";
+  LOG(feature_buffer_[3]);
 
   // F04: pos(buffer[1])
   node = NodeFromBuffer(1);
@@ -78,6 +88,7 @@ void DependencyParser::BuildFeatureList() {
     builder << node->POS_tag();
   else
     builder << "NULL";
+  LOG(feature_buffer_[4]);
 
   // F05: pos(buffer[2])
   node = NodeFromBuffer(2);
@@ -87,6 +98,7 @@ void DependencyParser::BuildFeatureList() {
     builder << node->POS_tag();
   else
     builder << "NULL";
+  LOG(feature_buffer_[5]);
 
   // F06: pos(buffer[3])
   node = NodeFromBuffer(3);
@@ -96,6 +108,7 @@ void DependencyParser::BuildFeatureList() {
     builder << node->POS_tag();
   else
     builder << "NULL";
+  LOG(feature_buffer_[6]);
 
   // F07: pos(stack[0])
   node = NodeFromStack(0);
@@ -105,6 +118,7 @@ void DependencyParser::BuildFeatureList() {
     builder << node->POS_tag();
   else
     builder << "NULL";
+  LOG(feature_buffer_[7]);
 
   // F08: pos(stack[1])
   node = NodeFromStack(1);
@@ -114,6 +128,7 @@ void DependencyParser::BuildFeatureList() {
     builder << node->POS_tag();
   else
     builder << "NULL";
+  LOG(feature_buffer_[8]);
 
   // F09: dep(ld(buffer[0]))
   node = NodeFromBuffer(0);
@@ -124,6 +139,7 @@ void DependencyParser::BuildFeatureList() {
     builder << node->dependency_label();
   else
     builder << "NULL"; 
+  LOG(feature_buffer_[9]);
 
   // F10: dep(stack[0])
   node = NodeFromStack(0);
@@ -133,6 +149,7 @@ void DependencyParser::BuildFeatureList() {
     builder << node->dependency_label();
   else
     builder << "NULL";
+  LOG(feature_buffer_[10]);
 
   // F11: word(hd(stack[0]))
   node = NodeFromStack(0);
@@ -143,6 +160,7 @@ void DependencyParser::BuildFeatureList() {
     builder << node->term_str();
   else
     builder << "NULL";
+  LOG(feature_buffer_[11]);
 
   // F12: dep(ld(stack[0]))
   node = NodeFromStack(0);
@@ -153,6 +171,7 @@ void DependencyParser::BuildFeatureList() {
     builder << node->dependency_label();
   else
     builder << "NULL";
+  LOG(feature_buffer_[12]);
 
   // F13: dep(rd(stack[0]))
   node = NodeFromStack(0);
@@ -163,6 +182,7 @@ void DependencyParser::BuildFeatureList() {
     builder << node->dependency_label();
   else
     builder << "NULL";
+  LOG(feature_buffer_[13]);
 
   // F14: pos(stack[0])/word(buffer[0])
   builder.ChangeBuffer(feature_buffer_[14], kFeatureStringMax);
@@ -178,11 +198,12 @@ void DependencyParser::BuildFeatureList() {
     builder << node->term_str();
   else
     builder << "NULL";
+  LOG(feature_buffer_[14]);
 
   // F15: word(stack[0])/pos(buffer[0])
   builder.ChangeBuffer(feature_buffer_[15], kFeatureStringMax);
   node = NodeFromStack(0);
-  builder << "S0TB0:";
+  builder << "S0B0T:";
   if (node) 
     builder << node->term_str();
   else
@@ -193,6 +214,7 @@ void DependencyParser::BuildFeatureList() {
     builder << node->POS_tag();
   else
     builder << "NULL";
+  LOG(feature_buffer_[15]);
 
   // F16: pos(stack[0])/pos(buffer[0])
   builder.ChangeBuffer(feature_buffer_[16], kFeatureStringMax);
@@ -208,6 +230,7 @@ void DependencyParser::BuildFeatureList() {
     builder << node->POS_tag();
   else
     builder << "NULL";
+  LOG(feature_buffer_[16]);
 
   // F17: Part-of-speech tag 4-gram 
   builder.ChangeBuffer(feature_buffer_[17], kFeatureStringMax);
@@ -235,6 +258,7 @@ void DependencyParser::BuildFeatureList() {
     builder << node->POS_tag();
   else
     builder << "NULL";
+  LOG(feature_buffer_[17]);
 
   // F18: Part-of-speech tag 6-gram 
   builder.ChangeBuffer(feature_buffer_[18], kFeatureStringMax);
@@ -274,6 +298,7 @@ void DependencyParser::BuildFeatureList() {
     builder << node->POS_tag();
   else
     builder << "NULL";
+  LOG(feature_buffer_[18]);
 }
 
 }  // namespace milkcat
