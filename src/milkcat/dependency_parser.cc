@@ -134,12 +134,10 @@ bool DependencyParser::AllowReduce() const {
 }
 
 bool DependencyParser::AllowShift() const {
-  return buffer_ptr_ < buffer_.size() - 1;
+  return buffer_ptr_ < buffer_.size() - 2;
 }
 
 bool DependencyParser::AllowRightArc() const {
-  // TODO: ...?
-  return true;
   // printf("%d %d %d\n", buffer_ptr_, buffer_.size(), n_arcs_);
   if (buffer_ptr_ == buffer_.size() - 1 && n_arcs_ < buffer_.size() - 2)
     return false;
@@ -197,7 +195,7 @@ int DependencyParser::NextAction() {
     } while (AllowAction(yid) == false);
   }
 
-  LOG("Action: " << maxent_classifier_->yname(yid));
+  LOG("Action: " << maxent_classifier_->yname(yid) << " (" << yid << ")");
 
   return yid;
 }
@@ -243,6 +241,8 @@ void DependencyParser::Parse(
 
   while (buffer_ptr_ < buffer_.size()) {
     int label_id = NextAction();
+    LOG("Stack size: " << stack_.size());
+    LOG("Buffer size: " << buffer_.size() - buffer_ptr_);
     const char *label_str = maxent_classifier_->yname(label_id);
     if (strncmp("SHIF", label_str, 4) == 0) {
       stack_.push_back(buffer_[buffer_ptr_]);
@@ -257,6 +257,7 @@ void DependencyParser::Parse(
       stack_.push_back(buffer_[buffer_ptr_]);
       buffer_ptr_++;      
     } else {
+      LOG("Unknown transition: " << label_str);
       assert(false);
     }
   }

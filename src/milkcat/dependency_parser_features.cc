@@ -24,8 +24,6 @@
 // dependency_parser_features.h --- Created at 2014-06-03
 //
 
-#define ENABLE_LOG
-
 #include "milkcat/dependency_parser.h"
 
 #include "utils/log.h"
@@ -37,8 +35,7 @@ void DependencyParser::BuildFeatureList() {
   Node *node;
   utils::StringBuilder builder;
 
-  LOG("");
-  LOG("Build Feature List:");
+  LOG("-------- Build Feature List --------");
 
   // F00: word(buffer[0])
   node = NodeFromBuffer(0);
@@ -113,7 +110,7 @@ void DependencyParser::BuildFeatureList() {
   // F07: pos(stack[0])
   node = NodeFromStack(0);
   builder.ChangeBuffer(feature_buffer_[7], kFeatureStringMax);
-  builder << "B3T:";
+  builder << "S0T:";
   if (node) 
     builder << node->POS_tag();
   else
@@ -123,7 +120,7 @@ void DependencyParser::BuildFeatureList() {
   // F08: pos(stack[1])
   node = NodeFromStack(1);
   builder.ChangeBuffer(feature_buffer_[8], kFeatureStringMax);
-  builder << "S0T:";
+  builder << "S1T:";
   if (node) 
     builder << node->POS_tag();
   else
