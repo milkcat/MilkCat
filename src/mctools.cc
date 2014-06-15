@@ -38,12 +38,12 @@
 #include <set>
 #include "common/darts.h"
 #include "common/get_vocabulary.h"
+#include "common/maxent_classifier.h"
 #include "common/trie_tree.h"
 #include "include/milkcat.h"
 #include "keyphrase/string_value.h"
 #include "milkcat/hmm_part_of_speech_tagger.h"
 #include "milkcat/static_hashtable.h"
-#include "nekoneko/maxent_classifier.h"
 #include "utils/utils.h"
 #include "utils/readable_file.h"
 #include "utils/writable_file.h"

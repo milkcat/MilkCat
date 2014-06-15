@@ -59,7 +59,7 @@ int test_parser() {
   assert(milkcat_parser_create(&parser, model, kDefault) == 0);
 
   it = milkcat_parser_parse(parser, test_text);
-  for (int i = 0; i < correct_length; ++i) {
+  for (i = 0; i < correct_length; ++i) {
     assert(milkcat_parser_iterator_has_next(it));
     assert(strcmp(milkcat_parser_iterator_word(it), correct_word[i]) == 0);
     assert(strcmp(milkcat_parser_iterator_tag(it), correct_tag[i]) == 0);

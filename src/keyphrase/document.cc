@@ -24,8 +24,6 @@
 // document.cc --- Created at 2014-03-26
 //
 
-#define ENABLE_LOG
-
 #include "keyphrase/document.h"
 
 #include "common/trie_tree.h"

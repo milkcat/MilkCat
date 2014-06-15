@@ -24,8 +24,6 @@
 // dependency_parser.h --- Created at 2013-08-10
 //
 
-#define ENABLE_LOG
-
 #include "milkcat/dependency_parser.h"
 
 #include <assert.h>

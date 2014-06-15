@@ -102,8 +102,12 @@ libmilkcat_la_SOURCES = common/darts.h \
                         nekoneko/mutual_information.cc \
                         nekoneko/utf8.h
 
-TESTS = milkcat_c_api_test
-check_PROGRAMS = milkcat_c_api_test
-milkcat_c_api_test_SOURCES = test/milkcat_c_api_test.c
-milkcat_c_api_test_CFLAGS = -DMODEL_DIR=\"$(top_srcdir)/data/\"
-milkcat_c_api_test_LDADD = libmilkcat.la
+TESTS = dependency_test
+check_PROGRAMS = dependency_test
+
+dependency_test_SOURCES = test/dependency_test.cc
+dependency_test_CXXFLAGS = -DMODEL_DIR=\"$(top_srcdir)/data/\" \
+                           -DPRIVATE_DIR=\"$(top_srcdir)/private/\"
+dependency_test_LDFLAGS = -all-static
+dependency_test_LDADD = libmilkcat.la
+

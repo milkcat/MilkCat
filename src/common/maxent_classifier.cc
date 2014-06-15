@@ -24,8 +24,6 @@
 // maxent_classifier.cc --- Created at 2014-02-01
 //
 
-#define ENABLE_LOG
-
 #include "common/maxent_classifier.h"
 
 #include <stdio.h>

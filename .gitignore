@@ -6,6 +6,7 @@ scripts
 m4
 aclocal.m4
 Makefile.in
+private
 
 /data/*
 !/data/Makefile.am
