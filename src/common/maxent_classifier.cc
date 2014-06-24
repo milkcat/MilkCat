@@ -31,7 +31,7 @@
 #include <stdint.h>
 #include <algorithm>
 #include <map>
-#include "common/darts.h"
+#include "common/cedar.h"
 #include "utils/readable_file.h"
 #include "utils/writable_file.h"
 #include "utils/status.h"
@@ -48,62 +48,63 @@ MaxentModel::MaxentModel(): index_data_(NULL),
 }
 
 MaxentModel *MaxentModel::NewFromText(const char *model_path, Status *status) {
-  ReadableFile *fd = ReadableFile::New(model_path, status);
   MaxentModel *self = new MaxentModel();
   char line[1024];
 
-  std::map<std::string, int> xids, yids;
+  // The y id and name
+  utils::unordered_map<std::string, int> yindex;
   std::vector<std::string> yname;
-  // data[xid][yid]
-  utils::unordered_map<int, utils::unordered_map<int, float> > data;
 
   // Load maxent data from text model file
   char y[1024], x[1024];
   int xid, yid;
   float cost;
+
+  // First pass - Get x, y names and numbers
+  ReadableFile *fd = ReadableFile::New(model_path, status);
+  self->xsize_ = 0;
   while (status->ok() && !fd->Eof()) {
     fd->ReadLine(line, 1024, status);
     if (status->ok()) {
       sscanf(line, "%s %s %f", y, x, &cost);
-      if (yids.find(y) == yids.end()) {
-        yids.insert(std::pair<std::string, int>(y, yids.size()));
+      if (yindex.find(y) == yindex.end()) {
+        yindex.insert(std::make_pair(y, yindex.size()));
         yname.push_back(y);
       }
-      if (xids.find(x) == xids.end()) {
-        xids.insert(std::pair<std::string, int>(x, xids.size()));
+
+      if (self->index_.exactMatchSearch<int>(x) < 0) {
+        self->index_.update(x, strlen(x), self->xsize_);
+        ++self->xsize_;
       }
-
-      xid = xids[x];
-      yid = yids[y];
-
-      data[xid][yid] = cost;
     }
   }
 
   if (status->ok()) {
     // Generate cost data
-    self->xsize_ = xids.size();
-    self->ysize_ = yids.size();
+    self->ysize_ = yindex.size();
     self->cost_ = new float[self->xsize_ * self->ysize_];
-    for (int xid = 0; xid < self->xsize_; ++xid) {
-      for (int yid = 0; yid < self->ysize_; ++yid) {
-        self->cost_[xid * self->ysize_ + yid] = data[xid][yid];
-      }
-    }
+  }
 
-    // Generate index data, NOTE: xname in xids are sorted!
-    std::vector<const char *> xname_vec;
-    std::vector<int> xid_vec;
-    typedef std::map<std::string, int>::iterator id_itertype;
-    for (id_itertype it = xids.begin(); it != xids.end(); ++it) {
-      xname_vec.push_back(it->first.c_str());
-      xid_vec.push_back(it->second);
-    }
-    self->double_array_.build(xname_vec.size(),
-                              xname_vec.data(),
-                              NULL,
-                              xid_vec.data());
+  delete fd;
+  fd = NULL;
 
+  if (status->ok()) fd = ReadableFile::New(model_path, status);
+  while (status->ok() && !fd->Eof()) {
+    fd->ReadLine(line, 1024, status);
+    if (status->ok()) {
+      sscanf(line, "%s %s %f", y, x, &cost);
+      int yid = yindex[y];
+      int xid = self->index_.exactMatchSearch<int>(x);
+
+      ASSERT(xid >= 0, "Invalid xid");
+      self->cost_[xid * self->ysize_ + yid] = cost;
+    }
+  }  
+  delete fd;
+  fd = NULL;
+
+
+  if (status->ok()) {
     // Generate yname
     self->yname_ = reinterpret_cast<char (*)[kYNameMax]>(
       new char[kYNameMax * self->ysize_]);
@@ -112,7 +113,6 @@ MaxentModel *MaxentModel::NewFromText(const char *model_path, Status *status) {
     }
   }
 
-  delete fd;
   if (status->ok()) {
     return self;
   } else {
@@ -144,7 +144,7 @@ MaxentModel *MaxentModel::New(const char *model_path, Status *status) {
   if (status->ok()) {
     self->index_data_ = new char[index_size];
     fd->Read(self->index_data_, index_size, status);
-    if (status->ok()) self->double_array_.set_array(self->index_data_);
+    if (status->ok()) self->index_.set_array(self->index_data_);
   }
 
   if (status->ok()) {
@@ -183,10 +183,10 @@ void MaxentModel::Save(const char *model_path, Status *status) {
   if (status->ok()) fd->Write(yname_, ysize_ * kYNameMax, status);
   if (status->ok())
     fd->WriteValue<int32_t>(
-      static_cast<int32_t>(double_array_.total_size()),
+      static_cast<int32_t>(index_.total_size()),
       status);
-  if (status->ok()) fd->Write(double_array_.array(),
-                              double_array_.total_size(),
+  if (status->ok()) fd->Write(index_.array(),
+                              index_.total_size(),
                               status);
   if (status->ok()) fd->Write(cost_, sizeof(float) * xsize_ * ysize_, status);
 

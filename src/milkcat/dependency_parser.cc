@@ -53,8 +53,8 @@ DependencyParser *DependencyParser::New(Model::Impl *model_impl,
 
   if (status->ok()) {
     self->maxent_classifier_ = new MaxentClassifier(maxent_model);
-    self->feature_buffer_ = new char *[kFeatures];
-    for (int i = 0; i < kFeatures; ++i) {
+    self->feature_buffer_ = new char *[kFeatureMax];
+    for (int i = 0; i < kFeatureMax; ++i) {
       self->feature_buffer_[i] = new char[kFeatureStringMax];
     }
   }
@@ -74,43 +74,12 @@ DependencyParser::~DependencyParser() {
   }
 
   if (feature_buffer_ != NULL) {
-    for (int i = 0; i < kFeatures; ++i)
+    for (int i = 0; i < kFeatureMax; ++i)
       delete[] feature_buffer_[i];
 
     delete[] feature_buffer_; 
     feature_buffer_ = NULL;
   }
-}
-
-DependencyParser::Node *
-DependencyParser::NodeFromStack(int top_index) const {
-  // printf("%d %d\n", top_index, stack_.size());
-  return top_index >= stack_.size()? NULL: 
-                                     stack_[stack_.size() - 1 - top_index];
-}
-
-DependencyParser::Node *
-DependencyParser::NodeFromBuffer(int index) const {
-  int real_index = buffer_ptr_ + index;
-  return real_index >= buffer_.size()? NULL: buffer_[real_index];
-}
-
-DependencyParser::Node *
-DependencyParser::HeadNode(Node *node) const {
-  int head_id = node->head_id();
-  return head_id == Node::kNone? NULL: buffer_[head_id];
-}
-
-DependencyParser::Node *
-DependencyParser::LeftmostDependentNode(Node *node) const {
-  int ld = node->GetLeftmostDepententId();
-  return ld == Node::kNone? NULL: buffer_[ld];
-}
-
-DependencyParser::Node *
-DependencyParser::RightmostDependentNode(Node *node) const {
-  int rd = node->GetRightmostDependentId();
-  return rd == Node::kNone? NULL: buffer_[rd];    
 }
 
 bool DependencyParser::AllowLeftArc() const {
@@ -132,7 +101,7 @@ bool DependencyParser::AllowReduce() const {
 }
 
 bool DependencyParser::AllowShift() const {
-  return buffer_ptr_ < buffer_.size() - 2;
+  return buffer_ptr_ < buffer_.size() - 1;
 }
 
 bool DependencyParser::AllowRightArc() const {
@@ -170,11 +139,11 @@ int DependencyParser::NextAction() {
   std::vector<std::pair<double, int> >
   candidate_actions(maxent_classifier_->ysize());
 
-  BuildFeatureList();
+  int feature_num = BuildFeature();
 
   int yid = maxent_classifier_->Classify(
       const_cast<const char **>(feature_buffer_),
-      kFeatures);
+      feature_num);
   
   LOG("Original action: " << maxent_classifier_->yname(yid));
 
@@ -227,16 +196,28 @@ void DependencyParser::Parse(
   
   for (int i = 0; i < term_instance->size(); ++i) {
     // TODO: Remove CR/LF Here
+    LOG(i << " " << term_instance->size());
     node = new Node(
         i + 1,    // node_id
         term_instance->term_text_at(i),
         part_of_speech_tag_instance->part_of_speech_tag_at(i));
+    LOG("Mark!");
     buffer_.push_back(node);
   }
 
+  LOG("Mark～2!");
+  // Build the right verb count feature
+  int verb_count = 0;
+  for (int i = term_instance->size() - 1; i >= 0; --i) {
+    right_verb_count_[i + 1] = verb_count;
+    if (*part_of_speech_tag_instance->part_of_speech_tag_at(i) == 'V')
+      verb_count++;
+  }
+  right_verb_count_[0] = verb_count;
+
+  // The root node
   stack_.push_back(buffer_[0]);
   buffer_ptr_ = 1;
-
   while (buffer_ptr_ < buffer_.size()) {
     int label_id = NextAction();
     LOG("Stack size: " << stack_.size());

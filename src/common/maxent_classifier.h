@@ -29,7 +29,7 @@
 
 #include <string>
 #include <vector>
-#include "common/darts.h"
+#include "common/cedar.h"
 #include "utils/status.h"
 
 namespace milkcat {
@@ -67,7 +67,7 @@ class MaxentModel {
   // Return the id of feature_str, if the feature_str not in feature set of
   // model return kFeatureIdNone
   int feature_id(const char *feature_str) const {
-    int id = double_array_.exactMatchSearch<int>(feature_str);
+    int id = index_.exactMatchSearch<int>(feature_str);
     if (id >= 0)
       return id;
     else
@@ -75,7 +75,7 @@ class MaxentModel {
   }
 
  private:
-  Darts::DoubleArray double_array_;
+  cedar::da<int> index_;
   char *index_data_;
   int xsize_;
   int ysize_;

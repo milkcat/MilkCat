@@ -10,7 +10,8 @@ include_HEADERS = include/milkcat.h include/milkcat-c.h
 lib_LTLIBRARIES = libmilkcat.la
 libmilkcat_la_LIBADD = -lpthread
 libmilkcat_la_LDFLAGS = -version-info 0:3:0
-libmilkcat_la_SOURCES = common/darts.h \
+libmilkcat_la_SOURCES = common/cedar.h \
+                        common/darts.h \
                         common/get_vocabulary.h \
                         common/get_vocabulary.cc \
                         common/maxent_classifier.cc \
@@ -102,8 +103,8 @@ libmilkcat_la_SOURCES = common/darts.h \
                         nekoneko/mutual_information.cc \
                         nekoneko/utf8.h
 
-TESTS = dependency_test
-check_PROGRAMS = dependency_test
+TESTS = dependency_test sparsehash_test
+check_PROGRAMS = dependency_test sparsehash_test
 
 dependency_test_SOURCES = test/dependency_test.cc
 dependency_test_CXXFLAGS = -DMODEL_DIR=\"$(top_srcdir)/data/\" \
@@ -111,3 +112,4 @@ dependency_test_CXXFLAGS = -DMODEL_DIR=\"$(top_srcdir)/data/\" \
 dependency_test_LDFLAGS = -all-static
 dependency_test_LDADD = libmilkcat.la
 
+sparsehash_test_SOURCES = test/sparsehash_test.cc

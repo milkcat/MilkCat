@@ -59,6 +59,11 @@ class StringBuilder {
     }
     return *this;
   }
+  StringBuilder &operator <<(int val) {
+    int len = sprintf(buffer_ + size_, "%d", val);
+    size_ += len;
+    return *this;
+  }
 
  private:
   char *buffer_;

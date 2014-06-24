@@ -33,6 +33,7 @@
 namespace milkcat {
 
 const int kTokenMax = 1000;
+const int kTermMax = kTokenMax;
 const int kFeatureLengthMax = 100;
 const int kTermLengthMax = kFeatureLengthMax;
 const int kPOSTagLengthMax = 10;

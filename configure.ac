@@ -40,7 +40,7 @@ AC_TYPE_UINT8_T
 AC_FUNC_MALLOC
 AC_FUNC_MMAP
 AC_FUNC_REALLOC
-AC_CHECK_FUNCS([memset munmap sqrt strdup strlcpy])
+AC_CHECK_FUNCS([strlcpy])
 
 # Set the model dir
 pkgdatadir=${datadir}/${PACKAGE}

@@ -16,6 +16,12 @@
 #include <assert.h>
 #include "common/model_factory.h"
 
+namespace utils {
+
+class StringBuilder;
+
+}  // namespace utils
+
 namespace milkcat {
 
 class TermInstance;
@@ -24,11 +30,12 @@ class DependencyInstance;
 class MaxentClassifier;
 class Status;
 
+// Use the arc-eager algorithm to parse a sentence into a dependency tree.
 class DependencyParser {
  public:
   class Node;
 
-  static const int kFeatures = 19;
+  static const int kFeatureMax = 30;
   static const int kFeatureStringMax = 1000;
 
   static DependencyParser *New(Model::Impl *model_impl, Status *status);
@@ -51,9 +58,24 @@ class DependencyParser {
   Node *NodeFromStack(int top_index) const;
 
   // Get the related node for the current node
-  Node *HeadNode(Node *node) const;
-  Node *LeftmostDependentNode(Node *node) const;
-  Node *RightmostDependentNode(Node *node) const;
+  Node *ParentNode(Node *node) const;
+  Node *LeftmostChildNode(Node *node) const;
+  Node *RightmostChildNode(Node *node) const;
+
+  // Extract the feature from current configuration. The feature are defined in
+  // Zhang Yue, A Tale of Two Parsers: investigating and combining graph-based 
+  // and transition-based dependency parsing using beam-search, 2008
+  const char *STw();
+  const char *STt();
+  const char *N0w();
+  const char *N0t();
+  const char *N1w();
+  const char *N1t();
+  const char *N2t();
+  const char *STPt();
+  const char *STLCt();
+  const char *STRCt();
+  const char *N0LCt();
 
   // Check if current state allows an action
   bool AllowLeftArc() const;
@@ -62,7 +84,8 @@ class DependencyParser {
   bool AllowRightArc() const;
 
   // Builds the features from current state and stores it in feature_buffer_
-  void BuildFeatureList();
+  // Returns the number of features added
+  int BuildFeature();
 
   // Check if the action defined by label_id is allowed
   bool AllowAction(int label_id) const;
@@ -78,6 +101,8 @@ class DependencyParser {
 
   std::vector<Node *> buffer_;
   std::vector<Node *> stack_;
+
+  int right_verb_count_[kTermMax + 1];
   int buffer_ptr_;
   int n_arcs_;
   MaxentClassifier *maxent_classifier_;
@@ -115,28 +140,27 @@ class DependencyParser::Node {
     strncpy(dependency_label_, label, sizeof(dependency_label_) - 1);
   }
   
-  // Get the leftmost depentent's id of current node
-  int GetLeftmostDepententId() const {
-
-    // dependency_ids_ is sorted
-    if (dependency_ids_.size() == 0)
-      return kNone;
-    else
-      return *dependency_ids_.begin();
+  // Get the leftmost child's id of current node
+  int LeftmostChildId() const {
+    if (dependency_ids_.size() > 0) {
+      int left_child = *dependency_ids_.begin();
+      if (left_child < node_id_) return left_child;
+    }
+    return kNone;
   }
 
-  int GetRightmostDependentId() const {
-    if (dependency_ids_.size() == 0)
-      return kNone;
-    else
-      return *dependency_ids_.rbegin();
+  int RightmostChildId() const {
+    if (dependency_ids_.size() > 0) {
+      int right_child = *dependency_ids_.begin();
+      if (right_child > node_id_) return right_child;
+    }
+    return kNone;
   }
   
   // Add a dependent to this node
   void AddDependent(int depentent_id) {
     dependency_ids_.insert(depentent_id);
   }
-
 
  private:
   int node_id_;

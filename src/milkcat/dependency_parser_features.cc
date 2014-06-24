@@ -31,271 +31,281 @@
 
 namespace milkcat {
 
-void DependencyParser::BuildFeatureList() {
+
+DependencyParser::Node *
+DependencyParser::NodeFromStack(int top_index) const {
+  return top_index >= stack_.size()? 
+      NULL: 
+      stack_[stack_.size() - 1 - top_index];
+}
+
+DependencyParser::Node *
+DependencyParser::NodeFromBuffer(int index) const {
+  int real_index = buffer_ptr_ + index;
+  return real_index >= buffer_.size()? NULL: buffer_[real_index];
+}
+
+inline DependencyParser::Node *
+DependencyParser::ParentNode(Node *node) const {
+  int head_id = node->head_id();
+  return head_id == Node::kNone? NULL: buffer_[head_id];
+}
+
+inline DependencyParser::Node *
+DependencyParser::LeftmostChildNode(Node *node) const {
+  int ld = node->LeftmostChildId();
+  return ld == Node::kNone? NULL: buffer_[ld];
+}
+
+inline DependencyParser::Node *
+DependencyParser::RightmostChildNode(Node *node) const {
+  int rd = node->RightmostChildId();
+  return rd == Node::kNone? NULL: buffer_[rd];    
+}
+
+inline const char *DependencyParser::STw() {
+  Node *node = NodeFromStack(0);
+  if (node) 
+    return node->term_str();
+  else
+    return "NULL";
+}
+
+inline const char *DependencyParser::STt() {
+  Node *node = NodeFromStack(0);
+  if (node) 
+    return node->POS_tag();
+  else
+    return "NULL";
+}
+
+inline const char *DependencyParser::N0w() {
+  Node *node = NodeFromBuffer(0);
+  if (node) 
+    return node->term_str();
+  else
+    return "NULL"; 
+}
+
+inline const char *DependencyParser::N0t() {
+  Node *node = NodeFromBuffer(0);
+  if (node) 
+    return node->POS_tag();
+  else
+    return "NULL"; 
+}
+
+inline const char *DependencyParser::N1w() {
+  Node *node = NodeFromBuffer(1);
+  if (node) 
+    return node->term_str();
+  else
+    return "NULL"; 
+}
+
+inline const char *DependencyParser::N1t() {
+  Node *node = NodeFromBuffer(1);
+  if (node) 
+    return node->POS_tag();
+  else
+    return "NULL"; 
+}
+
+inline const char *DependencyParser::N2t() {
+  Node *node = NodeFromBuffer(2);
+  if (node) 
+    return node->POS_tag();
+  else
+    return "NULL"; 
+}
+
+inline const char *DependencyParser::STPt() {
+  Node *node = NodeFromStack(0);
+  if (node != NULL) node = ParentNode(node);
+  if (node) 
+    return node->POS_tag();
+  else
+    return "NULL";  
+}
+
+const char *DependencyParser::STLCt() {
+  Node *node = NodeFromStack(0);
+  if (node != NULL) node = LeftmostChildNode(node);
+  if (node) 
+    return node->POS_tag();
+  else
+    return "NULL";
+}
+const char *DependencyParser::STRCt() {
+  Node *node = NodeFromStack(0);
+  if (node != NULL) node = RightmostChildNode(node);
+  if (node) 
+    return node->POS_tag();
+  else
+    return "NULL";
+}
+
+const char *DependencyParser::N0LCt() {
+  Node *node = NodeFromBuffer(0);
+  if (node != NULL) node = LeftmostChildNode(node);
+  if (node) 
+    return node->POS_tag();
+  else
+    return "NULL";
+}
+
+int DependencyParser::BuildFeature() {
   Node *node;
   utils::StringBuilder builder;
+  int feature_num = 0;
 
-  LOG("-------- Build Feature List --------");
+  builder.ChangeBuffer(feature_buffer_[feature_num], kFeatureStringMax);
+  builder << "STwt:" << STw() << '/' << STt();
+  LOG(feature_buffer_[feature_num]);
+  feature_num++;
 
-  // F00: word(buffer[0])
-  node = NodeFromBuffer(0);
-  builder.ChangeBuffer(feature_buffer_[0], kFeatureStringMax);
-  builder << "B0:";
-  if (node) 
-    builder << node->term_str();
-  else
-    builder << "NULL";
-  LOG(feature_buffer_[0]);
+  builder.ChangeBuffer(feature_buffer_[feature_num], kFeatureStringMax);
+  builder << "STw:" << STw();
+  LOG(feature_buffer_[feature_num]);
+  feature_num++;
 
-  // F01: word(buffer[1])
-  node = NodeFromBuffer(1);
-  builder.ChangeBuffer(feature_buffer_[1], kFeatureStringMax);
-  builder << "B1:";
-  if (node) 
-    builder << node->term_str();
-  else
-    builder << "NULL";
-  LOG(feature_buffer_[1]);
+  builder.ChangeBuffer(feature_buffer_[feature_num], kFeatureStringMax);
+  builder << "STt:" << STt();
+  LOG(feature_buffer_[feature_num]);
+  feature_num++;
 
-  // F02: word(stack[0])
-  node = NodeFromStack(0);
-  builder.ChangeBuffer(feature_buffer_[2], kFeatureStringMax);
-  builder << "S0:";
-  if (node) 
-    builder << node->term_str();
-  else
-    builder << "NULL";
-  LOG(feature_buffer_[2]);
+  builder.ChangeBuffer(feature_buffer_[feature_num], kFeatureStringMax);
+  builder << "N0wt:" << N0w() << '/' << N0t();
+  LOG(feature_buffer_[feature_num]);
+  feature_num++;
 
-  // F03: pos(buffer[0])
-  node = NodeFromBuffer(0);
-  builder.ChangeBuffer(feature_buffer_[3], kFeatureStringMax);
-  builder << "B0T:";
-  if (node) 
-    builder << node->POS_tag();
-  else
-    builder << "NULL";
-  LOG(feature_buffer_[3]);
+  builder.ChangeBuffer(feature_buffer_[feature_num], kFeatureStringMax);
+  builder << "N0w:" << N0w();
+  LOG(feature_buffer_[feature_num]);
+  feature_num++;
 
-  // F04: pos(buffer[1])
-  node = NodeFromBuffer(1);
-  builder.ChangeBuffer(feature_buffer_[4], kFeatureStringMax);
-  builder << "B1T:";
-  if (node) 
-    builder << node->POS_tag();
-  else
-    builder << "NULL";
-  LOG(feature_buffer_[4]);
+  builder.ChangeBuffer(feature_buffer_[feature_num], kFeatureStringMax);
+  builder << "N0t:" << N0t();
+  LOG(feature_buffer_[feature_num]);
+  feature_num++;
 
-  // F05: pos(buffer[2])
-  node = NodeFromBuffer(2);
-  builder.ChangeBuffer(feature_buffer_[5], kFeatureStringMax);
-  builder << "B2T:";
-  if (node) 
-    builder << node->POS_tag();
-  else
-    builder << "NULL";
-  LOG(feature_buffer_[5]);
+  builder.ChangeBuffer(feature_buffer_[feature_num], kFeatureStringMax);
+  builder << "N1wt:" << N1w() << '/' << N1t();
+  LOG(feature_buffer_[feature_num]);
+  feature_num++;
 
-  // F06: pos(buffer[3])
-  node = NodeFromBuffer(3);
-  builder.ChangeBuffer(feature_buffer_[6], kFeatureStringMax);
-  builder << "B3T:";
-  if (node) 
-    builder << node->POS_tag();
-  else
-    builder << "NULL";
-  LOG(feature_buffer_[6]);
+  builder.ChangeBuffer(feature_buffer_[feature_num], kFeatureStringMax);
+  builder << "N1w:" << N1w();
+  LOG(feature_buffer_[feature_num]);
+  feature_num++;
 
-  // F07: pos(stack[0])
-  node = NodeFromStack(0);
-  builder.ChangeBuffer(feature_buffer_[7], kFeatureStringMax);
-  builder << "S0T:";
-  if (node) 
-    builder << node->POS_tag();
-  else
-    builder << "NULL";
-  LOG(feature_buffer_[7]);
+  builder.ChangeBuffer(feature_buffer_[feature_num], kFeatureStringMax);
+  builder << "N1t:" << N1t();
+  LOG(feature_buffer_[feature_num]);
+  feature_num++;
 
-  // F08: pos(stack[1])
-  node = NodeFromStack(1);
-  builder.ChangeBuffer(feature_buffer_[8], kFeatureStringMax);
-  builder << "S1T:";
-  if (node) 
-    builder << node->POS_tag();
-  else
-    builder << "NULL";
-  LOG(feature_buffer_[8]);
+  builder.ChangeBuffer(feature_buffer_[feature_num], kFeatureStringMax);
+  builder << "STwtN0wt:" << STw() << '/' << STt() << '/' << N0w() << '/'
+          << N0t();
+  LOG(feature_buffer_[feature_num]);
+  feature_num++;
 
-  // F09: dep(ld(buffer[0]))
-  node = NodeFromBuffer(0);
-  if (node != NULL) node = LeftmostDependentNode(node);
-  builder.ChangeBuffer(feature_buffer_[9], kFeatureStringMax);
-  builder << "B0LD:";
-  if (node) 
-    builder << node->dependency_label();
-  else
-    builder << "NULL"; 
-  LOG(feature_buffer_[9]);
+  builder.ChangeBuffer(feature_buffer_[feature_num], kFeatureStringMax);
+  builder << "STwtN0w:" << STw() << '/' << STt() << '/' << N0w();
+  LOG(feature_buffer_[feature_num]);
+  feature_num++;
 
-  // F10: dep(stack[0])
-  node = NodeFromStack(0);
-  builder.ChangeBuffer(feature_buffer_[10], kFeatureStringMax);
-  builder << "S0D:";
-  if (node) 
-    builder << node->dependency_label();
-  else
-    builder << "NULL";
-  LOG(feature_buffer_[10]);
+  builder.ChangeBuffer(feature_buffer_[feature_num], kFeatureStringMax);
+  builder << "STwN0wt:" << STw() << '/' << N0w() << '/' << N0t();
+  LOG(feature_buffer_[feature_num]);
+  feature_num++;
 
-  // F11: word(hd(stack[0]))
-  node = NodeFromStack(0);
-  if (node != NULL) node = HeadNode(node);
-  builder.ChangeBuffer(feature_buffer_[11], kFeatureStringMax);
-  builder << "S0H:";
-  if (node) 
-    builder << node->term_str();
-  else
-    builder << "NULL";
-  LOG(feature_buffer_[11]);
+  builder.ChangeBuffer(feature_buffer_[feature_num], kFeatureStringMax);
+  builder << "STwtN0t:" << STw() << '/' << STt() << '/' << N0t();
+  LOG(feature_buffer_[feature_num]);
+  feature_num++;
 
-  // F12: dep(ld(stack[0]))
-  node = NodeFromStack(0);
-  if (node != NULL) node = LeftmostDependentNode(node);
-  builder.ChangeBuffer(feature_buffer_[12], kFeatureStringMax);
-  builder << "S0LD:";
-  if (node) 
-    builder << node->dependency_label();
-  else
-    builder << "NULL";
-  LOG(feature_buffer_[12]);
+  builder.ChangeBuffer(feature_buffer_[feature_num], kFeatureStringMax);
+  builder << "STtN0wt:" << STt() << '/' << N0w() << '/' << N0t();
+  LOG(feature_buffer_[feature_num]);
+  feature_num++;
 
-  // F13: dep(rd(stack[0]))
-  node = NodeFromStack(0);
-  if (node != NULL) node = RightmostDependentNode(node);
-  builder.ChangeBuffer(feature_buffer_[13], kFeatureStringMax);
-  builder << "S0RD:";
-  if (node) 
-    builder << node->dependency_label();
-  else
-    builder << "NULL";
-  LOG(feature_buffer_[13]);
+  builder.ChangeBuffer(feature_buffer_[feature_num], kFeatureStringMax);
+  builder << "STwN0w:" << STw() << '/' << N0w();
+  LOG(feature_buffer_[feature_num]);
+  feature_num++;
 
-  // F14: pos(stack[0])/word(buffer[0])
-  builder.ChangeBuffer(feature_buffer_[14], kFeatureStringMax);
-  node = NodeFromStack(0);
-  builder << "S0TB0:";
-  if (node) 
-    builder << node->POS_tag();
-  else
-    builder << "NULL";
-  builder << '/';
-  node = NodeFromBuffer(0);
-  if (node) 
-    builder << node->term_str();
-  else
-    builder << "NULL";
-  LOG(feature_buffer_[14]);
+  builder.ChangeBuffer(feature_buffer_[feature_num], kFeatureStringMax);
+  builder << "STtN0t:" << STt() << '/' << N0t();
+  LOG(feature_buffer_[feature_num]);
+  feature_num++;
 
-  // F15: word(stack[0])/pos(buffer[0])
-  builder.ChangeBuffer(feature_buffer_[15], kFeatureStringMax);
-  node = NodeFromStack(0);
-  builder << "S0B0T:";
-  if (node) 
-    builder << node->term_str();
-  else
-    builder << "NULL";
-  builder << '/';
-  node = NodeFromBuffer(0);
-  if (node) 
-    builder << node->POS_tag();
-  else
-    builder << "NULL";
-  LOG(feature_buffer_[15]);
+  builder.ChangeBuffer(feature_buffer_[feature_num], kFeatureStringMax);
+  builder << "N0tN1t:" << N0t() << '/' << N1t();
+  LOG(feature_buffer_[feature_num]);
+  feature_num++;
 
-  // F16: pos(stack[0])/pos(buffer[0])
-  builder.ChangeBuffer(feature_buffer_[16], kFeatureStringMax);
-  node = NodeFromStack(0);
-  builder << "BST2:";
-  if (node) 
-    builder << node->POS_tag();
-  else
-    builder << "NULL";
-  builder << '/';
-  node = NodeFromBuffer(0);
-  if (node) 
-    builder << node->POS_tag();
-  else
-    builder << "NULL";
-  LOG(feature_buffer_[16]);
+  builder.ChangeBuffer(feature_buffer_[feature_num], kFeatureStringMax);
+  builder << "N0tN1tN2t:" << N0t() << '/' << N1t() << '/' << N2t();
+  LOG(feature_buffer_[feature_num]);
+  feature_num++;
 
-  // F17: Part-of-speech tag 4-gram 
-  builder.ChangeBuffer(feature_buffer_[17], kFeatureStringMax);
-  builder << "BST4:";
-  node = NodeFromStack(1);
-  if (node) 
-    builder << node->POS_tag();
-  else
-    builder << "NULL";
-  builder << '/';
-  node = NodeFromStack(0);
-  if (node) 
-    builder << node->POS_tag();
-  else
-    builder << "NULL";
-  builder << '/';
-  node = NodeFromBuffer(0);
-  if (node) 
-    builder << node->POS_tag();
-  else
-    builder << "NULL";
-  builder << '/';
-  node = NodeFromBuffer(1);
-  if (node) 
-    builder << node->POS_tag();
-  else
-    builder << "NULL";
-  LOG(feature_buffer_[17]);
+  builder.ChangeBuffer(feature_buffer_[feature_num], kFeatureStringMax);
+  builder << "STtN0tN1t:" << STt() << '/' << N0t() << '/' << N1t();
+  LOG(feature_buffer_[feature_num]);
+  feature_num++;
 
-  // F18: Part-of-speech tag 6-gram 
-  builder.ChangeBuffer(feature_buffer_[18], kFeatureStringMax);
-  builder << "BST4:";
-  node = NodeFromStack(1);
-  if (node) 
-    builder << node->POS_tag();
-  else
-    builder << "NULL";
-  builder << '/';
-  node = NodeFromStack(0);
-  if (node) 
-    builder << node->POS_tag();
-  else
-    builder << "NULL";
-  builder << '/';
-  node = NodeFromBuffer(0);
-  if (node) 
-    builder << node->POS_tag();
-  else
-    builder << "NULL";
-  builder << '/';
-  node = NodeFromBuffer(1);
-  if (node) 
-    builder << node->POS_tag();
-  else
-    builder << "NULL";
-  builder << '/';
-  node = NodeFromBuffer(2);
-  if (node) 
-    builder << node->POS_tag();
-  else
-    builder << "NULL";
-  builder << '/';
-  node = NodeFromBuffer(3);
-  if (node) 
-    builder << node->POS_tag();
-  else
-    builder << "NULL";
-  LOG(feature_buffer_[18]);
+  builder.ChangeBuffer(feature_buffer_[feature_num], kFeatureStringMax);
+  builder << "STPtSTtN0t:" << STPt() << '/' << STt() << '/' << N0t();
+  LOG(feature_buffer_[feature_num]);
+  feature_num++;
+
+  builder.ChangeBuffer(feature_buffer_[feature_num], kFeatureStringMax);
+  builder << "STtSTLCtN0t:" << STt() << '/' << STLCt() << '/' << N0t();
+  LOG(feature_buffer_[feature_num]);
+  feature_num++;
+
+  builder.ChangeBuffer(feature_buffer_[feature_num], kFeatureStringMax);
+  builder << "STtSTRCtN0t:" << STt() << '/' << STRCt() << '/' << N0t();
+  LOG(feature_buffer_[feature_num]);
+  feature_num++;
+
+  builder.ChangeBuffer(feature_buffer_[feature_num], kFeatureStringMax);
+  builder << "STtN0tN0LCt:" << STt() << '/' << N0t() << '/' << N0LCt();
+  LOG(feature_buffer_[feature_num]);
+  feature_num++;
+
+  builder.ChangeBuffer(feature_buffer_[feature_num], kFeatureStringMax);
+  builder << "N0wN1tN2t:" << N0w() << '/' << N1t() << '/' << N2t();
+  LOG(feature_buffer_[feature_num]);
+  feature_num++;
+
+  builder.ChangeBuffer(feature_buffer_[feature_num], kFeatureStringMax);
+  builder << "STtN0wN1t:" << STt() << '/' << N0w() << '/' << N1t();
+  LOG(feature_buffer_[feature_num]);
+  feature_num++;
+
+  builder.ChangeBuffer(feature_buffer_[feature_num], kFeatureStringMax);
+  builder << "STPtSTtN0w:" << STPt() << '/' << STt() << '/' << N0w();
+  LOG(feature_buffer_[feature_num]);
+  feature_num++;
+
+  builder.ChangeBuffer(feature_buffer_[feature_num], kFeatureStringMax);
+  builder << "STtSTLCtN0w:" << STt() << '/' << STLCt() << '/' << N0w();
+  LOG(feature_buffer_[feature_num]);
+  feature_num++;
+
+  builder.ChangeBuffer(feature_buffer_[feature_num], kFeatureStringMax);
+  builder << "STtSTRCtN0w:" << STt() << '/' << STRCt() << '/' << N0w();
+  LOG(feature_buffer_[feature_num]);
+  feature_num++;
+
+  builder.ChangeBuffer(feature_buffer_[feature_num], kFeatureStringMax);
+  builder << "STtN0wN0LCt:" << STt() << '/' << N0w() << '/' << N0LCt();
+  LOG(feature_buffer_[feature_num]);
+  feature_num++;
+
+  return feature_num;
 }
 
 }  // namespace milkcat
