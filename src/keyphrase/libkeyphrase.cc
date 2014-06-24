@@ -32,7 +32,7 @@
 #include "keyphrase/document.h"
 #include "keyphrase/phrase_extractor.h"
 #include "keyphrase/phrase_ranker.h"
-#include "milkcat/libmilkcat.h"
+#include "parser/libmilkcat.h"
 #include "utils/log.h"
 #include "utils/pool.h"
 #include "utils/status.h"

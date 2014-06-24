@@ -21,30 +21,29 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 //
-// config.h
-// milkcat_config.h --- Created at 2013-09-17
+// segmenter.h --- Created at 2013-11-24
 //
 
-#ifndef SRC_COMMON_MILKCAT_CONFIG_H_
-#define SRC_COMMON_MILKCAT_CONFIG_H_
-
-#include <stdlib.h>
+#ifndef SRC_PARSER_SEGMENTER_H_
+#define SRC_PARSER_SEGMENTER_H_
 
 namespace milkcat {
 
-const int kTokenMax = 1000;
-const int kTermMax = kTokenMax;
-const int kFeatureLengthMax = 100;
-const int kTermLengthMax = kFeatureLengthMax;
-const int kPOSTagLengthMax = 10;
-const int kHMMSegmentAndPOSTaggingNBest = 3;
-const int kUserTermIdStart = 0x40000000;
-const double kDefaultCost = 16.0;
+class TermInstance;
+class TokenInstance;
 
+// The base class for segmenters
+class Segmenter {
+ public:
+  virtual ~Segmenter() = 0;
 
-const int kHmmModelMagicNumber = 0x3322;
-const int kDFModelMagicNumber = 0xdfdf;
+  // Segment a token instance into term instance
+  virtual void Segment(TermInstance *term_instance,
+                       TokenInstance *token_instance) = 0;
+};
+
+inline Segmenter::~Segmenter() {}
 
 }  // namespace milkcat
 
-#endif  // SRC_COMMON_MILKCAT_CONFIG_H_
+#endif  // SRC_PARSER_SEGMENTER_H_

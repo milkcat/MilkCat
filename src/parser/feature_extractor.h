@@ -1,4 +1,6 @@
 //
+// feature_extractor.h --- Created at 2013-10-09
+//
 // The MIT License (MIT)
 //
 // Copyright 2013-2014 The MilkCat Project Developers
@@ -21,30 +23,26 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 //
-// config.h
-// milkcat_config.h --- Created at 2013-09-17
-//
 
-#ifndef SRC_COMMON_MILKCAT_CONFIG_H_
-#define SRC_COMMON_MILKCAT_CONFIG_H_
+#ifndef SRC_PARSER_FEATURE_EXTRACTOR_H_
+#define SRC_PARSER_FEATURE_EXTRACTOR_H_
 
 #include <stdlib.h>
+#include "common/milkcat_config.h"
 
 namespace milkcat {
 
-const int kTokenMax = 1000;
-const int kTermMax = kTokenMax;
-const int kFeatureLengthMax = 100;
-const int kTermLengthMax = kFeatureLengthMax;
-const int kPOSTagLengthMax = 10;
-const int kHMMSegmentAndPOSTaggingNBest = 3;
-const int kUserTermIdStart = 0x40000000;
-const double kDefaultCost = 16.0;
+class FeatureExtractor {
+ public:
+  virtual void ExtractFeatureAt(size_t position,
+                                char (*feature_list)[kFeatureLengthMax],
+                                int list_size) = 0;
+  virtual size_t size() const = 0;
+  virtual ~FeatureExtractor();
+};
 
-
-const int kHmmModelMagicNumber = 0x3322;
-const int kDFModelMagicNumber = 0xdfdf;
+inline FeatureExtractor::~FeatureExtractor() {}
 
 }  // namespace milkcat
 
-#endif  // SRC_COMMON_MILKCAT_CONFIG_H_
+#endif  // SRC_PARSER_FEATURE_EXTRACTOR_H_

@@ -21,30 +21,29 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 //
-// config.h
-// milkcat_config.h --- Created at 2013-09-17
+// part_of_speech_tagger.cc --- Created at 2013-11-24
 //
 
-#ifndef SRC_COMMON_MILKCAT_CONFIG_H_
-#define SRC_COMMON_MILKCAT_CONFIG_H_
-
-#include <stdlib.h>
+#ifndef SRC_PARSER_PART_OF_SPEECH_TAGGER_H_
+#define SRC_PARSER_PART_OF_SPEECH_TAGGER_H_
 
 namespace milkcat {
 
-const int kTokenMax = 1000;
-const int kTermMax = kTokenMax;
-const int kFeatureLengthMax = 100;
-const int kTermLengthMax = kFeatureLengthMax;
-const int kPOSTagLengthMax = 10;
-const int kHMMSegmentAndPOSTaggingNBest = 3;
-const int kUserTermIdStart = 0x40000000;
-const double kDefaultCost = 16.0;
+class PartOfSpeechTagInstance;
+class TermInstance;
 
+// The base class for part-of-speech tagger
+class PartOfSpeechTagger {
+ public:
+  virtual ~PartOfSpeechTagger() = 0;
 
-const int kHmmModelMagicNumber = 0x3322;
-const int kDFModelMagicNumber = 0xdfdf;
+  // Tag the TermInstance and put the result to PartOfSpeechTagInstance
+  virtual void Tag(PartOfSpeechTagInstance *part_of_speech_tag_instance,
+                   TermInstance *term_instance) = 0;
+};
+
+inline PartOfSpeechTagger::~PartOfSpeechTagger() {}
 
 }  // namespace milkcat
 
-#endif  // SRC_COMMON_MILKCAT_CONFIG_H_
+#endif  // SRC_PARSER_PART_OF_SPEECH_TAGGER_H_

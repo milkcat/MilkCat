@@ -21,30 +21,43 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 //
-// config.h
-// milkcat_config.h --- Created at 2013-09-17
+// mixed_segmenter.h --- Created at 2013-11-25
 //
 
-#ifndef SRC_COMMON_MILKCAT_CONFIG_H_
-#define SRC_COMMON_MILKCAT_CONFIG_H_
+#ifndef SRC_PARSER_MIXED_SEGMENTER_H_
+#define SRC_PARSER_MIXED_SEGMENTER_H_
 
-#include <stdlib.h>
+#include "include/milkcat.h"
+#include "parser/segmenter.h"
+#include "parser/static_hashtable.h"
+#include "parser/crf_model.h"
+#include "utils/utils.h"
 
 namespace milkcat {
 
-const int kTokenMax = 1000;
-const int kTermMax = kTokenMax;
-const int kFeatureLengthMax = 100;
-const int kTermLengthMax = kFeatureLengthMax;
-const int kPOSTagLengthMax = 10;
-const int kHMMSegmentAndPOSTaggingNBest = 3;
-const int kUserTermIdStart = 0x40000000;
-const double kDefaultCost = 16.0;
+class OutOfVocabularyWordRecognition;
+class BigramSegmenter;
+class TermInstance;
+class TokenInstance;
 
+// Mixed Bigram segmenter and CRF Segmenter of OOV recognition
+class MixedSegmenter: public Segmenter {
+ public:
+  ~MixedSegmenter();
 
-const int kHmmModelMagicNumber = 0x3322;
-const int kDFModelMagicNumber = 0xdfdf;
+  static MixedSegmenter *New(Model::Impl *model_factory, Status *status);
+
+  // Segment a token instance into term instance
+  void Segment(TermInstance *term_instance, TokenInstance *token_instance);
+
+ private:
+  TermInstance *bigram_result_;
+  BigramSegmenter *bigram_;
+  OutOfVocabularyWordRecognition *oov_recognizer_;
+
+  MixedSegmenter();
+};
 
 }  // namespace milkcat
 
-#endif  // SRC_COMMON_MILKCAT_CONFIG_H_
+#endif  // SRC_PARSER_MIXED_SEGMENTER_H_

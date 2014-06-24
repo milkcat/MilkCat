@@ -21,30 +21,47 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 //
-// config.h
-// milkcat_config.h --- Created at 2013-09-17
+// crf_vocab.cc --- Created at 2014-01-28
+// get_crf_vocabulary.cc --- Created at 2014-03-20
 //
 
-#ifndef SRC_COMMON_MILKCAT_CONFIG_H_
-#define SRC_COMMON_MILKCAT_CONFIG_H_
+#include "newword/newword.h"
 
-#include <stdlib.h>
+#include <string>
+#include "include/milkcat.h"
+#include "utils/readable_file.h"
+#include "utils/status.h"
+#include "utils/utils.h"
 
 namespace milkcat {
 
-const int kTokenMax = 1000;
-const int kTermMax = kTokenMax;
-const int kFeatureLengthMax = 100;
-const int kTermLengthMax = kFeatureLengthMax;
-const int kPOSTagLengthMax = 10;
-const int kHMMSegmentAndPOSTaggingNBest = 3;
-const int kUserTermIdStart = 0x40000000;
-const double kDefaultCost = 16.0;
 
+// Segment the corpus from path and return the vocabulary of chinese words.
+// If any errors occured, status is not Status::OK()
+void CrfVocabulary(
+    const char *path,
+    int *total_count,
+    utils::unordered_map<std::string, int> *crf_vocab,
+    void (* progress)(int64_t bytes_processed,
+                      int64_t file_size,
+                      int64_t bytes_per_second),
+    Status *status) {
 
-const int kHmmModelMagicNumber = 0x3322;
-const int kDFModelMagicNumber = 0xdfdf;
+  utils::unordered_map<std::string, int> vocab;
+
+  // TODO: put model dir for this model
+  Model *model = Model::New();
+
+  *total_count = GetVocabularyFromFile(
+      path,
+      model,
+      Parser::kCrfSegmenter | Parser::kNoTagger,
+      utils::HardwareConcurrency(),
+      crf_vocab,
+      progress,
+      status);
+
+  delete model;
+}
 
 }  // namespace milkcat
-
-#endif  // SRC_COMMON_MILKCAT_CONFIG_H_

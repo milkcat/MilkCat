@@ -21,30 +21,20 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 //
-// config.h
-// milkcat_config.h --- Created at 2013-09-17
+// token_instance.cc --- Created at 2013-10-20
 //
 
-#ifndef SRC_COMMON_MILKCAT_CONFIG_H_
-#define SRC_COMMON_MILKCAT_CONFIG_H_
-
-#include <stdlib.h>
+#include "common/milkcat_config.h"
+#include "parser/token_instance.h"
 
 namespace milkcat {
 
-const int kTokenMax = 1000;
-const int kTermMax = kTokenMax;
-const int kFeatureLengthMax = 100;
-const int kTermLengthMax = kFeatureLengthMax;
-const int kPOSTagLengthMax = 10;
-const int kHMMSegmentAndPOSTaggingNBest = 3;
-const int kUserTermIdStart = 0x40000000;
-const double kDefaultCost = 16.0;
+TokenInstance::TokenInstance() {
+  instance_data_ = new InstanceData(1, 1, kTokenMax);
+}
 
-
-const int kHmmModelMagicNumber = 0x3322;
-const int kDFModelMagicNumber = 0xdfdf;
+TokenInstance::~TokenInstance() {
+  delete instance_data_;
+}
 
 }  // namespace milkcat
-
-#endif  // SRC_COMMON_MILKCAT_CONFIG_H_

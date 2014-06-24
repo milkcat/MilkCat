@@ -21,30 +21,50 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 //
-// config.h
-// milkcat_config.h --- Created at 2013-09-17
+// crf_segmenter.h --- Created at 2013-08-17
 //
 
-#ifndef SRC_COMMON_MILKCAT_CONFIG_H_
-#define SRC_COMMON_MILKCAT_CONFIG_H_
+#ifndef SRC_PARSER_CRF_SEGMENTER_H_
+#define SRC_PARSER_CRF_SEGMENTER_H_
 
-#include <stdlib.h>
+#include "include/milkcat.h"
+#include "parser/crf_tagger.h"
+#include "parser/token_instance.h"
+#include "parser/segmenter.h"
+#include "utils/utils.h"
 
 namespace milkcat {
 
-const int kTokenMax = 1000;
-const int kTermMax = kTokenMax;
-const int kFeatureLengthMax = 100;
-const int kTermLengthMax = kFeatureLengthMax;
-const int kPOSTagLengthMax = 10;
-const int kHMMSegmentAndPOSTaggingNBest = 3;
-const int kUserTermIdStart = 0x40000000;
-const double kDefaultCost = 16.0;
+class SegmentFeatureExtractor;
+class TermInstance;
 
+class CRFSegmenter: public Segmenter {
+ public:
+  static CRFSegmenter *New(Model::Impl *model_factory, Status *status);
+  ~CRFSegmenter();
 
-const int kHmmModelMagicNumber = 0x3322;
-const int kDFModelMagicNumber = 0xdfdf;
+  // Segment a range [begin, end) of token
+  void SegmentRange(TermInstance *term_instance,
+                    TokenInstance *token_instance,
+                    int begin,
+                    int end);
+
+  void Segment(TermInstance *term_instance, TokenInstance *token_instance) {
+    SegmentRange(term_instance, token_instance, 0, token_instance->size());
+  }
+
+ private:
+  CRFTagger *crf_tagger_;
+
+  SegmentFeatureExtractor *feature_extractor_;
+
+  int S, B, B1, B2, M, E;
+
+  CRFSegmenter();
+
+  DISALLOW_COPY_AND_ASSIGN(CRFSegmenter);
+};
 
 }  // namespace milkcat
 
-#endif  // SRC_COMMON_MILKCAT_CONFIG_H_
+#endif  // SRC_PARSER_CRF_SEGMENTER_H_

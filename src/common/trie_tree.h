@@ -75,4 +75,4 @@ class DoubleArrayTrieTree: public TrieTree {
 
 }  // namespace milkcat
 
-#endif  // SRC_MILKCAT_TRIE_TREE_H_
+#endif  // SRC_COMMON_TRIE_TREE_H_

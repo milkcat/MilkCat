@@ -33,9 +33,9 @@
 #include "common/trie_tree.h"
 #include "common/static_array.h"
 #include "keyphrase/string_value.h"
-#include "milkcat/hmm_model.h"
-#include "milkcat/crf_model.h"
-#include "milkcat/static_hashtable.h"
+#include "parser/hmm_model.h"
+#include "parser/crf_model.h"
+#include "parser/static_hashtable.h"
 #include "utils/mutex.h"
 
 #ifndef SRC_COMMON_MODEL_FACTORY_H_

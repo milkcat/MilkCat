@@ -21,30 +21,20 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 //
-// config.h
-// milkcat_config.h --- Created at 2013-09-17
+// depengency_instance.cc --- Created at 2014-06-03
 //
 
-#ifndef SRC_COMMON_MILKCAT_CONFIG_H_
-#define SRC_COMMON_MILKCAT_CONFIG_H_
-
-#include <stdlib.h>
+#include "common/milkcat_config.h"
+#include "parser/dependency_instance.h"
 
 namespace milkcat {
 
-const int kTokenMax = 1000;
-const int kTermMax = kTokenMax;
-const int kFeatureLengthMax = 100;
-const int kTermLengthMax = kFeatureLengthMax;
-const int kPOSTagLengthMax = 10;
-const int kHMMSegmentAndPOSTaggingNBest = 3;
-const int kUserTermIdStart = 0x40000000;
-const double kDefaultCost = 16.0;
+DependencyInstance::DependencyInstance() {
+  instance_data_ = new InstanceData(1, 1, kTokenMax);
+}
 
-
-const int kHmmModelMagicNumber = 0x3322;
-const int kDFModelMagicNumber = 0xdfdf;
+DependencyInstance::~DependencyInstance() {
+  delete instance_data_;
+}
 
 }  // namespace milkcat
-
-#endif  // SRC_COMMON_MILKCAT_CONFIG_H_
