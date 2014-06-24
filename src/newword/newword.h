@@ -22,10 +22,11 @@
 // THE SOFTWARE.
 //
 // libnekoneko.h --- Created at 2014-03-18
+// newword.h --- Created at 2014-06-24
 //
 
-#ifndef SRC_NEWWORD_LIBNEKONEKO_H_
-#define SRC_NEWWORD_LIBNEKONEKO_H_
+#ifndef SRC_NEWWORD_NEWWORD_H_
+#define SRC_NEWWORD_NEWWORD_H_
 
 #include <stdint.h>
 #include <vector>
@@ -92,4 +93,4 @@ void FinalRank(
 
 }  // namespace milkcat
 
-#endif  // SRC_NEWWORD_LIBNEKONEKO_H_
+#endif  // SRC_NEWWORD_NEWWORD_H_

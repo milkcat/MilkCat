@@ -24,8 +24,8 @@
 //
 
 
-#ifndef SRC_NEKO_UTF8_H_
-#define SRC_NEKO_UTF8_H_
+#ifndef SRC_NEWWORD_UTF8_H_
+#define SRC_NEWWORD_UTF8_H_
 
 #include <stdint.h>
 #include <iterator>
@@ -112,4 +112,4 @@ uint32_t next(octet_iterator& it) {
 }  // namespace utf8
 
 
-#endif  // SRC_NEKO_UTF8_H_
+#endif  // SRC_NEWWORD_UTF8_H_

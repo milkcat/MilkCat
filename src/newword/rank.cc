@@ -22,6 +22,7 @@
 // THE SOFTWARE.
 //
 // final_rank.cc --- Created at 2014-02-07
+// rank.cc --- Created at 2014-06-24
 //
 
 #include <string>

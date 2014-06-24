@@ -23,6 +23,7 @@
 //
 // crf_vocab.cc --- Created at 2014-01-28
 // get_crf_vocabulary.cc --- Created at 2014-03-20
+// vocabulary.cc --- Created at 2014-06-24
 //
 
 #include "newword/newword.h"

@@ -23,6 +23,7 @@
 //
 // neko_main.cc --- Created at 2014-02-03
 // libnekoneko.cc --- Created at 2014-03-20
+// newword.cc --- Created at 2014-06-24
 //
 
 #include "include/milkcat.h"

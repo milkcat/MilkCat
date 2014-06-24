@@ -23,6 +23,7 @@
 //
 // bigram_anal.cc --- Created at 2014-01-30
 // extract_adjent.cc --- Created at 2014-03-18
+// adjacent_entropy.cc --- Created at 2014-06-24
 //
 
 #include <math.h>
