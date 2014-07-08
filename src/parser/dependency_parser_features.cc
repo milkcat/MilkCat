@@ -136,6 +136,7 @@ const char *DependencyParser::STLCt() {
   else
     return "NULL";
 }
+
 const char *DependencyParser::STRCt() {
   Node *node = NodeFromStack(0);
   if (node != NULL) node = RightmostChildNode(node);
@@ -154,154 +155,167 @@ const char *DependencyParser::N0LCt() {
     return "NULL";
 }
 
+int DependencyParser::RV() {
+  Node *node = NodeFromBuffer(0);
+  if (node) 
+    return right_verb_count_[node->node_id()];
+  else
+    return -1;
+}
+
 int DependencyParser::BuildFeature() {
   Node *node;
   utils::StringBuilder builder;
   int feature_num = 0;
 
   builder.ChangeBuffer(feature_buffer_[feature_num], kFeatureStringMax);
-  builder << "STwt:" << STw() << '/' << STt();
+  builder << "STwt@" << STw() << '/' << STt();
   LOG(feature_buffer_[feature_num]);
   feature_num++;
 
   builder.ChangeBuffer(feature_buffer_[feature_num], kFeatureStringMax);
-  builder << "STw:" << STw();
+  builder << "STw@" << STw();
   LOG(feature_buffer_[feature_num]);
   feature_num++;
 
   builder.ChangeBuffer(feature_buffer_[feature_num], kFeatureStringMax);
-  builder << "STt:" << STt();
+  builder << "STt@" << STt();
   LOG(feature_buffer_[feature_num]);
   feature_num++;
 
   builder.ChangeBuffer(feature_buffer_[feature_num], kFeatureStringMax);
-  builder << "N0wt:" << N0w() << '/' << N0t();
+  builder << "N0wt@" << N0w() << '/' << N0t();
   LOG(feature_buffer_[feature_num]);
   feature_num++;
 
   builder.ChangeBuffer(feature_buffer_[feature_num], kFeatureStringMax);
-  builder << "N0w:" << N0w();
+  builder << "N0w@" << N0w();
   LOG(feature_buffer_[feature_num]);
   feature_num++;
 
   builder.ChangeBuffer(feature_buffer_[feature_num], kFeatureStringMax);
-  builder << "N0t:" << N0t();
+  builder << "N0t@" << N0t();
   LOG(feature_buffer_[feature_num]);
   feature_num++;
 
   builder.ChangeBuffer(feature_buffer_[feature_num], kFeatureStringMax);
-  builder << "N1wt:" << N1w() << '/' << N1t();
+  builder << "N1wt@" << N1w() << '/' << N1t();
   LOG(feature_buffer_[feature_num]);
   feature_num++;
 
   builder.ChangeBuffer(feature_buffer_[feature_num], kFeatureStringMax);
-  builder << "N1w:" << N1w();
+  builder << "N1w@" << N1w();
   LOG(feature_buffer_[feature_num]);
   feature_num++;
 
   builder.ChangeBuffer(feature_buffer_[feature_num], kFeatureStringMax);
-  builder << "N1t:" << N1t();
+  builder << "N1t@" << N1t();
   LOG(feature_buffer_[feature_num]);
   feature_num++;
 
   builder.ChangeBuffer(feature_buffer_[feature_num], kFeatureStringMax);
-  builder << "STwtN0wt:" << STw() << '/' << STt() << '/' << N0w() << '/'
+  builder << "STwtN0wt@" << STw() << '/' << STt() << '/' << N0w() << '/'
           << N0t();
   LOG(feature_buffer_[feature_num]);
   feature_num++;
 
   builder.ChangeBuffer(feature_buffer_[feature_num], kFeatureStringMax);
-  builder << "STwtN0w:" << STw() << '/' << STt() << '/' << N0w();
+  builder << "STwtN0w@" << STw() << '/' << STt() << '/' << N0w();
   LOG(feature_buffer_[feature_num]);
   feature_num++;
 
   builder.ChangeBuffer(feature_buffer_[feature_num], kFeatureStringMax);
-  builder << "STwN0wt:" << STw() << '/' << N0w() << '/' << N0t();
+  builder << "STwN0wt@" << STw() << '/' << N0w() << '/' << N0t();
   LOG(feature_buffer_[feature_num]);
   feature_num++;
 
   builder.ChangeBuffer(feature_buffer_[feature_num], kFeatureStringMax);
-  builder << "STwtN0t:" << STw() << '/' << STt() << '/' << N0t();
+  builder << "STwtN0t@" << STw() << '/' << STt() << '/' << N0t();
   LOG(feature_buffer_[feature_num]);
   feature_num++;
 
   builder.ChangeBuffer(feature_buffer_[feature_num], kFeatureStringMax);
-  builder << "STtN0wt:" << STt() << '/' << N0w() << '/' << N0t();
+  builder << "STtN0wt@" << STt() << '/' << N0w() << '/' << N0t();
   LOG(feature_buffer_[feature_num]);
   feature_num++;
 
   builder.ChangeBuffer(feature_buffer_[feature_num], kFeatureStringMax);
-  builder << "STwN0w:" << STw() << '/' << N0w();
+  builder << "STwN0w@" << STw() << '/' << N0w();
   LOG(feature_buffer_[feature_num]);
   feature_num++;
 
   builder.ChangeBuffer(feature_buffer_[feature_num], kFeatureStringMax);
-  builder << "STtN0t:" << STt() << '/' << N0t();
+  builder << "STtN0t@" << STt() << '/' << N0t();
   LOG(feature_buffer_[feature_num]);
   feature_num++;
 
   builder.ChangeBuffer(feature_buffer_[feature_num], kFeatureStringMax);
-  builder << "N0tN1t:" << N0t() << '/' << N1t();
+  builder << "N0tN1t@" << N0t() << '/' << N1t();
   LOG(feature_buffer_[feature_num]);
   feature_num++;
 
   builder.ChangeBuffer(feature_buffer_[feature_num], kFeatureStringMax);
-  builder << "N0tN1tN2t:" << N0t() << '/' << N1t() << '/' << N2t();
+  builder << "N0tN1tN2t@" << N0t() << '/' << N1t() << '/' << N2t();
   LOG(feature_buffer_[feature_num]);
   feature_num++;
 
   builder.ChangeBuffer(feature_buffer_[feature_num], kFeatureStringMax);
-  builder << "STtN0tN1t:" << STt() << '/' << N0t() << '/' << N1t();
+  builder << "STtN0tN1t@" << STt() << '/' << N0t() << '/' << N1t();
   LOG(feature_buffer_[feature_num]);
   feature_num++;
 
   builder.ChangeBuffer(feature_buffer_[feature_num], kFeatureStringMax);
-  builder << "STPtSTtN0t:" << STPt() << '/' << STt() << '/' << N0t();
+  builder << "STPtSTtN0t@" << STPt() << '/' << STt() << '/' << N0t();
   LOG(feature_buffer_[feature_num]);
   feature_num++;
 
   builder.ChangeBuffer(feature_buffer_[feature_num], kFeatureStringMax);
-  builder << "STtSTLCtN0t:" << STt() << '/' << STLCt() << '/' << N0t();
+  builder << "STtSTLCtN0t@" << STt() << '/' << STLCt() << '/' << N0t();
   LOG(feature_buffer_[feature_num]);
   feature_num++;
 
   builder.ChangeBuffer(feature_buffer_[feature_num], kFeatureStringMax);
-  builder << "STtSTRCtN0t:" << STt() << '/' << STRCt() << '/' << N0t();
+  builder << "STtSTRCtN0t@" << STt() << '/' << STRCt() << '/' << N0t();
   LOG(feature_buffer_[feature_num]);
   feature_num++;
 
   builder.ChangeBuffer(feature_buffer_[feature_num], kFeatureStringMax);
-  builder << "STtN0tN0LCt:" << STt() << '/' << N0t() << '/' << N0LCt();
+  builder << "STtN0tN0LCt@" << STt() << '/' << N0t() << '/' << N0LCt();
   LOG(feature_buffer_[feature_num]);
   feature_num++;
 
   builder.ChangeBuffer(feature_buffer_[feature_num], kFeatureStringMax);
-  builder << "N0wN1tN2t:" << N0w() << '/' << N1t() << '/' << N2t();
+  builder << "N0wN1tN2t@" << N0w() << '/' << N1t() << '/' << N2t();
   LOG(feature_buffer_[feature_num]);
   feature_num++;
 
   builder.ChangeBuffer(feature_buffer_[feature_num], kFeatureStringMax);
-  builder << "STtN0wN1t:" << STt() << '/' << N0w() << '/' << N1t();
+  builder << "STtN0wN1t@" << STt() << '/' << N0w() << '/' << N1t();
   LOG(feature_buffer_[feature_num]);
   feature_num++;
 
   builder.ChangeBuffer(feature_buffer_[feature_num], kFeatureStringMax);
-  builder << "STPtSTtN0w:" << STPt() << '/' << STt() << '/' << N0w();
+  builder << "STPtSTtN0w@" << STPt() << '/' << STt() << '/' << N0w();
   LOG(feature_buffer_[feature_num]);
   feature_num++;
 
   builder.ChangeBuffer(feature_buffer_[feature_num], kFeatureStringMax);
-  builder << "STtSTLCtN0w:" << STt() << '/' << STLCt() << '/' << N0w();
+  builder << "STtSTLCtN0w@" << STt() << '/' << STLCt() << '/' << N0w();
   LOG(feature_buffer_[feature_num]);
   feature_num++;
 
   builder.ChangeBuffer(feature_buffer_[feature_num], kFeatureStringMax);
-  builder << "STtSTRCtN0w:" << STt() << '/' << STRCt() << '/' << N0w();
+  builder << "STtSTRCtN0w@" << STt() << '/' << STRCt() << '/' << N0w();
   LOG(feature_buffer_[feature_num]);
   feature_num++;
 
   builder.ChangeBuffer(feature_buffer_[feature_num], kFeatureStringMax);
-  builder << "STtN0wN0LCt:" << STt() << '/' << N0w() << '/' << N0LCt();
+  builder << "STtN0wN0LCt@" << STt() << '/' << N0w() << '/' << N0LCt();
+  LOG(feature_buffer_[feature_num]);
+  feature_num++;
+
+  builder.ChangeBuffer(feature_buffer_[feature_num], kFeatureStringMax);
+  builder << "LAST@" << maxent_classifier_->yname(last_transition_);
   LOG(feature_buffer_[feature_num]);
   feature_num++;
 

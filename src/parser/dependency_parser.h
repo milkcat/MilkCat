@@ -35,7 +35,7 @@ class DependencyParser {
  public:
   class Node;
 
-  static const int kFeatureMax = 30;
+  static const int kFeatureMax = 50;
   static const int kFeatureStringMax = 1000;
 
   static DependencyParser *New(Model::Impl *model_impl, Status *status);
@@ -76,6 +76,7 @@ class DependencyParser {
   const char *STLCt();
   const char *STRCt();
   const char *N0LCt();
+  int RV();
 
   // Check if current state allows an action
   bool AllowLeftArc() const;
@@ -104,9 +105,11 @@ class DependencyParser {
 
   int right_verb_count_[kTermMax + 1];
   int buffer_ptr_;
+  bool have_root_node_;
   int n_arcs_;
   MaxentClassifier *maxent_classifier_;
   char **feature_buffer_;
+  int last_transition_;
 };
 
 

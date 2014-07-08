@@ -103,13 +103,12 @@ libmilkcat_la_SOURCES = common/cedar.h \
                         newword/mutual_information.cc \
                         newword/utf8.h
 
-TESTS = dependency_test sparsehash_test
-check_PROGRAMS = dependency_test sparsehash_test
+TESTS = dependency_test 
+check_PROGRAMS = dependency_test 
 
-dependency_test_SOURCES = test/dependency_test.cc
+dependency_test_SOURCES = tests/dependency_test.cc
 dependency_test_CXXFLAGS = -DMODEL_DIR=\"$(top_srcdir)/data/\" \
                            -DPRIVATE_DIR=\"$(top_srcdir)/private/\"
 dependency_test_LDFLAGS = -all-static
 dependency_test_LDADD = libmilkcat.la
 
-sparsehash_test_SOURCES = test/sparsehash_test.cc

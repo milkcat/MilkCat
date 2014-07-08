@@ -24,6 +24,8 @@
 // dependency_parser.h --- Created at 2013-08-10
 //
 
+#define ENABLE_LOG
+
 #include "parser/dependency_parser.h"
 
 #include <assert.h>
@@ -43,7 +45,8 @@ namespace milkcat {
 
 
 DependencyParser::DependencyParser(): maxent_classifier_(NULL),
-                                      feature_buffer_(NULL) {
+                                      feature_buffer_(NULL),
+                                      last_transition_(0) {
 }
 
 DependencyParser *DependencyParser::New(Model::Impl *model_impl,
@@ -101,15 +104,15 @@ bool DependencyParser::AllowReduce() const {
 }
 
 bool DependencyParser::AllowShift() const {
+  // if (strcmp(maxent_classifier_->yname(last_transition_), "REDU") == 0)
+  //  return false;
   return buffer_ptr_ < buffer_.size() - 1;
 }
 
 bool DependencyParser::AllowRightArc() const {
-  // printf("%d %d %d\n", buffer_ptr_, buffer_.size(), n_arcs_);
-  if (buffer_ptr_ == buffer_.size() - 1 && n_arcs_ < buffer_.size() - 2)
-    return false;
-  else
-    return true;
+  LOG(stack_.size() << " " << have_root_node_);
+  if (stack_.size() == 1 && have_root_node_ == true) return false;
+  return true;
 }
 
 void DependencyParser::AddArc(Node *head, 
@@ -122,6 +125,7 @@ void DependencyParser::AddArc(Node *head,
 }
 
 bool DependencyParser::AllowAction(int label_id) const {
+  LOG("LabelId: " << label_id);
   const char *actoin_str = maxent_classifier_->yname(label_id);
   if (strncmp(actoin_str, "LARC", 4) == 0)
     return AllowLeftArc();
@@ -131,6 +135,7 @@ bool DependencyParser::AllowAction(int label_id) const {
     return AllowReduce();
   else if (strncmp(actoin_str, "SHIF", 4) == 0)
     return AllowShift();
+  assert(false);
 
   return true;
 }
@@ -159,11 +164,18 @@ int DependencyParser::NextAction() {
     do {
       yid = candidate_actions.back().second;
       candidate_actions.pop_back();
+      if (candidate_actions.size() == 0) {
+        yid = 0; // SHIFT
+        break;
+      }
     } while (AllowAction(yid) == false);
   }
 
   LOG("Action: " << maxent_classifier_->yname(yid) << " (" << yid << ")");
 
+  last_transition_ = yid;
+  if (strcmp(maxent_classifier_->yname(yid), "RARC-ROOT") == 0)
+    have_root_node_ = true;
   return yid;
 }
 
@@ -189,6 +201,8 @@ void DependencyParser::Parse(
   buffer_.clear();
   stack_.clear();
   n_arcs_ = 0;
+  last_transition_ = 0;
+  have_root_node_ = false;
 
   // Load the Term-POS_tag data into Dependency::Node
   node = new Node(0, "-ROOT-", "ROOT");  // ROOT node
@@ -201,11 +215,9 @@ void DependencyParser::Parse(
         i + 1,    // node_id
         term_instance->term_text_at(i),
         part_of_speech_tag_instance->part_of_speech_tag_at(i));
-    LOG("Mark!");
     buffer_.push_back(node);
   }
 
-  LOG("Mark～2!");
   // Build the right verb count feature
   int verb_count = 0;
   for (int i = term_instance->size() - 1; i >= 0; --i) {

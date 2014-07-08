@@ -193,6 +193,7 @@ int ParserMain(int argc, char **argv) {
   FILE *fd = NULL;
   Options options;
   char buffer[1024];
+  int index = 0;
 
   GetArgs(argc, argv, &options);
   
@@ -239,7 +240,9 @@ int ParserMain(int argc, char **argv) {
 
   while (NULL != fgets(input_buffer, 1048576, fd)) {
     Parser::Iterator *it = parser->Parse(input_buffer);
+    index = 0;
     while (!it->End()) {
+      index++;
       switch (*it->word()) {
         case '\r':
         case '\n':
@@ -266,6 +269,10 @@ int ParserMain(int argc, char **argv) {
       
       } else {
         // Use conll format to output the dependdency parsing result
+        fputs("\t", stdout);
+        sprintf(buffer, "%d", index);
+        fputs(buffer, stdout);
+
         fputs("\t", stdout);
         fputs(it->part_of_speech_tag(), stdout);
 

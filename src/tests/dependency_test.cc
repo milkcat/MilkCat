@@ -101,14 +101,17 @@ int TestDependency(const char *gold_filename) {
     parser->Parse(dependency_instance, tag_instance, term_instance);
 
     for (int i = 0; i < term_instance->size(); ++i) {
-      total++;
+      
       printf("%s %s %d %s %d %s\n", 
              term_instance->term_text_at(i),
              tag_instance->part_of_speech_tag_at(i),
              dependency_instance_gold->head_node_at(i),
              dependency_instance_gold->dependency_type_at(i),
              dependency_instance->head_node_at(i),
-             dependency_instance->dependency_type_at(i));
+             dependency_instance->dependency_type_at(i)); 
+      if (strcmp(tag_instance->part_of_speech_tag_at(i), "PU") == 0)
+        continue;
+      total++;
       if (dependency_instance_gold->head_node_at(i) == 
           dependency_instance->head_node_at(i)) {
         uas_count++;
@@ -118,6 +121,7 @@ int TestDependency(const char *gold_filename) {
         }
       }
     }
+    puts("");
   }
 
   printf("LAS: %.3lf\n", static_cast<double>(las_count) / total);
