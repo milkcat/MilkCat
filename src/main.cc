@@ -35,7 +35,7 @@
 
 using milkcat::Parser;
 using milkcat::Model;
-using milkcat::Keyphrase;
+using milkcat::Phrase;
 using milkcat::Status;
 using milkcat::ReadableFile;
 using milkcat::Newword;
@@ -69,8 +69,8 @@ int PrintUsage() {
   printf("Usage:\n");
   printf("    milkcat [parser-options] filename|-i\n");
   printf("        Parses the text from filename or stdin (-i).\n");
-  printf("    milkcat keyphrase filename\n");
-  printf("        Extracts keyphrases from filename.\n");
+  printf("    milkcat phrase filename\n");
+  printf("        Extracts phrases from filename.\n");
   printf("    milkcat newword filename\n");
   printf("        Extracts newwords from filename.\n");
   printf("Parser Options:\n");
@@ -301,7 +301,7 @@ int ParserMain(int argc, char **argv) {
   return 0;
 }
 
-int KeyphraseMain(int argc, char **argv) {
+int PhraseMain(int argc, char **argv) {
   Status status;
 
   if (argc != 3) {
@@ -315,10 +315,10 @@ int KeyphraseMain(int argc, char **argv) {
     if (model == NULL) status = Status::Info(milkcat::LastError());
   }
 
-  Keyphrase *keyphrase = NULL;
+  Phrase *phrase = NULL;
   if (status.ok()) {
-    keyphrase = Keyphrase::New(model);
-    if (keyphrase == NULL) status = Status::Info(milkcat::LastError());
+    phrase = Phrase::New(model);
+    if (phrase == NULL) status = Status::Info(milkcat::LastError());
   }
 
   const char *filename = argv[argc - 1];
@@ -335,19 +335,19 @@ int KeyphraseMain(int argc, char **argv) {
     text[text_size] = '\0';
   }
 
-  Keyphrase::Iterator *it = NULL;
+  Phrase::Iterator *it = NULL;
   if (status.ok()) {
-    it = keyphrase->Extract(text);
+    it = phrase->Extract(text);
     while (!it->End()) {
       printf("%s %lf\n", it->phrase(), it->weight());
       it->Next();
     }
-    keyphrase->Release(it);
+    phrase->Release(it);
   }
 
   delete[] text;
   delete fd;
-  delete keyphrase;
+  delete phrase;
   delete model;
 
   if (!status.ok()) {
@@ -404,8 +404,8 @@ int NekonkeoMain(int argc, char **argv) {
 int main(int argc, char **argv) {
   if (argc == 1) {
     PrintUsage();
-  } else if (strcmp(argv[1], "keyphrase") == 0) {
-    return KeyphraseMain(argc, argv);
+  } else if (strcmp(argv[1], "phrase") == 0) {
+    return PhraseMain(argc, argv);
   } else if (strcmp(argv[1], "newword") == 0) {
     return NekonkeoMain(argc, argv);
   } else {

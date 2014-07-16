@@ -30,7 +30,7 @@
 #include <assert.h>
 #include <set>
 #include <vector>
-#include "keyphrase/string_table.h"
+#include "phrase/string_table.h"
 #include "utils/utils.h"
 
 namespace milkcat {
@@ -74,8 +74,8 @@ class Document {
 
   // Gets the term frequency of the term specified by word. Term frequency
   // for stopwords is 0
-  int tf(int word) const {
-    return inverted_index_[word].size();
+  double tf(int word) const {
+    return static_cast<double>(inverted_index_[word].size()) / size();
   }
 
   const char *WordString(int word) const { 

@@ -23,16 +23,6 @@ libmilkcat_la_SOURCES = common/cedar.h \
                         common/trie_tree.h \
                         include/milkcat.h \
                         include/milkcat-c.h \
-                        keyphrase/document.cc \
-                        keyphrase/document.h \
-                        keyphrase/libkeyphrase.cc \
-                        keyphrase/phrase.h \
-                        keyphrase/phrase_ranker.h \
-                        keyphrase/phrase_ranker.cc \
-                        keyphrase/phrase_extractor.h \
-                        keyphrase/phrase_extractor.cc \
-                        keyphrase/string_table.h \
-                        keyphrase/string_value.h \
                         parser/beam.h \
                         parser/bigram_segmenter.cc \
                         parser/bigram_segmenter.h \
@@ -78,6 +68,14 @@ libmilkcat_la_SOURCES = common/cedar.h \
                         parser/segmenter.h \
                         parser/static_array.h \
                         parser/static_hashtable.h \
+                        phrase/document.cc \
+                        phrase/document.h \
+                        phrase/phrase.cc \
+                        phrase/phrase.h \
+                        phrase/phrase_extractor.h \
+                        phrase/phrase_extractor.cc \
+                        phrase/string_table.h \
+                        phrase/string_value.h \
                         utils/log.h \
                         utils/log.cc \
                         utils/readable_file.cc \

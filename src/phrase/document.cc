@@ -24,7 +24,7 @@
 // document.cc --- Created at 2014-03-26
 //
 
-#include "keyphrase/document.h"
+#include "phrase/document.h"
 
 #include "common/trie_tree.h"
 #include "include/milkcat.h"

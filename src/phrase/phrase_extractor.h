@@ -27,8 +27,7 @@
 #ifndef SRC_KEYPHRASE_PHRASE_EXTRACTOR_H_
 #define SRC_KEYPHRASE_PHRASE_EXTRACTOR_H_
 
-#include "keyphrase/document.h"
-#include "keyphrase/phrase.h"
+#include "phrase/document.h"
 #include "utils/pool.h"
 #include <string>
 
@@ -40,6 +39,8 @@ class TrieTree;
 // PhraseExtractor extracts phrases in the document
 class PhraseExtractor {
  public:
+  class Phrase;
+
   // Extracts phrases from document and stores into phrases. phrases contains
   // not only multiple word phrases but also the phrases contain only one word.
   // The extracted phrases is allocated by phrase_pool.
@@ -49,18 +50,9 @@ class PhraseExtractor {
 
  private:
   static const double kBoundaryThreshold;
-  static const double kShiftThreshold;
+  static const double kPhrasePMIThreshold;
+  static const int kFrequencyThreshold = 2;
 
-  // Adjacent represent the adjacent data for a phrase contains the adjacent
-  // entropy which word occurs or which word occurs most 
-  struct Adjacent {
-    int major_word;
-    int major_word_freq;
-    double entropy;
-  };
-
-  // This structure represent a candidate of phrase. It stores the words
-  // contained by this phrase and the phrase's index in document
   class PhraseCandidate;
 
   const Document *document_;
@@ -70,32 +62,21 @@ class PhraseExtractor {
 
   utils::Pool<PhraseCandidate> candidate_pool_;
   
-  // Calculate the major term id and its term frequency as well as adjacent
-  // entropy from an unordered_map contained term frequency data
-  inline void CalcAdjacent(const utils::unordered_map<int, int> &term_freq,
-                           Adjacent *adjacent);
+  // Calculate the adjacent entropy of the term-frequency map
+  inline double CalcAdjent(const utils::unordered_map<int, int> &term_freq);
 
-  // Finds which word occurs most in the left position of word_index,
-  // returns the word and the entrypy. index_offset is the offset in the
-  // word_index
-  void LeftAdjacent(const std::vector<int> &word_index,
-                    int index_offset,
-                    Adjacent *adjacent);
+  // Calculate the left adjacent entropy of the word.
+  // @param word_index inversed index of the word
+  // @param index_offset offset of each position in word_index
+  // @return the entropy
+  double Left(const std::vector<int> &word_index, int index_offset);
 
-  // Finds which word occurs most in the right position of word_index,
-  // returns the word and the entrypy.
-  void RightAdjacent(const std::vector<int> &word_index,
-                     Adjacent *adjacent);
-
-  // Whether the next term is part of current phrase
-  inline bool IsPhrase(const Adjacent &adjacent) {
-    return adjacent.major_word_freq > 1 && adjacent.entropy < kShiftThreshold;
-  }
-
-  // Whether the left or right term is the boundary of a term
-  inline bool IsBoundary(const Adjacent &adjacent) {
-    return adjacent.entropy > kBoundaryThreshold;
-  }
+  // Finds which words occurs most in the right position of word_index
+  // @param candidate The candidate phrase
+  // @param right_words stores the words occurs most in the right position of 
+  //        this word
+  double Right(PhraseCandidate *candidate,
+               std::vector<int> *right_words);
 
   // Get a set of words that candidate phrase maybe begin with it, store it into
   // phrases_
@@ -109,6 +90,8 @@ class PhraseExtractor {
 
 class PhraseExtractor::PhraseCandidate {
  public:
+  PhraseCandidate();
+  
   // Clears the word and the index of the phrase candidate
   void Clear();
 
@@ -127,6 +110,15 @@ class PhraseExtractor::PhraseCandidate {
 
   const std::vector<int> &index() { return index_; }
   const std::vector<int> &phrase_words() { return phrase_words_; }
+  int size() const { return phrase_words_.size(); }
+
+  // The sum of log-probability of each word. Using for calculate the pmi
+  int sum_logpw() const { return sum_logpw_; }
+  void set_sum_logpw(double value) { sum_logpw_ = value; }
+
+  // Weight for the candidate
+  int weight() const { return weight_; }
+  void set_weight(double value) { weight_ = value; }
 
  private:
   // Words of this phrase
@@ -134,7 +126,58 @@ class PhraseExtractor::PhraseCandidate {
 
   // The index for last word of phrase
   std::vector<int> index_;
+
+  double sum_logpw_;
+  double weight_;
 };
+
+// A phrase in document
+class PhraseExtractor::Phrase {
+ public:
+  Phrase(): document_(NULL), tf_(0.0), weight_(0.0) {
+  }
+
+  void set_document(const Document *document) {
+    document_ = document;
+  }
+
+  void set_words(const std::vector<int> &words) {
+    words_ = words;
+  }
+
+  // Final weight for the phrase
+  void set_weight(double weight) { weight_ = weight; }
+  double weight() const { return weight_; }
+
+  // Gets the string of this phrase
+  const char *PhraseString() {
+    if (phrase_string_.size() == 0) {
+      for (int i = 0; i < words_.size(); ++i)
+        phrase_string_ += document_->WordString(words_[i]);
+    }
+
+    return phrase_string_.c_str();
+  }
+
+  // Word's string at index
+  const char *WordString(int index) const {
+    assert(index < word_count());
+    
+    int word = words_[index];
+    return document_->WordString(word);
+  }
+
+  // Number of words in this phrase
+  int word_count() const { return words_.size(); }
+
+ private:
+  const Document *document_;
+  double tf_;
+  double weight_;
+  std::vector<int> words_;
+  std::string phrase_string_;
+};
+
 
 }  // namespace milkcat
 

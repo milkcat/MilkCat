@@ -171,17 +171,16 @@ class Parser::Iterator {
 
 // ---------------------------- Keyphrase ------------------------------------
 
-// Keyphrase extracts keyphrases from an text. 'Extract phrase' means it would
-// contains not only words but alse the phrase that contains several words.
-// Use Extract to extract the keyphrases and it returns an Keyphrase::Iterator.
+// Extracts phrases from an text.
+// Use Extract to extract the phrases and returns an Phrase::Iterator.
 // After interating, using Release to free the iterator.
-class Keyphrase {
+class Phrase {
  public:
   class Impl;
   class Iterator;
 
-  static Keyphrase *New(Model *model);
-  ~Keyphrase();
+  static Phrase *New(Model *model);
+  ~Phrase();
 
   // Extracts keyphrase from text and returns a Iterator of keyphrases
   Iterator *Extract(const char *text);
@@ -190,11 +189,11 @@ class Keyphrase {
   void Release(Iterator *it);
 
  private:
-  Keyphrase();
+  Phrase();
   Impl *impl_;
 };
 
-class Keyphrase::Iterator {
+class Phrase::Iterator {
  public:
   class Impl;
 
@@ -219,7 +218,7 @@ class Keyphrase::Iterator {
   Impl *impl_;
   Iterator();
 
-  friend class Keyphrase;
+  friend class Phrase;
 };
 
 // ---------------------------- Newword --------------------------------------

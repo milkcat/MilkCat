@@ -32,7 +32,7 @@
 #include "common/milkcat_config.h"
 #include "common/trie_tree.h"
 #include "common/static_array.h"
-#include "keyphrase/string_value.h"
+#include "phrase/string_value.h"
 #include "parser/hmm_model.h"
 #include "parser/crf_model.h"
 #include "parser/static_hashtable.h"

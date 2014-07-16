@@ -41,7 +41,7 @@
 #include "common/maxent_classifier.h"
 #include "common/trie_tree.h"
 #include "include/milkcat.h"
-#include "keyphrase/string_value.h"
+#include "phrase/string_value.h"
 #include "parser/hmm_part_of_speech_tagger.h"
 #include "parser/static_hashtable.h"
 #include "utils/utils.h"
