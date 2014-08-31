@@ -3,10 +3,12 @@ autom4te.cache
 
 configure
 scripts
-m4
+m4/*
+!m4/ax_cxx_compile_stdcxx_11.m4
+!m4/ax_pthread.m4
 aclocal.m4
 Makefile.in
 private
 
-/data/*
-!/data/Makefile.am
+data/*
+!data/Makefile.am

@@ -64,7 +64,7 @@ void FinalRank(
   final_result->clear();
 
   // Remove the minimal N values in each map, the ratio is specified by
-  // remove_ratio. And normalize the values in each map to [0, 1]
+  // remove_ratio. 
   std::vector<std::pair<std::string, double> > adjent_vec, mutinf_vec;
   SortMapByValue(adjecent_entropy, &adjent_vec);
   SortMapByValue(mutual_information, &mutinf_vec);
