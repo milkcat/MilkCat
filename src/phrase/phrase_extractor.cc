@@ -1,4 +1,3 @@
-//
 // The MIT License (MIT)
 //
 // Copyright 2013-2014 The MilkCat Project Developers
@@ -24,10 +23,11 @@
 // candidate_term.cc --- Created at 2014-03-26
 //
 
-#define ENABLE_LOG
+#define DEBUG
 
 #include "phrase/phrase_extractor.h"
 
+#include <algorithm>
 #include <math.h>
 #include <stdlib.h>
 #include <string>
@@ -44,7 +44,7 @@ const double PhraseExtractor::kBoundaryThreshold = 0.5;
 
 PhraseExtractor::PhraseCandidate::PhraseCandidate(): 
     sum_logpw_(0.0),
-    weight_(0.0) {
+    pmi_(0.0) {
 }
 
 void PhraseExtractor::PhraseCandidate::Clear() {
@@ -70,14 +70,24 @@ void PhraseExtractor::PhraseCandidate::FromPhraseCandidateAndWord(
       if (document->word(idx + 1) == word) index_.push_back(idx + 1);
     }
   }
+
+  // Update PMI values
+  sum_logpw_ = from->sum_logpw() + log(document->tf(word));
+  double phrase_freq = static_cast<double>(index_.size()) / document->size();
+  pmi_ = log(phrase_freq) - sum_logpw_;
+  LOG("pmi_ = ", pmi_);
 }
 
 void PhraseExtractor::PhraseCandidate::FromIndexAndWord(
+    const Document *document,
     const std::vector<int> &index,
     int word) {
   Clear();
   phrase_words_.push_back(word);
   index_ = index;
+
+  // Update PMI values
+  sum_logpw_ = log(document->tf(word));
 }
 
 std::string PhraseExtractor::PhraseCandidate::PhraseString(
@@ -185,7 +195,7 @@ void PhraseExtractor::PhraseBeginSet() {
 
       if (adjacent > kBoundaryThreshold) {
         PhraseCandidate *phrase_candidate = candidate_pool_.Alloc();
-        phrase_candidate->FromIndexAndWord(index, word);
+        phrase_candidate->FromIndexAndWord(document_, index, word);
         from_set_.push_back(phrase_candidate);
       }
     }
@@ -218,8 +228,9 @@ void PhraseExtractor::DoIteration(utils::Pool<Phrase> *phrase_pool) {
     // If current word is the end of phrase
     if (adjacent > kBoundaryThreshold && from_phrase->size() > 1) {
       // Recalculate the Left Adjacent Entropy
-      adjacent = Left(from_phrase->index(),
-                      from_phrase->phrase_words().size() - 1);
+      double left_adjacent = Left(
+          from_phrase->index(),
+          from_phrase->phrase_words().size() - 1);
  
       // Ensure adjacent entropy of every phrase larger than kBoundaryThreshold
       if (from_phrase->index().size() > 1 && 
@@ -227,10 +238,71 @@ void PhraseExtractor::DoIteration(utils::Pool<Phrase> *phrase_pool) {
         Phrase *phrase = phrase_pool->Alloc();
         phrase->set_document(document_);
         phrase->set_words(from_phrase->phrase_words());
+        phrase->set_PMI(from_phrase->PMI());
+        phrase->set_adjent(std::min(left_adjacent, adjacent));
         phrases_->push_back(phrase);
       }
     }
   }
+}
+
+void PhraseExtractor::CalculateWeight(std::vector<Phrase *> *phrases) {
+  // Calculate the weight of each phrase. Assuming that PMI and AdjEnt are
+  // normally distributed.
+  // Calculate mean
+  double PMI_sum = 0.0;
+  double adjent_sum = 0.0;
+  for (std::vector<Phrase *>::iterator
+       it = phrases->begin(); it != phrases->end(); ++it) {
+    PMI_sum += (*it)->PMI();
+    adjent_sum += (*it)->adjent();
+  }
+  double PMI_mean = PMI_sum / phrases->size();
+  double adjent_mean = adjent_sum / phrases->size();
+  LOG("PMI_mean = ", PMI_mean);
+  LOG("adjent_mean = ", adjent_mean);
+
+  // Calculate variance
+  double PMI_variance = 0.0;
+  double adjent_variance = 0.0;
+  for (std::vector<Phrase *>::iterator
+       it = phrases->begin(); it != phrases->end(); ++it) {
+    PMI_variance += pow((*it)->PMI() - PMI_mean, 2);
+    adjent_variance += pow((*it)->adjent() - adjent_mean, 2);
+  }
+  double PMI_sigma = sqrt(PMI_variance / phrases->size());
+  double adjent_sigma = sqrt(adjent_variance / phrases->size());
+  LOG("PMI_sigma = ", PMI_sigma);
+  LOG("adjent_sigma = ", adjent_sigma);
+
+  // Calcuate weight
+  for (std::vector<Phrase *>::iterator
+       it = phrases->begin(); it != phrases->end(); ++it) {
+    double PMI_normalized = ((*it)->PMI() - PMI_mean) / PMI_sigma;
+    double adjent_normalized = ((*it)->adjent() - adjent_mean) / adjent_sigma;
+    PMI_normalized = std::min(PMI_normalized, 3.0);
+    adjent_normalized = std::min(adjent_normalized, 3.0);
+    (*it)->set_PMI(PMI_normalized);
+    (*it)->set_adjent(adjent_normalized);
+    (*it)->set_weight(adjent_normalized + PMI_normalized);
+    LOG((*it)->PhraseString(), " ", PMI_normalized, adjent_normalized);
+  }
+}
+
+// Remove the phrase if either PMI or adjent less than 0. Note that the values
+// are normalized during CalculateWeight
+inline bool
+PhraseFilter(const PhraseExtractor::Phrase *phrase) {
+  LOG("PhraseFilter ", phrase->PMI(), " ",
+      phrase->adjent(), " ", phrase->PMI() < 0.0 || phrase->adjent() < 0.0);
+  return phrase->PMI() < 0.0 || phrase->adjent() < 0.0;
+}
+
+// Compares two phrases by its weight
+inline bool
+WeightCompare(const PhraseExtractor::Phrase *phrase,
+              const PhraseExtractor::Phrase *phrase2) {
+  return phrase->weight() < phrase2->weight();
 }
 
 void PhraseExtractor::Extract(const Document *document,
@@ -253,11 +325,17 @@ void PhraseExtractor::Extract(const Document *document,
   while (from_set_.size() != 0) {
     LOG("DoIteration");
     DoIteration(phrase_pool);
-    LOG("from_set = " << from_set_.size());
-    LOG("to_set = " << to_set_.size());
+    LOG("from_set = ", from_set_.size());
+    LOG("to_set = ", to_set_.size());
     from_set_.clear();
     from_set_.swap(to_set_);
   }
+
+  CalculateWeight(phrases);
+  phrases->erase(
+      std::remove_if(phrases->begin(), phrases->end(), PhraseFilter),
+      phrases->end());
+  std::sort(phrases->begin(), phrases->end(), WeightCompare);
 }
 
 }  // namespace milkcat

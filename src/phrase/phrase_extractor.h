@@ -52,6 +52,7 @@ class PhraseExtractor {
   static const double kBoundaryThreshold;
   static const double kPhrasePMIThreshold;
   static const int kFrequencyThreshold = 2;
+  static const int kMaxPhrases = 5000;
 
   class PhraseCandidate;
 
@@ -82,16 +83,22 @@ class PhraseExtractor {
   // phrases_
   void PhraseBeginSet();
 
+  // Appends a candidate to to_set_.
+  void AppendCandidate(const PhraseCandidate *candidate);
+
   // Iteration for find phrases from a list of PhraseCandidate specified by
   // from_set_ then release it and put the phrases to phrases and put candidate
   // of phrases into to_set_
   void DoIteration(utils::Pool<Phrase> *phrase_pool);
+
+  // Calculate the weight from PMI and adjacent entropy
+  void CalculateWeight(std::vector<Phrase *> *phrases);
 };
 
 class PhraseExtractor::PhraseCandidate {
  public:
   PhraseCandidate();
-  
+
   // Clears the word and the index of the phrase candidate
   void Clear();
 
@@ -103,7 +110,10 @@ class PhraseExtractor::PhraseCandidate {
       int word);
 
   // Initialize the PhraseCandidate from an index and the first word
-  void FromIndexAndWord(const std::vector<int> &index, int word);
+  void FromIndexAndWord(
+      const Document *document,
+      const std::vector<int> &index,
+      int word);
 
   // Returns the string of the PhraseCandidate
   std::string PhraseString(const Document *ducument);
@@ -112,29 +122,27 @@ class PhraseExtractor::PhraseCandidate {
   const std::vector<int> &phrase_words() { return phrase_words_; }
   int size() const { return phrase_words_.size(); }
 
-  // The sum of log-probability of each word. Using for calculate the pmi
+  // The sum of log-probability of each word. Uses for calculate the PMI value
   int sum_logpw() const { return sum_logpw_; }
-  void set_sum_logpw(double value) { sum_logpw_ = value; }
 
-  // Weight for the candidate
-  int weight() const { return weight_; }
-  void set_weight(double value) { weight_ = value; }
+  // PMI value for the phrase
+  double PMI() const { return pmi_; }
 
  private:
   // Words of this phrase
   std::vector<int> phrase_words_;
 
-  // The index for last word of phrase
+  // The index of the phrase (index of the last word)
   std::vector<int> index_;
 
   double sum_logpw_;
-  double weight_;
+  double pmi_;
 };
 
 // A phrase in document
 class PhraseExtractor::Phrase {
  public:
-  Phrase(): document_(NULL), tf_(0.0), weight_(0.0) {
+  Phrase(): document_(NULL), weight_(0.0), PMI_(0.0), adjent_(0.0) {
   }
 
   void set_document(const Document *document) {
@@ -148,6 +156,14 @@ class PhraseExtractor::Phrase {
   // Final weight for the phrase
   void set_weight(double weight) { weight_ = weight; }
   double weight() const { return weight_; }
+
+  // PMI value
+  void set_PMI(double PMI) { PMI_ = PMI; }
+  double PMI() const { return PMI_; }
+
+  // Adjacent entropy
+  void set_adjent(double adjent) { adjent_ = adjent; }
+  double adjent() const { return adjent_; }
 
   // Gets the string of this phrase
   const char *PhraseString() {
@@ -172,8 +188,9 @@ class PhraseExtractor::Phrase {
 
  private:
   const Document *document_;
-  double tf_;
   double weight_;
+  double PMI_;
+  double adjent_;
   std::vector<int> words_;
   std::string phrase_string_;
 };

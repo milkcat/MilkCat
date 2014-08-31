@@ -32,13 +32,17 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#ifdef HAVE_CONFIG_H
 #include "config.h"
+#endif
 #include "utils/status.h"
 
 #if defined(HAVE_UNORDERED_MAP)
 #include <unordered_map>
 #elif defined(HAVE_TR1_UNORDERED_MAP)
 #include <tr1/unordered_map>
+#else
+#include <map>
 #endif
 
 namespace milkcat {
@@ -62,6 +66,9 @@ int HardwareConcurrency();
 using std::unordered_map;
 #elif defined(HAVE_TR1_UNORDERED_MAP)
 using std::tr1::unordered_map;
+#else
+template<typename TK, typename TV>
+using unordered_map = std::map<TK, TV>;
 #endif
 
 }  // namespace utils

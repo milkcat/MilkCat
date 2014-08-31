@@ -171,6 +171,28 @@ bool Model::Impl::SetUserDictionary(const char *path) {
   }
 }
 
+void Model::Impl::SetUserDictionary(
+    const utils::unordered_map<std::string, float> &words) {
+  std::map<std::string, int> term_ids;
+  std::vector<float> costs;
+
+  mutex.Lock();
+  for (utils::unordered_map<std::string, float>::const_iterator
+       it = words.begin(); it != words.end(); ++it) {
+    term_ids.insert(std::make_pair(
+        it->first, 
+        kUserTermIdStart + term_ids.size()));
+    costs.push_back(it->second);
+  }
+
+  delete user_index_;
+  user_index_ = DoubleArrayTrieTree::NewFromMap(term_ids);
+
+  delete user_cost_;
+  user_cost_ = StaticArray<float>::NewFromArray(costs.data(), costs.size());
+  mutex.Unlock();  
+}
+
 const TrieTree *Model::Impl::UserIndex(Status *status) {
   if (user_index_) {
     return user_index_;

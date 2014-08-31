@@ -171,11 +171,6 @@ namespace cedar {
 #endif
       for (const uchar* const key_ = reinterpret_cast <const uchar*> (key);
            pos < len; ++pos) {
-#ifdef USE_REDUCED_TRIE
-        const value_type val_ = _array[from].value;
-        if (val_ >= 0 && val_ != CEDAR_VALUE_LIMIT) // always new; correct this!
-          { const int to = _follow (from, 0, cf); _array[to].value = val_; }
-#endif
         from = static_cast <size_t> (_follow (from, key_[pos], cf));
       }
 #ifdef USE_REDUCED_TRIE
@@ -526,13 +521,9 @@ namespace cedar {
           _transfer_block (bi, _bheadO, _bheadC);
       }
       // initialize the released node
-#ifdef USE_REDUCED_TRIE
-      n.value = CEDAR_VALUE_LIMIT; n.check = from;
-      if (base < 0) _array[from].base_ = - (e ^ label) - 1;
-#else
       if (label) n.base_ = -1; else n.value = value_type (0); n.check = from;
       if (base < 0) _array[from].base_ = e ^ label;
-#endif
+      
       return e;
     }
     // push empty node into empty ring

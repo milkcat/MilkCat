@@ -32,6 +32,8 @@
 #include <string.h>
 #include <sstream>
 #include <string>
+#include <vector>
+#include <iostream>
 
 inline const char *_filename(const char *path) {
   int len = strlen(path);
@@ -42,11 +44,11 @@ inline const char *_filename(const char *path) {
 }
 
 #ifdef ENABLE_LOG
-#define LOG(x) \
+#define _LOG(x) \
         puts((LogUtil() << "[" << _filename(__FILE__) << __LINE__ << "] " \
                         << x).GetString().c_str())
 #else
-#define LOG(x)
+#define _LOG(x)
 #endif
 
 #ifdef ENABLE_LOG
@@ -56,6 +58,44 @@ inline const char *_filename(const char *path) {
 #else
 #define LOG_IF(...)
 #endif
+
+// If we have the c++11 compiler
+#if __cplusplus >= 201103L
+
+namespace milkcat {
+namespace logging {
+template<typename T>
+inline void print_log(const T &t) {
+  std::cout << t << std::endl;
+}
+template<typename T, typename... Args>
+inline void print_log(const T &first, Args &&...rest) {
+  std::cout << first;
+  print_log(rest...);
+}
+}  // namespace log
+}  // namespace milkcat
+
+#ifdef DEBUG
+#define LOG(...) do { std::cout << "[" << _filename(__FILE__) << ":" \
+        << __LINE__ << "] "; milkcat::logging::print_log(__VA_ARGS__); } \
+        while (0);
+#else
+#define LOG(...)
+#endif
+
+#else
+
+#ifdef DEBUG
+#define LOG(...) do { std::cout << "[" << _filename(__FILE__) << ":" \
+        << __LINE__ << "] "; puts("LOG needs c++11 support!"); } \
+        while (0);
+#else
+#define LOG(...)
+#endif
+
+#endif  // __cplusplus >= 201103L
+
 
 #ifndef NOASSERT
 #define ASSERT(cond, message) \
@@ -91,7 +131,7 @@ class LogUtil {
     stream_ << val;
     return *this;
   }
-  LogUtil &operator<<(const std::string *val) {
+  LogUtil &operator<<(const std::string &val) {
     stream_ << val;
     return *this;
   }

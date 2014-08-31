@@ -24,7 +24,6 @@
 // milkcat.h --- Created at 2013-09-03
 //
 
-
 #ifndef MILKCAT_H_
 #define MILKCAT_H_
 

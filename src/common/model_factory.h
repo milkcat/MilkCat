@@ -37,6 +37,7 @@
 #include "parser/crf_model.h"
 #include "parser/static_hashtable.h"
 #include "utils/mutex.h"
+#include "utils/utils.h"
 
 #ifndef SRC_COMMON_MODEL_FACTORY_H_
 #define SRC_COMMON_MODEL_FACTORY_H_
@@ -56,6 +57,7 @@ class Model::Impl {
 
   // Sets the user dictionary for the segmenter
   bool SetUserDictionary(const char *path);
+  void SetUserDictionary(const utils::unordered_map<std::string, float> &words);
 
   // If the model has loaded the user dictionary
   bool HasUserDictionary() const { return user_index_ != NULL; }
