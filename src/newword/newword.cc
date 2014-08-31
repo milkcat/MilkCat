@@ -248,8 +248,8 @@ Newword::Iterator *Newword::Impl::Extract(const char *filename) {
   it->impl()->Reset();
 
   if (status.ok()) {
-    Log(LogUtil() << "Calculate final rank.");
-    FinalRank(adjacent_entropy, mutual_information, it->impl()->result());
+    Log(LogUtil() << "Rank.");
+    NewwordRank(adjacent_entropy, mutual_information, it->impl()->result());
   }
 
   if (!status.ok()) {

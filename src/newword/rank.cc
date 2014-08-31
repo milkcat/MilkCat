@@ -25,6 +25,7 @@
 // rank.cc --- Created at 2014-06-24
 //
 
+#include <math.h>
 #include <string>
 #include <vector>
 #include <algorithm>
@@ -33,6 +34,8 @@
 
 namespace milkcat {
 
+const double kRankThreshold = -1.0;
+
 namespace {
 
 // Reversed sort by second value
@@ -40,7 +43,6 @@ bool CmpPairByValue(const std::pair<std::string, double> &v1,
                     const std::pair<std::string, double> &v2) {
   return v1.second > v2.second;
 }
-
 
 void SortMapByValue(
     const utils::unordered_map<std::string, double> &map,
@@ -55,54 +57,72 @@ void SortMapByValue(
 
 }  // namespace
 
-void FinalRank(
+void NewwordRank(
     const utils::unordered_map<std::string, double> &adjecent_entropy,
     const utils::unordered_map<std::string, double> &mutual_information,
-    std::vector<std::pair<std::string, double> > *final_result,
-    double remove_ratio = 0.1,
+    std::vector<std::pair<std::string, double> > *newword_rank,
     double alpha = 0.6) {
-  final_result->clear();
+  // Calculate the mean of adjacent entropy
+  double adjent_mean = 0.0;
+  for (utils::unordered_map<std::string, double>::const_iterator
+       it = adjecent_entropy.begin(); it != adjecent_entropy.end(); ++it) {
+    adjent_mean += it->second;
+  }
+  adjent_mean /= adjecent_entropy.size();
 
-  // Remove the minimal N values in each map, the ratio is specified by
-  // remove_ratio. 
-  std::vector<std::pair<std::string, double> > adjent_vec, mutinf_vec;
-  SortMapByValue(adjecent_entropy, &adjent_vec);
-  SortMapByValue(mutual_information, &mutinf_vec);
+  // Calculate the variance of adjacent entrppy
+  double adjent_variance = 0.0;
+  for (utils::unordered_map<std::string, double>::const_iterator
+       it = adjecent_entropy.begin(); it != adjecent_entropy.end(); ++it) {
+    adjent_variance += pow(it->second - adjent_mean, 2);
+  }
+  adjent_variance /= adjecent_entropy.size();
+  double adjent_sigma = sqrt(adjent_variance);
 
-  int n_remove = adjent_vec.size() * remove_ratio;
-  adjent_vec.erase(adjent_vec.end() - n_remove, adjent_vec.end());
-  double max_value = adjent_vec[0].second;
-  LOG("Adjent Max: " << max_value);
-  for (int i = 0; i < adjent_vec.size(); ++i) 
-    adjent_vec[i].second /= max_value;
+  // Calculate the mean of PMI (pointwise mutual entropy)
+  double PMI_mean = 0.0;
+  for (utils::unordered_map<std::string, double>::const_iterator
+       it = mutual_information.begin(); it != mutual_information.end(); ++it) {
+    PMI_mean += it->second;
+  }
+  PMI_mean /= mutual_information.size();
 
-  n_remove = mutinf_vec.size() * remove_ratio;
-  mutinf_vec.erase(mutinf_vec.end() - n_remove, mutinf_vec.end());
-  max_value = mutinf_vec[0].second;
-  LOG("MI Max: " << max_value);
-  for (int i = 0; i < mutinf_vec.size(); ++i) 
-    mutinf_vec[i].second /= max_value;
+  // Calculate the variance of PMI
+  double PMI_variance = 0.0;
+  for (utils::unordered_map<std::string, double>::const_iterator
+       it = mutual_information.begin(); it != mutual_information.end(); ++it) {
+    PMI_variance += pow(it->second - PMI_mean, 2);
+  }
+  PMI_variance /= mutual_information.size();
+  double PMI_sigma = sqrt(PMI_variance);  
 
-  // Calculate the final value
-  utils::unordered_map<std::string, double> adjent_new(
-      adjent_vec.begin(), adjent_vec.end());
-  utils::unordered_map<std::string, double> mutinf_new(
-      mutinf_vec.begin(), mutinf_vec.end());
-  utils::unordered_map<std::string, double> final;
+  // Calculate the weight for all newwords
+  newword_rank->clear();
+  double PMI_normalized, adjent_normalized, weight;
+  utils::unordered_map<std::string, double> weight_map;
+  for (utils::unordered_map<std::string, double>::const_iterator
+       it = adjecent_entropy.begin(); it != adjecent_entropy.end(); ++it) {
+    utils::unordered_map<std::string, double>::const_iterator 
+    PMI_it = mutual_information.find(it->first);
+    if (PMI_it != mutual_information.end()) {
+      adjent_normalized = (it->second - adjent_mean) / adjent_sigma;
+      PMI_normalized = (PMI_it->second - PMI_mean) / PMI_sigma;
 
-  for (utils::unordered_map<std::string, double>::iterator
-       it = adjent_new.begin(); it != adjent_new.end(); ++it) {
-    if (mutinf_new.find(it->first) != mutinf_new.end()) {
-      final[it->first] = alpha * it->second +
-                         (1 - alpha) * mutinf_new[it->first];
-      LOG("Word:" << it->first.c_str() << ", " <<
-          "Weight:" << final[it->first] << ", " << 
-          "Adjent:" << it->second << ", " <<
-          "MI: " << mutinf_new[it->first]);
+      // Ignore the words that the normalized PMI or adjent less than
+      // kRankThreshold
+      if (adjent_normalized > kRankThreshold &&
+          PMI_normalized > kRankThreshold) {
+        weight = alpha * adjent_normalized + (1- alpha) * PMI_normalized;
+        weight_map[it->first] = weight;
+        LOG("Word:", it->first, ", ",
+            "Weight:", weight, ", ",
+            "AdjEnt:", adjent_normalized << ", ",
+            "PMI: ", PMI_normalized);
+      }
     }
   }
 
-  SortMapByValue(final, final_result);
+  SortMapByValue(weight_map, newword_rank);
 }
 
 }  // namespace milkcat

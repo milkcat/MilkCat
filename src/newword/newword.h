@@ -84,11 +84,11 @@ void GetMutualInformation(
     utils::unordered_map<std::string, double> *mutual_information,
     Status *status);
 
-void FinalRank(
+
+void NewwordRank(
     const utils::unordered_map<std::string, double> &adjecent_entropy,
     const utils::unordered_map<std::string, double> &mutual_information,
-    std::vector<std::pair<std::string, double> > *final_result,
-    double remove_ratio = 0.1,
+    std::vector<std::pair<std::string, double> > *newword_rank,
     double alpha = 0.6);
 
 }  // namespace milkcat
