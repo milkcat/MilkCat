@@ -24,8 +24,6 @@
 // dependency_parser.h --- Created at 2013-08-10
 //
 
-#define ENABLE_LOG
-
 #include "parser/dependency_parser.h"
 
 #include <assert.h>
@@ -44,7 +42,8 @@
 namespace milkcat {
 
 
-DependencyParser::DependencyParser(): maxent_classifier_(NULL),
+DependencyParser::DependencyParser(): feature_index_(NULL),
+                                      maxent_classifier_(NULL),
                                       feature_buffer_(NULL),
                                       last_transition_(0) {
 }
@@ -53,14 +52,19 @@ DependencyParser *DependencyParser::New(Model::Impl *model_impl,
                                         Status *status) {
   DependencyParser *self = new DependencyParser();
   const MaxentModel *maxent_model = model_impl->DependencyModel(status);
+  const std::vector<std::string> *feature_templates = NULL;
 
   if (status->ok()) {
+    self->InitializeFeatureIndex();
     self->maxent_classifier_ = new MaxentClassifier(maxent_model);
     self->feature_buffer_ = new char *[kFeatureMax];
     for (int i = 0; i < kFeatureMax; ++i) {
       self->feature_buffer_[i] = new char[kFeatureStringMax];
     }
+    feature_templates = model_impl->DependencyTemplate(status);
   }
+
+  if (status->ok()) self->feature_templates_ = *feature_templates;
 
   if (status->ok()) {
     return self;
@@ -71,10 +75,8 @@ DependencyParser *DependencyParser::New(Model::Impl *model_impl,
 }
 
 DependencyParser::~DependencyParser() {
-  if (maxent_classifier_ != NULL) {  
-    delete maxent_classifier_;
-    maxent_classifier_ = NULL;
-  }
+  delete maxent_classifier_;
+  maxent_classifier_ = NULL;
 
   if (feature_buffer_ != NULL) {
     for (int i = 0; i < kFeatureMax; ++i)
@@ -83,6 +85,9 @@ DependencyParser::~DependencyParser() {
     delete[] feature_buffer_; 
     feature_buffer_ = NULL;
   }
+
+  delete feature_index_;
+  feature_index_ = NULL;
 }
 
 bool DependencyParser::AllowLeftArc() const {

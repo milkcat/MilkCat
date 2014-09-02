@@ -15,6 +15,7 @@
 #include <string.h>
 #include <assert.h>
 #include "common/model_factory.h"
+#include "common/trie_tree.h"
 
 namespace utils {
 
@@ -62,6 +63,22 @@ class DependencyParser {
   Node *LeftmostChildNode(Node *node) const;
   Node *RightmostChildNode(Node *node) const;
 
+  // The features used in dependency parsing
+  enum {
+    kSTw = 0,
+    kSTt,
+    kN0w,
+    kN0t,
+    kN1w,
+    kN1t,
+    kN2t,
+    kSTPt,
+    kSTLCt,
+    kSTRCt,
+    kN0LCt,
+    kFeatureNumber
+  };
+
   // Extract the feature from current configuration. The feature are defined in
   // Zhang Yue, A Tale of Two Parsers: investigating and combining graph-based 
   // and transition-based dependency parsing using beam-search, 2008
@@ -76,7 +93,6 @@ class DependencyParser {
   const char *STLCt();
   const char *STRCt();
   const char *N0LCt();
-  int RV();
 
   // Check if current state allows an action
   bool AllowLeftArc() const;
@@ -87,6 +103,9 @@ class DependencyParser {
   // Builds the features from current state and stores it in feature_buffer_
   // Returns the number of features added
   int BuildFeature();
+
+  // Get the cost value from one feature template and current state
+  float CostFromTemplate(const char *feature_template);
 
   // Check if the action defined by label_id is allowed
   bool AllowAction(int label_id) const;
@@ -103,12 +122,20 @@ class DependencyParser {
   std::vector<Node *> buffer_;
   std::vector<Node *> stack_;
 
+  // Initialize the feature index, store the key-value pair in feature_index_
+  void InitializeFeatureIndex();
+
+  // Index for single feature, such as STw, STt ...
+  TrieTree *feature_index_;
+  std::vector<std::string> feature_templates_;
+
   int right_verb_count_[kTermMax + 1];
   int buffer_ptr_;
   bool have_root_node_;
   int n_arcs_;
   MaxentClassifier *maxent_classifier_;
   char **feature_buffer_;
+  char feature_[kFeatureNumber][kFeatureStringMax];
   int last_transition_;
 };
 

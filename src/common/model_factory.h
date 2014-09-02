@@ -28,6 +28,7 @@
 #include "include/milkcat.h"
 
 #include <string>
+#include <vector>
 #include "common/maxent_classifier.h"
 #include "common/milkcat_config.h"
 #include "common/trie_tree.h"
@@ -89,6 +90,9 @@ class Model::Impl {
   // Get the dependency model
   const MaxentModel *DependencyModel(Status *status);
 
+  // Get the feature template for dependency parsing
+  const std::vector<std::string> *DependencyTemplate(Status *status);
+
  private:
   std::string model_dir_path_;
   utils::Mutex mutex;
@@ -105,6 +109,7 @@ class Model::Impl {
   const StringValue<float> *idf_model_;
   const TrieTree *stopword_;
   const MaxentModel *depengency_;
+  const std::vector<std::string> *dependency_template_;
 
   // Load and set the user dictionary data specified by path
   void LoadUserDictionary(const char *userdict_path, Status *status);

@@ -44,6 +44,7 @@ class TrieTree {
   // Search a trie tree if text exists return its value
   // else the return value is < 0
   virtual int Search(const char *text) const = 0;
+  virtual int Search(const char *text, int len) const = 0;
 
   // Traverse a trie tree the node is the last state and will changed during
   // traversing for the root node the node = 0, return value > 0 if text exists
@@ -65,6 +66,7 @@ class DoubleArrayTrieTree: public TrieTree {
   DoubleArrayTrieTree() {}
 
   int Search(const char *text) const;
+  int Search(const char *text, int len) const;
   int Traverse(const char *text, size_t *node) const;
 
  private:

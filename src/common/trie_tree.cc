@@ -72,6 +72,10 @@ int DoubleArrayTrieTree::Search(const char *text) const {
   return double_array_.exactMatchSearch<int>(text);
 }
 
+int DoubleArrayTrieTree::Search(const char *text, int len) const {
+  return double_array_.exactMatchSearch<int>(text, static_cast<size_t>(len));
+}
+
 int DoubleArrayTrieTree::Traverse(const char *text, size_t *node) const {
   size_t key_pos = 0;
   return double_array_.traverse(text, *node, key_pos);

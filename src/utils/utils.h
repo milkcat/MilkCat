@@ -74,6 +74,17 @@ using unordered_map = std::map<TK, TV>;
 }  // namespace utils
 }  // namespace milkcat
 
+#define ERROR(message) \
+        do { \
+          fprintf(stderr,  \
+                  "[%s:%d] ERROR: ", \
+                  _filename(__FILE__), \
+                  __LINE__); \
+          fputs(message, stderr); \
+          fputs("\n", stderr); \
+          exit(1); \
+        } while (0);
+
 #define DISALLOW_COPY_AND_ASSIGN(TypeName) \
         TypeName(const TypeName&); \
         void operator=(const TypeName&)

@@ -39,6 +39,7 @@ const char *kOovPropertyFile = "oov_property.idx";
 const char *kIdfModelFile = "tfidf.bin";
 const char *kStopwordFile = "stopword.idx";
 const char *kDepengencyFile = "ctb_dep.maxent";
+const char *kDependenctTemplateFile = "depparse.templ";
 
 // ---------- Model::Impl ----------
 
@@ -55,7 +56,8 @@ Model::Impl::Impl(const char *model_dir_path):
     oov_property_(NULL),
     idf_model_(NULL),
     stopword_(NULL),
-    depengency_(NULL) {
+    depengency_(NULL),
+    dependency_template_(NULL) {
 }
 
 Model::Impl::~Impl() {
@@ -94,6 +96,9 @@ Model::Impl::~Impl() {
 
   delete depengency_;
   depengency_ = NULL;
+
+  delete dependency_template_;
+  dependency_template_ = NULL;
 }
 
 const TrieTree *Model::Impl::Index(Status *status) {
@@ -308,6 +313,31 @@ const MaxentModel *Model::Impl::DependencyModel(Status *status) {
   }
   mutex.Unlock();
   return depengency_;  
+}
+
+const std::vector<std::string> *
+Model::Impl::DependencyTemplate(Status *status) {
+  char line[1024];
+  std::vector<std::string> *template_vector = new std::vector<std::string>();
+  ReadableFile *fd = NULL;
+  std::string model_path = model_dir_path_ + kDependenctTemplateFile;
+  if (status->ok()) fd = ReadableFile::New(model_path.c_str(), status);
+
+  while (status->ok() && !fd->Eof()) {
+    fd->ReadLine(line, sizeof(line), status);
+    if (status->ok()) {
+      utils::trim(line);
+      template_vector->push_back(line);
+    }
+  }
+
+  delete fd;
+  if (status->ok()) {
+    return template_vector;
+  } else {
+    delete template_vector;
+    return NULL;
+  }
 }
 
 }  // namespace milkcat
