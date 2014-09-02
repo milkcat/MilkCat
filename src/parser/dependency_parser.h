@@ -14,7 +14,7 @@
 #include <vector>
 #include <string.h>
 #include <assert.h>
-#include "common/model_factory.h"
+#include "common/model_impl.h"
 #include "common/trie_tree.h"
 
 namespace utils {

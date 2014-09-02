@@ -34,7 +34,7 @@
 #include <vector>
 #include <string>
 #include <sstream>
-#include "parser/libmilkcat.h"
+#include "libmilkcat.h"
 #include "utils/log.h"
 #include "utils/status.h"
 #include "utils/utils.h"

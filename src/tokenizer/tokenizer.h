@@ -21,54 +21,35 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 //
-// dependency_instance.h --- Created at 2013-08-12
+// tokenization.h
+// tokenizer.h --- Created at 2013-12-24
 //
 
-#ifndef SRC_PARSER_DEPENDENCY_INSTANCE_H_
-#define SRC_PARSER_DEPENDENCY_INSTANCE_H_
+#ifndef SRC_TOKENIZER_TOKENIZER_H_
+#define SRC_TOKENIZER_TOKENIZER_H_
 
-#include <assert.h>
-#include "common/instance_data.h"
-#include "utils/utils.h"
+#include "tokenizer/token_lex.h"
 
 namespace milkcat {
 
-class DependencyInstance {
+class TokenInstance;
+
+class Tokenization {
  public:
-  DependencyInstance();
-  ~DependencyInstance();
+  Tokenization();
+  ~Tokenization();
 
-  static const int kDependencyTypeS = 0;
-  static const int kHeadIdI = 0;
+  // Scan an string to get tokens
+  void Scan(const char *buffer_string);
 
-  const char *dependency_type_at(int position) const {
-    return instance_data_->string_at(position, kDependencyTypeS);
-  }
-
-  int head_node_at(int position) const {
-    return instance_data_->integer_at(position, kHeadIdI);
-  }
-
-  // Set the size of this instance
-  void set_size(int size) { instance_data_->set_size(size); }
-
-  // Get the size of this instance
-  int size() const { return instance_data_->size(); }
-
-  // Set the value at position
-  void set_value_at(int position, 
-                    const char *dependency_type, 
-                    int head_id) {
-    instance_data_->set_string_at(position, kDependencyTypeS, dependency_type);
-    instance_data_->set_integer_at(position, kHeadIdI, head_id);
-  }
+  bool GetSentence(TokenInstance *token_instance);
 
  private:
-  InstanceData *instance_data_;
-
-  DISALLOW_COPY_AND_ASSIGN(DependencyInstance);
+  YY_BUFFER_STATE yy_buffer_state_;
+  yyscan_t yyscanner;
+  bool buffer_alloced_;
 };
 
 }  // namespace milkcat
 
-#endif  // SRC_PARSER_DEPENDENCY_INSTANCE_H_
+#endif  // SRC_TOKENIZER_TOKENIZER_H_

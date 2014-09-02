@@ -31,10 +31,10 @@
 #include <math.h>
 #include <vector>
 #include <string>
-#include "common/maxent_classifier.h"
+#include "libmilkcat.h"
 #include "common/milkcat_config.h"
-#include "common/model_factory.h"
-#include "parser/libmilkcat.h"
+#include "common/model_impl.h"
+#include "ml/maxent_classifier.h"
 #include "newword/utf8.h"
 #include "utils/log.h"
 #include "utils/readable_file.h"

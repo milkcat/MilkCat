@@ -31,10 +31,10 @@
 #include <string.h>
 #include <algorithm>
 #include <vector>
-#include "common/maxent_classifier.h"
+#include "ml/maxent_classifier.h"
+#include "segmenter/term_instance.h"
 #include "parser/dependency_instance.h"
-#include "parser/part_of_speech_tag_instance.h"
-#include "parser/term_instance.h"
+#include "tagger/part_of_speech_tag_instance.h"
 #include "utils/status.h"
 #include "utils/string_builder.h"
 #include "utils/utils.h"

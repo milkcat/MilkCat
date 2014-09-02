@@ -21,54 +21,50 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 //
-// dependency_instance.h --- Created at 2013-08-12
+// crf_segmenter.h --- Created at 2013-08-17
 //
 
-#ifndef SRC_PARSER_DEPENDENCY_INSTANCE_H_
-#define SRC_PARSER_DEPENDENCY_INSTANCE_H_
+#ifndef SRC_SEGMENTER_CRF_SEGMENTER_H_
+#define SRC_SEGMENTER_CRF_SEGMENTER_H_
 
-#include <assert.h>
-#include "common/instance_data.h"
+#include "include/milkcat.h"
+#include "ml/crf_tagger.h"
+#include "segmenter/segmenter.h"
+#include "tokenizer/token_instance.h"
 #include "utils/utils.h"
 
 namespace milkcat {
 
-class DependencyInstance {
+class SegmentFeatureExtractor;
+class TermInstance;
+
+class CRFSegmenter: public Segmenter {
  public:
-  DependencyInstance();
-  ~DependencyInstance();
+  static CRFSegmenter *New(Model::Impl *model_factory, Status *status);
+  ~CRFSegmenter();
 
-  static const int kDependencyTypeS = 0;
-  static const int kHeadIdI = 0;
+  // Segment a range [begin, end) of token
+  void SegmentRange(TermInstance *term_instance,
+                    TokenInstance *token_instance,
+                    int begin,
+                    int end);
 
-  const char *dependency_type_at(int position) const {
-    return instance_data_->string_at(position, kDependencyTypeS);
-  }
-
-  int head_node_at(int position) const {
-    return instance_data_->integer_at(position, kHeadIdI);
-  }
-
-  // Set the size of this instance
-  void set_size(int size) { instance_data_->set_size(size); }
-
-  // Get the size of this instance
-  int size() const { return instance_data_->size(); }
-
-  // Set the value at position
-  void set_value_at(int position, 
-                    const char *dependency_type, 
-                    int head_id) {
-    instance_data_->set_string_at(position, kDependencyTypeS, dependency_type);
-    instance_data_->set_integer_at(position, kHeadIdI, head_id);
+  void Segment(TermInstance *term_instance, TokenInstance *token_instance) {
+    SegmentRange(term_instance, token_instance, 0, token_instance->size());
   }
 
  private:
-  InstanceData *instance_data_;
+  CRFTagger *crf_tagger_;
 
-  DISALLOW_COPY_AND_ASSIGN(DependencyInstance);
+  SegmentFeatureExtractor *feature_extractor_;
+
+  int S, B, B1, B2, M, E;
+
+  CRFSegmenter();
+
+  DISALLOW_COPY_AND_ASSIGN(CRFSegmenter);
 };
 
 }  // namespace milkcat
 
-#endif  // SRC_PARSER_DEPENDENCY_INSTANCE_H_
+#endif  // SRC_SEGMENTER_CRF_SEGMENTER_H_

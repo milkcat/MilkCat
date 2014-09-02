@@ -32,9 +32,9 @@
 #include <map>
 #include <vector>
 #include <utility>
-#include "common/model_factory.h"
+#include "libmilkcat.h"
+#include "common/model_impl.h"
 #include "include/milkcat.h"
-#include "parser/libmilkcat.h"
 #include "utils/readable_file.h"
 #include "utils/status.h"
 #include "utils/thread.h"

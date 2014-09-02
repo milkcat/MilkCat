@@ -21,48 +21,29 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 //
-// crf_vocab.cc --- Created at 2014-01-28
-// get_crf_vocabulary.cc --- Created at 2014-03-20
-// vocabulary.cc --- Created at 2014-06-24
+// part_of_speech_tagger.cc --- Created at 2013-11-24
 //
 
-#include "newword/newword.h"
-
-#include <string>
-#include "include/milkcat.h"
-#include "utils/readable_file.h"
-#include "utils/status.h"
-#include "utils/utils.h"
+#ifndef SRC_TAGGER_PART_OF_SPEECH_TAGGER_H_
+#define SRC_TAGGER_PART_OF_SPEECH_TAGGER_H_
 
 namespace milkcat {
 
+class PartOfSpeechTagInstance;
+class TermInstance;
 
-// Segment the corpus from path and return the vocabulary of chinese words.
-// If any errors occured, status is not Status::OK()
-void CrfVocabulary(
-    const char *path,
-    int *total_count,
-    utils::unordered_map<std::string, int> *crf_vocab,
-    void (* progress)(int64_t bytes_processed,
-                      int64_t file_size,
-                      int64_t bytes_per_second),
-    Status *status) {
+// The base class for part-of-speech tagger
+class PartOfSpeechTagger {
+ public:
+  virtual ~PartOfSpeechTagger() = 0;
 
-  utils::unordered_map<std::string, int> vocab;
+  // Tag the TermInstance and put the result to PartOfSpeechTagInstance
+  virtual void Tag(PartOfSpeechTagInstance *part_of_speech_tag_instance,
+                   TermInstance *term_instance) = 0;
+};
 
-  // TODO: put model dir for this model
-  Model *model = Model::New();
-
-  *total_count = CountWordFrequencyFromFile(
-      path,
-      model,
-      Parser::kCrfSegmenter | Parser::kNoTagger,
-      utils::HardwareConcurrency(),
-      crf_vocab,
-      progress,
-      status);
-
-  delete model;
-}
+inline PartOfSpeechTagger::~PartOfSpeechTagger() {}
 
 }  // namespace milkcat
+
+#endif  // SRC_TAGGER_PART_OF_SPEECH_TAGGER_H_

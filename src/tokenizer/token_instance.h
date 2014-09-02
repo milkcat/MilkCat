@@ -21,32 +21,49 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 //
-// dependency_instance.h --- Created at 2013-08-12
+// token_instance.h --- Created at 2013-10-20
 //
 
-#ifndef SRC_PARSER_DEPENDENCY_INSTANCE_H_
-#define SRC_PARSER_DEPENDENCY_INSTANCE_H_
+#ifndef SRC_TOKENIZER_TOKEN_INSTANCE_H_
+#define SRC_TOKENIZER_TOKEN_INSTANCE_H_
 
 #include <assert.h>
 #include "common/instance_data.h"
+#include "common/milkcat_config.h"
 #include "utils/utils.h"
 
 namespace milkcat {
 
-class DependencyInstance {
+class TokenInstance {
  public:
-  DependencyInstance();
-  ~DependencyInstance();
+  TokenInstance();
+  ~TokenInstance();
 
-  static const int kDependencyTypeS = 0;
-  static const int kHeadIdI = 0;
+  enum {
+    kEnd = 0,
+    kSpace = 1,
+    kChineseChar = 2,
+    kCrLf = 3,
+    kPeriod = 4,
+    kNumber = 5,
+    kEnglishWord = 6,
+    kPunctuation = 7,
+    kSymbol = 8,
+    kOther = 9
+  };
 
-  const char *dependency_type_at(int position) const {
-    return instance_data_->string_at(position, kDependencyTypeS);
+
+  static const int kTokenTypeI = 0;
+  static const int kTokenUTF8S = 0;
+
+  // Get the token's string value at position
+  const char *token_text_at(int position) const {
+    return instance_data_->string_at(position, kTokenUTF8S);
   }
 
-  int head_node_at(int position) const {
-    return instance_data_->integer_at(position, kHeadIdI);
+  // Get the token type at position
+  int token_type_at(int position) const {
+    return instance_data_->integer_at(position, kTokenTypeI);
   }
 
   // Set the size of this instance
@@ -56,19 +73,16 @@ class DependencyInstance {
   int size() const { return instance_data_->size(); }
 
   // Set the value at position
-  void set_value_at(int position, 
-                    const char *dependency_type, 
-                    int head_id) {
-    instance_data_->set_string_at(position, kDependencyTypeS, dependency_type);
-    instance_data_->set_integer_at(position, kHeadIdI, head_id);
+  void set_value_at(int position, const char *token_text, int token_type) {
+    instance_data_->set_string_at(position, kTokenUTF8S, token_text);
+    instance_data_->set_integer_at(position, kTokenTypeI, token_type);
   }
 
  private:
   InstanceData *instance_data_;
-
-  DISALLOW_COPY_AND_ASSIGN(DependencyInstance);
+  DISALLOW_COPY_AND_ASSIGN(TokenInstance);
 };
 
 }  // namespace milkcat
 
-#endif  // SRC_PARSER_DEPENDENCY_INSTANCE_H_
+#endif  // SRC_TOKENIZER_TOKEN_INSTANCE_H_

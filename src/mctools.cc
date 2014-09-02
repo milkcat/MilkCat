@@ -37,13 +37,13 @@
 #include <algorithm>
 #include <set>
 #include "common/darts.h"
-#include "common/get_vocabulary.h"
-#include "common/maxent_classifier.h"
+#include "common/static_hashtable.h"
 #include "common/trie_tree.h"
+#include "common/word_frequency_count.h"
+#include "ml/maxent_classifier.h"
 #include "include/milkcat.h"
 #include "phrase/string_value.h"
-#include "parser/hmm_part_of_speech_tagger.h"
-#include "parser/static_hashtable.h"
+#include "tagger/hmm_part_of_speech_tagger.h"
 #include "utils/utils.h"
 #include "utils/readable_file.h"
 #include "utils/writable_file.h"
@@ -433,13 +433,13 @@ int CorpusVocabulary(int argc, char **argv) {
     model = Model::New(*model_path == '\0'? NULL: model_path);
     if (*user_dict) model->SetUserDictionary(user_dict);
     int n_threads = utils::HardwareConcurrency();
-    GetVocabularyFromFile(corpus_path,
-                          model,
-                          analyzer_type,
-                          n_threads,
-                          &vocab,
-                          DisplayProgress,
-                          &status);
+    CountWordFrequencyFromFile(corpus_path,
+                               model,
+                               analyzer_type,
+                               n_threads,
+                               &vocab,
+                               DisplayProgress,
+                               &status);
   }
 
   WritableFile *fd = NULL;

@@ -21,54 +21,43 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 //
-// dependency_instance.h --- Created at 2013-08-12
+// mixed_segmenter.h --- Created at 2013-11-25
 //
 
-#ifndef SRC_PARSER_DEPENDENCY_INSTANCE_H_
-#define SRC_PARSER_DEPENDENCY_INSTANCE_H_
+#ifndef SRC_SEGMENTER_MIXED_SEGMENTER_H_
+#define SRC_SEGMENTER_MIXED_SEGMENTER_H_
 
-#include <assert.h>
-#include "common/instance_data.h"
+#include "include/milkcat.h"
+#include "common/static_hashtable.h"
+#include "ml/crf_model.h"
+#include "segmenter/segmenter.h"
 #include "utils/utils.h"
 
 namespace milkcat {
 
-class DependencyInstance {
+class OutOfVocabularyWordRecognition;
+class BigramSegmenter;
+class TermInstance;
+class TokenInstance;
+
+// Mixed Bigram segmenter and CRF Segmenter of OOV recognition
+class MixedSegmenter: public Segmenter {
  public:
-  DependencyInstance();
-  ~DependencyInstance();
+  ~MixedSegmenter();
 
-  static const int kDependencyTypeS = 0;
-  static const int kHeadIdI = 0;
+  static MixedSegmenter *New(Model::Impl *model_factory, Status *status);
 
-  const char *dependency_type_at(int position) const {
-    return instance_data_->string_at(position, kDependencyTypeS);
-  }
-
-  int head_node_at(int position) const {
-    return instance_data_->integer_at(position, kHeadIdI);
-  }
-
-  // Set the size of this instance
-  void set_size(int size) { instance_data_->set_size(size); }
-
-  // Get the size of this instance
-  int size() const { return instance_data_->size(); }
-
-  // Set the value at position
-  void set_value_at(int position, 
-                    const char *dependency_type, 
-                    int head_id) {
-    instance_data_->set_string_at(position, kDependencyTypeS, dependency_type);
-    instance_data_->set_integer_at(position, kHeadIdI, head_id);
-  }
+  // Segment a token instance into term instance
+  void Segment(TermInstance *term_instance, TokenInstance *token_instance);
 
  private:
-  InstanceData *instance_data_;
+  TermInstance *bigram_result_;
+  BigramSegmenter *bigram_;
+  OutOfVocabularyWordRecognition *oov_recognizer_;
 
-  DISALLOW_COPY_AND_ASSIGN(DependencyInstance);
+  MixedSegmenter();
 };
 
 }  // namespace milkcat
 
-#endif  // SRC_PARSER_DEPENDENCY_INSTANCE_H_
+#endif  // SRC_SEGMENTER_MIXED_SEGMENTER_H_

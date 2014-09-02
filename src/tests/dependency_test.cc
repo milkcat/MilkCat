@@ -24,7 +24,7 @@
 // dependency_test.cc --- Created at 2014-06-15
 //
 
-#include "common/model_factory.h"
+#include "common/model_impl.h"
 #include "include/milkcat.h"
 #include "parser/dependency_instance.h"
 #include "parser/dependency_parser.h"

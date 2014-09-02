@@ -5,77 +5,81 @@ AM_CXXFLAGS = -I$(top_srcdir)/src -DMODEL_PATH=\"$(pkgdatadir)/\" -fno-rtti \
 
 ACLOCAL_AMFLAGS = -I m4
 
-include_HEADERS = include/milkcat.h include/milkcat-c.h
+include_HEADERS = include/milkcat.h
 
 lib_LTLIBRARIES = libmilkcat.la
 libmilkcat_la_LIBADD = -lpthread
 libmilkcat_la_LDFLAGS = -version-info 0:3:0
-libmilkcat_la_SOURCES = common/cedar.h \
+libmilkcat_la_SOURCES = libmilkcat.cc \
+                        libmilkcat.h \
+                        common/cedar.h \
                         common/darts.h \
-                        common/get_vocabulary.h \
-                        common/get_vocabulary.cc \
-                        common/maxent_classifier.cc \
-                        common/maxent_classifier.h \
+                        common/instance_data.cc \
+                        common/instance_data.h \
                         common/milkcat_config.h \
-                        common/model_factory.cc \
-                        common/model_factory.h \
+                        common/model_impl.cc \
+                        common/model_impl.h \
+                        common/static_array.h \
+                        common/static_hashtable.h \
                         common/trie_tree.cc \
                         common/trie_tree.h \
+                        common/word_frequency_count.h \
+                        common/word_frequency_count.cc \
                         include/milkcat.h \
-                        include/milkcat-c.h \
-                        parser/beam.h \
-                        parser/bigram_segmenter.cc \
-                        parser/bigram_segmenter.h \
-                        parser/crf_model.cc \
-                        parser/crf_model.h \
-                        parser/crf_part_of_speech_tagger.cc \
-                        parser/crf_part_of_speech_tagger.h \
-                        parser/crf_segmenter.cc \
-                        parser/crf_segmenter.h \
-                        parser/crf_tagger.cc \
-                        parser/crf_tagger.h \
+                        ml/beam.h \
+                        ml/crf_model.cc \
+                        ml/crf_model.h \
+                        ml/crf_tagger.cc \
+                        ml/crf_tagger.h \
+                        ml/hmm_model.cc \
+                        ml/hmm_model.h \
+                        ml/maxent_classifier.cc \
+                        ml/maxent_classifier.h \
+                        ml/sequence_feature_extractor.h \
+                        newword/adjent_entropy.cc \
+                        newword/candidate.cc \
+                        newword/mutual_information.cc \
+                        newword/newword.cc \
+                        newword/newword.h \
+                        newword/rank.cc \
+                        newword/utf8.h \
+                        newword/vocabulary.cc \
                         parser/dependency_instance.h \
                         parser/dependency_instance.cc \
                         parser/dependency_parser.h \
                         parser/dependency_parser.cc \
                         parser/dependency_parser_features.cc \
-                        parser/feature_extractor.h \
-                        parser/hmm_model.cc \
-                        parser/hmm_model.h \
-                        parser/hmm_part_of_speech_tagger.cc \
-                        parser/hmm_part_of_speech_tagger.h \
-                        parser/instance_data.cc \
-                        parser/instance_data.h \
-                        parser/libmilkcat.cc \
-                        parser/libmilkcat.h \
-                        parser/libmilkcat-c.cc \
-                        parser/milkcat_config.h \
-                        parser/mixed_segmenter.cc \
-                        parser/mixed_segmenter.h \
-                        parser/out_of_vocabulary_word_recognition.cc \
-                        parser/out_of_vocabulary_word_recognition.h \
-                        parser/part_of_speech_tag_instance.cc \
-                        parser/part_of_speech_tag_instance.h \
-                        parser/part_of_speech_tagger.h \
-                        parser/term_instance.h \
-                        parser/term_instance.cc \
-                        parser/token_instance.h \
-                        parser/token_instance.cc \
-                        parser/token_lex.cc \
-                        parser/token_lex.h \
-                        parser/tokenizer.cc \
-                        parser/tokenizer.h \
-                        parser/segmenter.h \
-                        parser/static_array.h \
-                        parser/static_hashtable.h \
                         phrase/document.cc \
                         phrase/document.h \
                         phrase/phrase.cc \
-                        phrase/phrase.h \
                         phrase/phrase_extractor.h \
                         phrase/phrase_extractor.cc \
                         phrase/string_table.h \
                         phrase/string_value.h \
+                        segmenter/bigram_segmenter.cc \
+                        segmenter/bigram_segmenter.h \
+                        segmenter/crf_segmenter.cc \
+                        segmenter/crf_segmenter.h \
+                        segmenter/mixed_segmenter.cc \
+                        segmenter/mixed_segmenter.h \
+                        segmenter/out_of_vocabulary_word_recognition.cc \
+                        segmenter/out_of_vocabulary_word_recognition.h \
+                        segmenter/segmenter.h \
+                        segmenter/term_instance.h \
+                        segmenter/term_instance.cc \
+                        tagger/crf_part_of_speech_tagger.cc \
+                        tagger/crf_part_of_speech_tagger.h \
+                        tagger/hmm_part_of_speech_tagger.cc \
+                        tagger/hmm_part_of_speech_tagger.h \
+                        tagger/part_of_speech_tag_instance.cc \
+                        tagger/part_of_speech_tag_instance.h \
+                        tagger/part_of_speech_tagger.h \
+                        tokenizer/token_instance.h \
+                        tokenizer/token_instance.cc \
+                        tokenizer/token_lex.cc \
+                        tokenizer/token_lex.h \
+                        tokenizer/tokenizer.cc \
+                        tokenizer/tokenizer.h \
                         utils/log.h \
                         utils/log.cc \
                         utils/readable_file.cc \
@@ -91,15 +95,7 @@ libmilkcat_la_SOURCES = common/cedar.h \
                         utils/mutex.h \
                         utils/mutex_posix.cc \
                         utils/thread.h \
-                        utils/thread_posix.cc \
-                        newword/candidate.cc \
-                        newword/adjent_entropy.cc \
-                        newword/rank.cc \
-                        newword/vocabulary.cc \
-                        newword/newword.cc \
-                        newword/newword.h \
-                        newword/mutual_information.cc \
-                        newword/utf8.h
+                        utils/thread_posix.cc
 
 TESTS = dependency_test 
 check_PROGRAMS = dependency_test 

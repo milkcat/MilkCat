@@ -30,7 +30,7 @@
 
 #include <stdint.h>
 #include <vector>
-#include "common/get_vocabulary.h"
+#include "common/word_frequency_count.h"
 #include "include/milkcat.h"
 #include "utils/utils.h"
 

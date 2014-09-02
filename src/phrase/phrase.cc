@@ -27,11 +27,11 @@
 #include "include/milkcat.h"
 
 #include <vector>
-#include "common/model_factory.h"
+#include "libmilkcat.h"
+#include "common/model_impl.h"
 #include "common/trie_tree.h"
 #include "phrase/document.h"
 #include "phrase/phrase_extractor.h"
-#include "parser/libmilkcat.h"
 #include "utils/log.h"
 #include "utils/pool.h"
 #include "utils/status.h"

@@ -21,32 +21,36 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 //
-// dependency_instance.h --- Created at 2013-08-12
+// term_pos_tag_instance.h
+// part_of_speech_tag_instance.h --- Created at 2013-10-20
 //
 
-#ifndef SRC_PARSER_DEPENDENCY_INSTANCE_H_
-#define SRC_PARSER_DEPENDENCY_INSTANCE_H_
+#ifndef SRC_TAGGER_PART_OF_SPEECH_TAG_INSTANCE_H_
+#define SRC_TAGGER_PART_OF_SPEECH_TAG_INSTANCE_H_
 
 #include <assert.h>
 #include "common/instance_data.h"
+#include "segmenter/term_instance.h"
 #include "utils/utils.h"
 
 namespace milkcat {
 
-class DependencyInstance {
+class PartOfSpeechTagInstance {
  public:
-  DependencyInstance();
-  ~DependencyInstance();
+  PartOfSpeechTagInstance();
+  ~PartOfSpeechTagInstance();
 
-  static const int kDependencyTypeS = 0;
-  static const int kHeadIdI = 0;
+  static const int kPOSTagS = 0;
+  static const int kOutOfVocabularyI = 0;
 
-  const char *dependency_type_at(int position) const {
-    return instance_data_->string_at(position, kDependencyTypeS);
+  const char *part_of_speech_tag_at(int position) const {
+    return instance_data_->string_at(position, kPOSTagS);
   }
 
-  int head_node_at(int position) const {
-    return instance_data_->integer_at(position, kHeadIdI);
+  // return true if it is a out-of-vocabulary word or it doesnt't have tag
+  // information in HMM data file
+  bool is_out_of_vocabulary_word_at(int position) const {
+    return instance_data_->integer_at(position, kOutOfVocabularyI) != 0;
   }
 
   // Set the size of this instance
@@ -56,19 +60,17 @@ class DependencyInstance {
   int size() const { return instance_data_->size(); }
 
   // Set the value at position
-  void set_value_at(int position, 
-                    const char *dependency_type, 
-                    int head_id) {
-    instance_data_->set_string_at(position, kDependencyTypeS, dependency_type);
-    instance_data_->set_integer_at(position, kHeadIdI, head_id);
+  void set_value_at(int position, const char *tag, bool is_oov = true) {
+    instance_data_->set_string_at(position, kPOSTagS, tag);
+    instance_data_->set_integer_at(position, kOutOfVocabularyI, is_oov);
   }
 
  private:
   InstanceData *instance_data_;
 
-  DISALLOW_COPY_AND_ASSIGN(DependencyInstance);
+  DISALLOW_COPY_AND_ASSIGN(PartOfSpeechTagInstance);
 };
 
 }  // namespace milkcat
 
-#endif  // SRC_PARSER_DEPENDENCY_INSTANCE_H_
+#endif  // SRC_PARSER_PART_OF_SPEECH_TAG_INSTANCE_H_

@@ -21,48 +21,29 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 //
-// crf_vocab.cc --- Created at 2014-01-28
-// get_crf_vocabulary.cc --- Created at 2014-03-20
-// vocabulary.cc --- Created at 2014-06-24
+// segmenter.h --- Created at 2013-11-24
 //
 
-#include "newword/newword.h"
-
-#include <string>
-#include "include/milkcat.h"
-#include "utils/readable_file.h"
-#include "utils/status.h"
-#include "utils/utils.h"
+#ifndef SRC_SEGMENTER_SEGMENTER_H_
+#define SRC_SEGMENTER_SEGMENTER_H_
 
 namespace milkcat {
 
+class TermInstance;
+class TokenInstance;
 
-// Segment the corpus from path and return the vocabulary of chinese words.
-// If any errors occured, status is not Status::OK()
-void CrfVocabulary(
-    const char *path,
-    int *total_count,
-    utils::unordered_map<std::string, int> *crf_vocab,
-    void (* progress)(int64_t bytes_processed,
-                      int64_t file_size,
-                      int64_t bytes_per_second),
-    Status *status) {
+// The base class for segmenters
+class Segmenter {
+ public:
+  virtual ~Segmenter() = 0;
 
-  utils::unordered_map<std::string, int> vocab;
+  // Segment a token instance into term instance
+  virtual void Segment(TermInstance *term_instance,
+                       TokenInstance *token_instance) = 0;
+};
 
-  // TODO: put model dir for this model
-  Model *model = Model::New();
-
-  *total_count = CountWordFrequencyFromFile(
-      path,
-      model,
-      Parser::kCrfSegmenter | Parser::kNoTagger,
-      utils::HardwareConcurrency(),
-      crf_vocab,
-      progress,
-      status);
-
-  delete model;
-}
+inline Segmenter::~Segmenter() {}
 
 }  // namespace milkcat
+
+#endif  // SRC_SEGMENTER_SEGMENTER_H_

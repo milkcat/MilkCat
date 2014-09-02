@@ -29,10 +29,10 @@
 #include <math.h>
 #include <map>
 #include <string>
+#include "libmilkcat.h"
+#include "segmenter/bigram_segmenter.h"
 #include "utils/utils.h"
 #include "utils/writable_file.h"
-#include "parser/libmilkcat.h"
-#include "parser/bigram_segmenter.h"
 
 namespace milkcat {
 

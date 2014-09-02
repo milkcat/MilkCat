@@ -21,48 +21,20 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 //
-// crf_vocab.cc --- Created at 2014-01-28
-// get_crf_vocabulary.cc --- Created at 2014-03-20
-// vocabulary.cc --- Created at 2014-06-24
+// term_instance.cc --- Created at 2013-10-20
 //
 
-#include "newword/newword.h"
-
-#include <string>
-#include "include/milkcat.h"
-#include "utils/readable_file.h"
-#include "utils/status.h"
-#include "utils/utils.h"
+#include "common/milkcat_config.h"
+#include "segmenter/term_instance.h"
 
 namespace milkcat {
 
+TermInstance::TermInstance() {
+  instance_data_ = new InstanceData(1, 3, kTokenMax);
+}
 
-// Segment the corpus from path and return the vocabulary of chinese words.
-// If any errors occured, status is not Status::OK()
-void CrfVocabulary(
-    const char *path,
-    int *total_count,
-    utils::unordered_map<std::string, int> *crf_vocab,
-    void (* progress)(int64_t bytes_processed,
-                      int64_t file_size,
-                      int64_t bytes_per_second),
-    Status *status) {
-
-  utils::unordered_map<std::string, int> vocab;
-
-  // TODO: put model dir for this model
-  Model *model = Model::New();
-
-  *total_count = CountWordFrequencyFromFile(
-      path,
-      model,
-      Parser::kCrfSegmenter | Parser::kNoTagger,
-      utils::HardwareConcurrency(),
-      crf_vocab,
-      progress,
-      status);
-
-  delete model;
+TermInstance::~TermInstance() {
+  delete instance_data_;
 }
 
 }  // namespace milkcat
