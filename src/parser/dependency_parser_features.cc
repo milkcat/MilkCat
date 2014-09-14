@@ -29,9 +29,11 @@
 #include <map>
 #include "utils/log.h"
 #include "utils/string_builder.h"
+#include "utils/utils.h"
 
 namespace milkcat {
 
+using utils::strlcpy;
 
 DependencyParser::Node *
 DependencyParser::NodeFromStack(int top_index) const {
