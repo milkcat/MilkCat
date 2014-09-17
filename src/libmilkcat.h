@@ -42,6 +42,7 @@
 #include "tagger/part_of_speech_tag_instance.h"
 #include "parser/dependency_instance.h"
 #include "parser/dependency_parser.h"
+#include "parser/naive_arceager_dependency_parser.h"
 #include "tokenizer/tokenizer.h"
 #include "utils/mutex.h"
 #include "utils/utils.h"

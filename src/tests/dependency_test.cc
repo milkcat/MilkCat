@@ -28,8 +28,9 @@
 #include "include/milkcat.h"
 #include "parser/dependency_instance.h"
 #include "parser/dependency_parser.h"
-#include "parser/term_instance.h"
-#include "parser/part_of_speech_tag_instance.h"
+#include "parser/naive_arceager_dependency_parser.h"
+#include "segmenter/term_instance.h"
+#include "tagger/part_of_speech_tag_instance.h"
 #include "utils/log.h"
 #include "utils/readable_file.h"
 #include "utils/utils.h"
@@ -39,6 +40,7 @@ using milkcat::TermInstance;
 using milkcat::PartOfSpeechTagInstance;
 using milkcat::DependencyInstance;
 using milkcat::DependencyParser;
+using milkcat::NaiveArceagerDependencyParser;
 using milkcat::Model;
 using milkcat::ReadableFile;
 
@@ -78,7 +80,9 @@ int TestDependency(const char *gold_filename) {
   if (!status.ok()) return 77;
 
   Model::Impl *model_impl = new Model::Impl(MODEL_DIR);
-  DependencyParser *parser = DependencyParser::New(model_impl, &status);
+  DependencyParser *parser = NaiveArceagerDependencyParser::New(
+        model_impl,
+        &status);
   ASSERT(status.ok(), status.what());
 
   int total = 0;
@@ -98,17 +102,17 @@ int TestDependency(const char *gold_filename) {
                  &status);
 
     ASSERT(status.ok(), status.what());
-    parser->Parse(dependency_instance, tag_instance, term_instance);
+    parser->Parse(dependency_instance, term_instance, tag_instance);
 
     for (int i = 0; i < term_instance->size(); ++i) {
       
-      printf("%s %s %d %s %d %s\n", 
-             term_instance->term_text_at(i),
-             tag_instance->part_of_speech_tag_at(i),
-             dependency_instance_gold->head_node_at(i),
-             dependency_instance_gold->dependency_type_at(i),
-             dependency_instance->head_node_at(i),
-             dependency_instance->dependency_type_at(i)); 
+      // printf("%s %s %d %s %d %s\n", 
+      //        term_instance->term_text_at(i),
+      //        tag_instance->part_of_speech_tag_at(i),
+      //        dependency_instance_gold->head_node_at(i),
+      //        dependency_instance_gold->dependency_type_at(i),
+      //        dependency_instance->head_node_at(i),
+      //        dependency_instance->dependency_type_at(i)); 
       if (strcmp(tag_instance->part_of_speech_tag_at(i), "PU") == 0)
         continue;
       total++;
@@ -121,7 +125,6 @@ int TestDependency(const char *gold_filename) {
         }
       }
     }
-    puts("");
   }
 
   printf("LAS: %.3lf\n", static_cast<double>(las_count) / total);

@@ -1,4 +1,6 @@
 //
+// feature_extractor.h --- Created at 2013-10-09
+//
 // The MIT License (MIT)
 //
 // Copyright 2013-2014 The MilkCat Project Developers
@@ -21,37 +23,26 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 //
-// dependency_parser.h --- Created at 2013-08-12
-//
 
+#ifndef SRC_COMMON_FEATURE_EXTRACTOR_H_
+#define SRC_COMMON_FEATURE_EXTRACTOR_H_
 
-#ifndef SRC_PERSER_DEPENDENCY_PARSER_H_
-#define SRC_PERSER_DEPENDENCY_PARSER_H_
+#include <stdlib.h>
+#include "common/milkcat_config.h"
 
 namespace milkcat {
 
-class TermInstance;
-class PartOfSpeechTagInstance;
-class DependencyInstance;
-
-// Base class for dependency parser
-class DependencyParser {
+class FeatureExtractor {
  public:
-  class Node;
-  class Feature;
-  class State;
-
-  virtual ~DependencyParser();
-
-  virtual void Parse(
-    DependencyInstance *dependency_instance,
-    const TermInstance *term_instance,
-    const PartOfSpeechTagInstance *part_of_speech_tag_instance) = 0;
+  virtual void ExtractFeatureAt(size_t position,
+                                char (*feature_list)[kFeatureLengthMax],
+                                int list_size) = 0;
+  virtual size_t size() const = 0;
+  virtual ~FeatureExtractor();
 };
 
-inline DependencyParser::~DependencyParser() {
-}
+inline FeatureExtractor::~FeatureExtractor() {}
 
 }  // namespace milkcat
 
-#endif  // SRC_PERSER_DEPENDENCY_PARSER_H_
+#endif  // SRC_COMMON_FEATURE_EXTRACTOR_H_

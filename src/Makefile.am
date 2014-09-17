@@ -44,11 +44,16 @@ libmilkcat_la_SOURCES = libmilkcat.cc \
                         newword/rank.cc \
                         newword/utf8.h \
                         newword/vocabulary.cc \
+                        parser/dependency_feature.h \
+                        parser/dependency_feature.cc \
                         parser/dependency_instance.h \
                         parser/dependency_instance.cc \
+                        parser/dependency_node.h \
                         parser/dependency_parser.h \
-                        parser/dependency_parser.cc \
-                        parser/dependency_parser_features.cc \
+                        parser/dependency_state.cc \
+                        parser/dependency_state.h \
+                        parser/naive_arceager_dependency_parser.h \
+                        parser/naive_arceager_dependency_parser.cc \
                         phrase/document.cc \
                         phrase/document.h \
                         phrase/phrase.cc \

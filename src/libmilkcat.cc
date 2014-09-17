@@ -135,7 +135,7 @@ DependencyParser *DependencyParserFactory(Model::Impl *factory,
   switch (parser_type) {
     case Parser::kMaxentParser:
       if (status->ok()) {
-        return DependencyParser::New(factory, status);
+        return NaiveArceagerDependencyParser::New(factory, status);
       } else {
         return NULL;
       }
@@ -214,8 +214,8 @@ void Parser::Iterator::Impl::Next() {
       // Dependency Parsing
       if (analyzer_->dependency_parser()) {
         analyzer_->dependency_parser()->Parse(dependency_instance_,
-                                              part_of_speech_tag_instance_,
-                                              term_instance_);
+                                              term_instance_,
+                                              part_of_speech_tag_instance_);
       }
       sentence_length_ = term_instance_->size();
       current_position_ = 0;
