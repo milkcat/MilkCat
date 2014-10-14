@@ -21,51 +21,8 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 //
-// crf_vocab.cc --- Created at 2014-01-28
-// get_crf_vocabulary.cc --- Created at 2014-03-20
-// vocabulary.cc --- Created at 2014-06-24
+// perceptron.h --- Created at 2014-10-10
 //
 
-#include "newword/newword.h"
+#ifndef 
 
-#include <string>
-#include "include/milkcat.h"
-#include "utils/readable_file.h"
-#include "utils/status.h"
-#include "utils/utils.h"
-
-namespace milkcat {
-
-
-// Segment the corpus from path and return the vocabulary of chinese words.
-// If any errors occured, status is not Status::OK()
-void CrfVocabulary(
-    const char *path,
-    int *total_count,
-    utils::unordered_map<std::string, int> *crf_vocab,
-    void (* progress)(int64_t bytes_processed,
-                      int64_t file_size,
-                      int64_t bytes_per_second),
-    Status *status) {
-
-  utils::unordered_map<std::string, int> vocab;
-
-  // TODO: put model dir for this model
-  Model *model = Model::New();
-
-  Parser::Options options;
-  options.SetModel(model);
-  options.UseCrfSegmenter();
-  options.NoPOSTagger();
-  *total_count = CountWordFrequencyFromFile(
-      path,
-      options,
-      utils::HardwareConcurrency(),
-      crf_vocab,
-      progress,
-      status);
-
-  delete model;
-}
-
-}  // namespace milkcat

@@ -41,7 +41,7 @@ using milkcat::ReadableFile;
 using milkcat::Newword;
 
 struct Options {
-  int method;
+  Parser::Options parser_options;
   bool display_tag;
   bool display_type;
   bool use_stdin;
@@ -55,8 +55,7 @@ struct Options {
   Options();
 };
 
-Options::Options(): method(Parser::kDefault),
-                    display_tag(true),
+Options::Options(): display_tag(true),
                     display_type(false),
                     use_stdin(false),
                     has_userdict(false),
@@ -134,25 +133,31 @@ void GetArgs(int argc, char **argv, Options *options) {
 
       case 'm':
         if (strcmp(optarg, "crf_seg") == 0) {
-          options->method = Parser::kCrfSegmenter | Parser::kNoTagger;
+          options->parser_options.UseCrfSegmenter();
+          options->parser_options.NoPOSTagger();
           options->display_tag = false;
         } else if (strcmp(optarg, "unigram_seg") == 0) {
-          options->method = Parser::kUnigramSegmenter | Parser::kNoTagger;
+          options->parser_options.UseUnigramSegmenter();
+          options->parser_options.NoPOSTagger();
           options->display_tag = false;
         } else if (strcmp(optarg, "crf") == 0) {
-          options->method = Parser::kCrfSegmenter | Parser::kCrfTagger;
+          options->parser_options.UseCrfSegmenter();
+          options->parser_options.UseCrfPOSTagger();
           options->display_tag = true;   
         } else if (strcmp(optarg, "mixed_seg") == 0) {
-          options->method = Parser::kMixedSegmenter | Parser::kNoTagger;
+          options->parser_options.UseMixedSegmenter();
+          options->parser_options.NoPOSTagger();
           options->display_tag = false;   
         } else if (strcmp(optarg, "mixed") == 0) {
-          options->method = Parser::kMixedSegmenter | Parser::kMixedTagger;
+          options->parser_options.UseMixedSegmenter();
+          options->parser_options.UseMixedPOSTagger();
           options->display_tag = true;   
         } else if (strcmp(optarg, "bigram_seg") == 0) {
-          options->method = Parser::kBigramSegmenter | Parser::kNoTagger;
+          options->parser_options.UseBigramSegmenter();
+          options->parser_options.NoPOSTagger();
           options->display_tag = false;   
         } else if (strcmp(optarg, "dep") == 0) {
-          options->method = Parser::kParser;
+          options->parser_options.UseArcEagerDependencyParser();
           options->conll_format = true;   
         } else {
           PrintUsage();
@@ -229,8 +234,9 @@ int ParserMain(int argc, char **argv) {
       exit(1);
     }
   }
-  
-  Parser *parser = Parser::New(model, options.method);
+  options.parser_options.SetModel(model);
+  Parser *parser = Parser::New(options.parser_options);
+  Parser::Iterator *it = new Parser::Iterator();
 
   if (parser == NULL) {
     fputs(milkcat::LastError(), stderr);
@@ -239,7 +245,7 @@ int ParserMain(int argc, char **argv) {
   }
 
   while (NULL != fgets(input_buffer, 1048576, fd)) {
-    Parser::Iterator *it = parser->Parse(input_buffer);
+    parser->Parse(input_buffer, it);
     index = 0;
     while (!it->End()) {
       index++;
@@ -290,10 +296,10 @@ int ParserMain(int argc, char **argv) {
     }
 
     fputs("\n", stdout);
-    parser->Release(it);
   }
 
   delete parser;
+  delete it;
   delete model;
   delete[] input_buffer;
   if (!options.use_stdin) fclose(fd);

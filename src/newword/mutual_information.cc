@@ -74,12 +74,19 @@ void GetMutualInformation(
   BigramSegmenter *segmenter;
   Model *model;
   Parser *parser;
+  Parser::Iterator *pit = new Parser::Iterator();
   
   if (status->ok()) {
     // TODO: Add support for user model path
     model = Model::New();
     model->SetUserDictionary("bigram_vocab.txt");
-    parser = Parser::New(model, Parser::kBigramSegmenter | Parser::kNoTagger);
+
+    Parser::Options options;
+    options.UseBigramSegmenter();
+    options.NoPOSTagger();
+    options.SetModel(model);
+
+    parser = Parser::New(options);
     if (parser == NULL)
       *status = Status::RuntimeError(LastError());
   }
@@ -96,9 +103,8 @@ void GetMutualInformation(
       segmenter->ClearAllDisabledTermIds();
       segmenter->AddDisabledTermId(term_id);
 
-      Parser::Iterator *pit = parser->Parse(word);
+      parser->Parse(word, pit);
       while (!pit->End()) pit->Next();
-      parser->Release(pit);
 
       double word_cost = -log(
           static_cast<double>(it->second) / total_frequency);
@@ -111,6 +117,7 @@ void GetMutualInformation(
   }
 
   delete parser;
+  delete pit;
   delete model;
 }
 

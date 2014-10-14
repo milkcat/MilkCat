@@ -27,6 +27,8 @@
 #ifndef SRC_PARSER_DEPENDENCY_NODE_H_
 #define SRC_PARSER_DEPENDENCY_NODE_H_
 
+#include "utils/utils.h"
+
 namespace milkcat {
 
 class DependencyParser;
@@ -34,6 +36,7 @@ class DependencyParser;
 class DependencyParser::Node {
  public:
   static const int kNone = -1;
+  Node() {}
 
   // Reset to initial values
   void Initialize(int id) {
@@ -69,12 +72,23 @@ class DependencyParser::Node {
     }
   }
 
+  // Copy to another node instande
+  void Copy(Node *node) const {
+    node->id_ = id_;
+    node->head_id_ = head_id_;
+    node->left_child_id_ = left_child_id_;
+    node->right_child_id_ = right_child_id_;
+    strcpy(node->dependency_label_, dependency_label_);
+  }
+
  private:
   int id_;
   int head_id_;
   int left_child_id_;
   int right_child_id_;
   char dependency_label_[10];
+
+  DISALLOW_COPY_AND_ASSIGN(Node);
 };
 
 }  // namespace milkcat

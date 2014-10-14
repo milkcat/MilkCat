@@ -38,7 +38,8 @@ namespace milkcat {
 DependencyParser::State::State(): stack_top_(0),
                                   input_size_(0),
                                   input_position_(0),
-                                  after_reduce_(false) {
+                                  after_reduce_(false),
+                                  cost_(0.0) {
 }
 
 void DependencyParser::State::Initialize(utils::Pool<Node> *node_pool,

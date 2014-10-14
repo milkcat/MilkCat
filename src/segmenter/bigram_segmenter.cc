@@ -157,7 +157,7 @@ inline int BigramSegmenter::GetTermIdAndUnigramCost(
     if (term_id == TrieTree::kNone) *system_flag = false;
     if (term_id >= 0) {
       *right_cost = unigram_cost_->get(term_id);
-      LOG("System unigram find " << term_id << " " << *right_cost);
+      LOG("System unigram find ", term_id, " ", *right_cost);
     }
   }
 
@@ -167,7 +167,7 @@ inline int BigramSegmenter::GetTermIdAndUnigramCost(
 
     if (uterm_id >= 0) {
       double cost = user_cost_->get(uterm_id - kUserTermIdStart);
-      LOG("User unigram find " << uterm_id << " " << cost);
+      LOG("User unigram find ", uterm_id, " ", cost);
 
       if (term_id < 0) {
         *right_cost = cost;
@@ -210,7 +210,7 @@ inline double BigramSegmenter::CalculateBigramCost(int left_id,
   if (it != NULL) {
     // if have bigram data use p(x_n+1|x_n) = p(x_n+1, x_n) / p(x_n)
     cost = left_cost + (*it - unigram_cost_->get(left_id));
-    LOG("bigram find " << left_id << " "<< right_id << " " << cost - left_cost);
+    LOG("bigram find ", left_id, " ", right_id, " ", cost - left_cost);
   } else {
     cost = left_cost + right_cost;
   }
@@ -247,7 +247,7 @@ void BigramSegmenter::BuildBeamFromPosition(TokenInstance *token_instance,
   const char *token_str = NULL;
   int length_end = token_instance->size() - position;
   for (int length = 0; length < length_end; ++length) {
-    LOG("Position: [" << position << ", " << position + length + 1 << ")");
+    LOG("Position: [", position, ", ", position + length + 1, ")");
 
     // Get current term-id from system and user dictionary
     token_str = token_instance->token_text_at(position + length);
@@ -273,7 +273,7 @@ void BigramSegmenter::BuildBeamFromPosition(TokenInstance *token_instance,
                                           term_id,
                                           node->cost,
                                           right_cost);
-        LOG("Cost: " << cost - node->cost << ", total: " << cost);
+        LOG("Cost: ", cost - node->cost, ", total: ", cost);
         if (cost < min_cost) {
           min_cost = cost;
           min_node = node;

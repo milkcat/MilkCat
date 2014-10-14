@@ -25,7 +25,7 @@ namespace cedar {
   template <typename value_type,
             const int     NO_VALUE  = NaN <value_type>::N1,
             const int     NO_PATH   = NaN <value_type>::N2,
-            const bool    ORDERED   = true,
+            const bool    ORDERED   = false,
             const int     MAX_TRIAL = 1,
             const size_t  NUM_TRACKING_NODES = 0>
   class da {
@@ -415,6 +415,7 @@ namespace cedar {
 #ifdef USE_REDUCED_TRIE
         if (_array[from].value >= 0) break;
 #endif
+        printf("base = %d, key=%d\n", _array[from].base (), (int)key_[pos]);
         size_t to = static_cast <size_t> (_array[from].base ()); to ^= key_[pos];
         if (_array[to].check != static_cast <int> (from)) return CEDAR_NO_PATH;
         ++pos;
@@ -435,9 +436,11 @@ namespace cedar {
         const int from = _array[to].check;
         if (from < 0) continue; // skip empty node
         const int base = _array[from].base ();
-        if (const uchar label = static_cast <uchar> (base ^ to)) // skip leaf
+        // skip leaf
+        if (const uchar label = static_cast <uchar> (base ^ to)) {
           _push_sibling (static_cast <size_t> (from), base, label,
                          ! from || _ninfo[from].child || _array[base ^ 0].check == from);
+        }
       }
     }
     void _restore_block () {

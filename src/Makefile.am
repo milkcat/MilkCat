@@ -85,22 +85,23 @@ libmilkcat_la_SOURCES = libmilkcat.cc \
                         tokenizer/token_lex.h \
                         tokenizer/tokenizer.cc \
                         tokenizer/tokenizer.h \
-                        utils/log.h \
                         utils/log.cc \
+                        utils/log.h \
+                        utils/mutex.h \
+                        utils/mutex_posix.cc \
+                        utils/pool.h \
                         utils/readable_file.cc \
                         utils/readable_file.h \
                         utils/status.h \
                         utils/string_builder.h \
                         utils/strlcpy.cc \
+                        utils/thread.h \
+                        utils/thread_posix.cc \
                         utils/utils.cc \
                         utils/utils.h \
                         utils/utils_posix.cc \
                         utils/writable_file.cc \
-                        utils/writable_file.h \
-                        utils/mutex.h \
-                        utils/mutex_posix.cc \
-                        utils/thread.h \
-                        utils/thread_posix.cc
+                        utils/writable_file.h 
 
 TESTS = dependency_test 
 check_PROGRAMS = dependency_test 

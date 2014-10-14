@@ -51,11 +51,38 @@
 
 namespace milkcat {
 
+// This enum represents the type or the algorithm of Parser. It could be
+// kDefault which indicates using the default algorithm for segmentation and
+// part-of-speech tagging. Meanwhile, it could also be
+//   kTextTokenizer | kBigramSegmenter | kHmmTagger
+// which indicates using bigram segmenter for segmentation, using HMM model
+// for part-of-speech tagging.
+enum ParserType {
+  // Tokenizer type
+  kTextTokenizer = 0,
+
+  // Segmenter type
+  kMixedSegmenter = 0x00000000,
+  kCrfSegmenter = 0x00000010,
+  kUnigramSegmenter = 0x00000020,
+  kBigramSegmenter = 0x00000030,
+
+  // Part-of-speech tagger type
+  kMixedTagger = 0x00000000,
+  kHmmTagger = 0x00001000,
+  kCrfTagger = 0x00002000,
+  kNoTagger = 0x000ff000,
+
+  // Depengency parser type
+  kArcEagerParser = 0x00100000,
+  kNoParser = 0x00000000,
+};
+
 Tokenization *TokenizerFactory(int analyzer_type) {
   int tokenizer_type = analyzer_type & kTokenizerMask;
 
   switch (tokenizer_type) {
-    case Parser::kTextTokenizer:
+    case kTextTokenizer:
       return new Tokenization();
 
     default:
@@ -69,16 +96,16 @@ Segmenter *SegmenterFactory(Model::Impl *factory,
   int segmenter_type = analyzer_type & kSegmenterMask;
 
   switch (segmenter_type) {
-    case Parser::kBigramSegmenter:
+    case kBigramSegmenter:
       return BigramSegmenter::New(factory, true, status);
 
-    case Parser::kUnigramSegmenter:
+    case kUnigramSegmenter:
       return BigramSegmenter::New(factory, false, status);
 
-    case Parser::kCrfSegmenter:
+    case kCrfSegmenter:
       return CRFSegmenter::New(factory, status);
 
-    case Parser::kMixedSegmenter:
+    case kMixedSegmenter:
       return MixedSegmenter::New(factory, status);
 
     default:
@@ -96,7 +123,7 @@ PartOfSpeechTagger *PartOfSpeechTaggerFactory(Model::Impl *factory,
   LOG("Tagger type: " << tagger_type);
 
   switch (tagger_type) {
-    case Parser::kCrfTagger:
+    case kCrfTagger:
       if (status->ok()) crf_pos_model = factory->CRFPosModel(status);
 
       if (status->ok()) {
@@ -105,21 +132,21 @@ PartOfSpeechTagger *PartOfSpeechTaggerFactory(Model::Impl *factory,
         return NULL;
       }
 
-    case Parser::kHmmTagger:
+    case kHmmTagger:
       if (status->ok()) {
         return HMMPartOfSpeechTagger::New(factory, false, status);
       } else {
         return NULL;
       }
 
-    case Parser::kMixedTagger:
+    case kMixedTagger:
       if (status->ok()) {
         return HMMPartOfSpeechTagger::New(factory, true, status);
       } else {
         return NULL;
       }
 
-    case Parser::kNoTagger:
+    case kNoTagger:
       return NULL;
 
     default:
@@ -133,14 +160,14 @@ DependencyParser *DependencyParserFactory(Model::Impl *factory,
                                           Status *status) {
   parser_type = kParserMask & parser_type;
   switch (parser_type) {
-    case Parser::kMaxentParser:
+    case kArcEagerParser:
       if (status->ok()) {
         return NaiveArceagerDependencyParser::New(factory, status);
       } else {
         return NULL;
       }
 
-    case Parser::kNoParser:
+    case kNoParser:
       return NULL;
 
     default:
@@ -156,8 +183,8 @@ Status global_status;
 // ----------------------------- Parser::Iterator -----------------------------
 
 Parser::Iterator::Impl::Impl():
-    analyzer_(NULL),
-    tokenizer_(TokenizerFactory(Parser::kTextTokenizer)),
+    parser_(NULL),
+    tokenizer_(TokenizerFactory(kTextTokenizer)),
     token_instance_(new TokenInstance()),
     term_instance_(new TermInstance()),
     dependency_instance_(new DependencyInstance()),
@@ -183,7 +210,7 @@ Parser::Iterator::Impl::~Impl() {
   delete dependency_instance_;
   dependency_instance_ = NULL;
 
-  analyzer_ = NULL;
+  parser_ = NULL;
 }
 
 void Parser::Iterator::Impl::Scan(const char *text) {
@@ -203,19 +230,19 @@ void Parser::Iterator::Impl::Next() {
     if (tokenizer_->GetSentence(token_instance_) == false) {
       end_ = true;
     } else {
-      analyzer_->segmenter()->Segment(term_instance_, token_instance_);
+      parser_->segmenter()->Segment(term_instance_, token_instance_);
 
-      // If the analyzer have part of speech tagger, tag the term_instance
-      if (analyzer_->part_of_speech_tagger()) {
-        analyzer_->part_of_speech_tagger()->Tag(part_of_speech_tag_instance_,
-                                                term_instance_);
+      // If the parser have part-of-speech tagger, tag the term_instance
+      if (parser_->part_of_speech_tagger()) {
+        parser_->part_of_speech_tagger()->Tag(part_of_speech_tag_instance_,
+                                              term_instance_);
       }
 
       // Dependency Parsing
-      if (analyzer_->dependency_parser()) {
-        analyzer_->dependency_parser()->Parse(dependency_instance_,
-                                              term_instance_,
-                                              part_of_speech_tag_instance_);
+      if (parser_->dependency_parser()) {
+        parser_->dependency_parser()->Parse(dependency_instance_,
+                                            term_instance_,
+                                            part_of_speech_tag_instance_);
       }
       sentence_length_ = term_instance_->size();
       current_position_ = 0;
@@ -280,16 +307,13 @@ Parser::Impl::~Impl() {
 
   if (own_model_) delete model_impl_;
   model_impl_ = NULL;
-
-  for (std::vector<Parser::Iterator *>::iterator
-       it = iterator_pool_.begin(); it != iterator_pool_.end(); ++it) {
-    delete *it;
-  }
 }
 
-Parser::Impl *Parser::Impl::New(Model::Impl *model_impl, int type) {
+Parser::Impl *Parser::Impl::New(const Options &options) {
   global_status = Status::OK();
   Impl *self = new Parser::Impl();
+  int type = options.TypeValue();
+  Model::Impl *model_impl = options.model()? options.model()->impl(): NULL;
 
   if (model_impl == NULL) {
     self->model_impl_ = new Model::Impl(MODEL_PATH);
@@ -325,23 +349,10 @@ Parser::Impl *Parser::Impl::New(Model::Impl *model_impl, int type) {
   }
 }
 
-Parser::Iterator *Parser::Impl::Parse(const char *text) {
-  Parser::Iterator *cursor;
-  if (iterator_pool_.size() == 0) {
-    ASSERT(iterator_alloced_ < 1024,
-           "Too many Parser::Iterator allocated without Parser::Release.");
-    cursor = new Parser::Iterator();
-    iterator_alloced_++;
-  } else {
-    cursor = iterator_pool_.back();
-    iterator_pool_.pop_back();
-  }
-
-  cursor->impl()->set_analyzer(this);
-  cursor->impl()->Scan(text);
-  cursor->Next();
-
-  return cursor;
+void Parser::Impl::Parse(const char *text, Parser::Iterator *iterator) {
+  iterator->impl()->set_parser(this);
+  iterator->impl()->Scan(text);
+  iterator->Next();
 }
 
 Parser::Parser(): impl_(NULL) {
@@ -352,9 +363,9 @@ Parser::~Parser() {
   impl_ = NULL;
 }
 
-Parser *Parser::New(Model *model, int type) {
+Parser *Parser::New(const Options &options) {
   Parser *self = new Parser();
-  self->impl_ = Impl::New(model? model->impl(): NULL, type);
+  self->impl_ = Impl::New(options);
 
   if (self->impl_) {
     return self;
@@ -364,12 +375,54 @@ Parser *Parser::New(Model *model, int type) {
   }
 }
 
-void Parser::Release(Parser::Iterator *it) {
-  return impl_->Release(it);
+void Parser::Parse(const char *text, Parser::Iterator *iterator) {
+  return impl_->Parse(text, iterator);
 }
 
-Parser::Iterator *Parser::Parse(const char *text) {
-  return impl_->Parse(text);
+Parser::Options::Options(): model_(NULL),
+                            segmenter_type_(kMixedSegmenter),
+                            tagger_type_(kMixedTagger),
+                            parser_type_(kNoParser) {
+}
+
+void Parser::Options::SetModel(Model *model) {
+  model_ = model;
+}
+Model *Parser::Options::model() const { return model_; }
+
+void Parser::Options::UseMixedSegmenter() {
+  segmenter_type_ = kMixedSegmenter;
+}
+void Parser::Options::UseCrfSegmenter() {
+  segmenter_type_ = kCrfSegmenter;
+}
+void Parser::Options::UseUnigramSegmenter() {
+  segmenter_type_ = kUnigramSegmenter;
+}
+void Parser::Options::UseBigramSegmenter() {
+  segmenter_type_ = kBigramSegmenter;
+}
+void Parser::Options::UseMixedPOSTagger() {
+  tagger_type_ = kMixedTagger;
+}
+void Parser::Options::UseHmmPOSTagger() {
+  tagger_type_ = kHmmTagger;
+}
+void Parser::Options::UseCrfPOSTagger() {
+  tagger_type_ = kCrfTagger;
+}
+void Parser::Options::NoPOSTagger() {
+  tagger_type_ = kNoTagger;
+}
+void Parser::Options::UseArcEagerDependencyParser() {
+  if (tagger_type_ == kNoTagger) tagger_type_ = kMixedTagger;
+  parser_type_ = kArcEagerParser;
+}
+void Parser::Options::NoDependencyParser() {
+  parser_type_ = kNoParser;
+}
+int Parser::Options::TypeValue() const {
+  return segmenter_type_ | tagger_type_ | parser_type_;
 }
 
 // ------------------------------- Model -------------------------------------

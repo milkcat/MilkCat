@@ -376,7 +376,7 @@ int CorpusVocabulary(int argc, char **argv) {
        model_path[1024] = "",
        user_dict[1024] = "";
   int c = '\0';
-  int analyzer_type = Parser::kBigramSegmenter | Parser::kNoTagger;
+  Parser::Options options;
 
   while ((c = getopt(argc, argv, "u:d:m:o:")) != -1 && status.ok()) {
     switch (c) {
@@ -396,9 +396,11 @@ int CorpusVocabulary(int argc, char **argv) {
 
       case 'm':
         if (strcmp(optarg, "crf_seg") == 0) {
-          analyzer_type = Parser::kCrfSegmenter | Parser::kNoTagger;
+          options.UseCrfSegmenter();
+          options.NoPOSTagger();
         } else if (strcmp(optarg, "bigram_seg") == 0) {
-          analyzer_type = Parser::kBigramSegmenter | Parser::kNoTagger;
+          options.UseBigramSegmenter();
+          options.NoPOSTagger();
         } else {
           status = Status::Info("Option -m: invalid method");
         }
@@ -431,11 +433,11 @@ int CorpusVocabulary(int argc, char **argv) {
   if (status.ok()) {
     const char *corpus_path = argv[optind];
     model = Model::New(*model_path == '\0'? NULL: model_path);
+    options.SetModel(model);
     if (*user_dict) model->SetUserDictionary(user_dict);
     int n_threads = utils::HardwareConcurrency();
     CountWordFrequencyFromFile(corpus_path,
-                               model,
-                               analyzer_type,
+                               options,
                                n_threads,
                                &vocab,
                                DisplayProgress,

@@ -29,6 +29,7 @@
 
 #include <stdint.h>
 #include <stdlib.h>
+#include <string>
 
 namespace milkcat {
 
@@ -43,7 +44,7 @@ class Model {
   ~Model();
   
   // Create the model for further use. model_dir is the path of the model data
-  // dir, NULL is to use the default data dir. 
+  // dir, NULL is to use the default data dir.
   static Model *New(const char *model_dir = NULL);
 
   // Set the user dictionary for segmenter. On success, return true. On failed,
@@ -68,37 +69,7 @@ class Parser {
  public:
   class Impl;
   class Iterator;
-
-  // This enum represents the type or the algorithm of Parser. It could be
-  // kDefault which indicates using the default algorithm for segmentation and
-  // part-of-speech tagging. Meanwhile, it could also be 
-  //   kTextTokenizer | kBigramSegmenter | kHmmTagger
-  // which indicates using bigram segmenter for segmentation, using HMM model
-  // for part-of-speech tagging.
-  enum ParserType {
-    // Tokenizer type
-    kTextTokenizer = 0,
-
-    // Segmenter type
-    kMixedSegmenter = 0x00000000,
-    kCrfSegmenter = 0x00000010,
-    kUnigramSegmenter = 0x00000020,
-    kBigramSegmenter = 0x00000030,
-
-    // Part-of-speech tagger type
-    kMixedTagger = 0x00000000,
-    kHmmTagger = 0x00001000,
-    kCrfTagger = 0x00002000,
-    kNoTagger = 0x000ff000,
-
-    // Depengency parser type
-    kMaxentParser = 0x00100000,
-    kNoParser = 0x00000000,
-
-    kDefault = 0,
-    kSegmenter = kNoTagger,
-    kParser = kMaxentParser
-  };
+  class Options;
 
   // The type of word. If the word is a Chinese word, English word or it's a
   // number or ...
@@ -113,16 +84,12 @@ class Parser {
 
   ~Parser();
 
-  // Create the parser. model is the data model it uses, NULL is to
-  // create default data model by Parser it self. type is the analyzer type of
-  // Parser, indicates witch algorithm to use.
-  static Parser *New(Model *model = NULL, int type = 0);
+  // Create the parser. 
+  static Parser *New(const Options &options);
+  static Parser *New();
 
-  // Parses the text and return an iterator for all the tokens.
-  Iterator *Parse(const char *text);
-
-  // Release and recycle an iterator
-  void Release(Iterator *it);
+  // Parses the text and stores the result into the iterator
+  void Parse(const char *text, Iterator *iterator);
 
   // Get the instance of the implementation class
   Impl *impl() { return impl_; }
@@ -130,6 +97,41 @@ class Parser {
  private:
   Parser();
   Impl *impl_;
+};
+
+// The options for the parser
+class Parser::Options {
+ public:
+  Options();
+
+  // Sets the model used in parser. If not set, just use the model created by
+  // parser itself.
+  void SetModel(Model *model);
+  Model *model() const;
+
+  // The type of segmenter, part-of-speech tagger and dependency parser
+  // Default is MixedSegmenter, MixedPOSTagger and NoDependencyParser
+  void UseMixedSegmenter();
+  void UseCrfSegmenter();
+  void UseUnigramSegmenter();
+  void UseBigramSegmenter();
+
+  void UseMixedPOSTagger();
+  void UseHmmPOSTagger();
+  void UseCrfPOSTagger();
+  void NoPOSTagger();
+
+  void UseArcEagerDependencyParser();
+  void NoDependencyParser();
+
+  // Get the type value of current setting
+  int TypeValue() const;
+
+ private:
+  Model *model_;
+  int segmenter_type_;
+  int tagger_type_;
+  int parser_type_;
 };
 
 

@@ -39,7 +39,7 @@ const int kTermLengthMax = kFeatureLengthMax;
 const int kPOSTagLengthMax = 10;
 const int kHMMSegmentAndPOSTaggingNBest = 3;
 const int kUserTermIdStart = 0x40000000;
-const double kDefaultCost = 16.0;
+const double kDefaultCost = 6.0;
 
 
 const int kHmmModelMagicNumber = 0x3322;

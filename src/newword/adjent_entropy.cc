@@ -76,9 +76,10 @@ int GetWordId(const utils::unordered_map<std::string, int> &candidate_id,
 void SegmentText(
       const char *text,
       Parser *parser,
+      Parser::Iterator *it,
       std::vector<std::string> *segment_result) {
   segment_result->clear();
-  Parser::Iterator *it = parser->Parse(text);
+  parser->Parse(text, it);
 
   while (!it->End()) {
     if (it->type() == Parser::kChineseWord) {
@@ -88,8 +89,6 @@ void SegmentText(
     }
     it->Next();
   }
-
-  parser->Release(it);
 }
 
 // Update the word_adjacent data from words specified by line_words
@@ -158,9 +157,13 @@ class BigramAnalyzeThread: public utils::Thread {
   }
 
   void Run() {
-    Parser *parser = Parser::New(
-        model_,
-        Parser::kBigramSegmenter | Parser::kNoTagger);
+    Parser::Options options;
+    options.UseBigramSegmenter();
+    options.NoPOSTagger();
+    options.SetModel(model_);
+    Parser *parser = Parser::New(options);
+    Parser::Iterator *it = new Parser::Iterator();
+
     if (parser == NULL) {
       *status_ = Status::Corruption(LastError());
     }
@@ -179,7 +182,7 @@ class BigramAnalyzeThread: public utils::Thread {
 
       if (status_->ok() && !eof) {
         // Using bigram model to segment the corpus
-        SegmentText(buf, parser, &words);
+        SegmentText(buf, parser, it, &words);
         vocab_mutex_->Lock();
         for (int i = 0; i < words.size(); ++i) {
           utils::unordered_map<std::string, int>::iterator
@@ -204,6 +207,7 @@ class BigramAnalyzeThread: public utils::Thread {
     }
 
     delete parser;
+    delete it;
     delete[] buf;
   }
 

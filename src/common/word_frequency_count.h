@@ -38,8 +38,7 @@ namespace milkcat {
 // words. If any errors occured, status is not Status::OK()
 int CountWordFrequencyFromFile(
     const char *path,
-    Model *model,
-    int parser_type,
+    const Parser::Options &options,
     int n_threads,
     utils::unordered_map<std::string, int> *vocab,
     void (* progress)(int64_t bytes_processed,

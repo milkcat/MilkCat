@@ -45,16 +45,14 @@ namespace milkcat {
 class SegmentThread: public utils::Thread {
  public:
   SegmentThread(
-    Model *model,
-    int parser_type,
+    const Parser::Options &options,
     ReadableFile *fd,
     utils::Mutex *fd_mutex,
     utils::unordered_map<std::string, int> *vocab,
     int *total_count,
     utils::Mutex *vocab_mutex,
     Status *status): 
-      model_(model),
-      parser_type_(parser_type),
+      options_(options),
       fd_(fd),
       fd_mutex_(fd_mutex),
       vocab_(vocab),
@@ -68,7 +66,8 @@ class SegmentThread: public utils::Thread {
     char *buf = new char[buf_size];
 
     // Creates an parser from model
-    Parser *parser = Parser::New(model_, parser_type_);
+    Parser *parser = Parser::New(options_);
+    Parser::Iterator *it = new Parser::Iterator();
     if (parser == NULL) *status_ = Status::Corruption(LastError());
 
     bool eof = false;
@@ -83,7 +82,7 @@ class SegmentThread: public utils::Thread {
       // Segment the line and store the results into words
       if (status_->ok() && !eof) {
         words.clear();
-        Parser::Iterator *it = parser->Parse(buf);
+        parser->Parse(buf, it);
         while (!it->End()) {
           if (it->type() == Parser::kChineseWord)
             words.push_back(it->word());
@@ -91,7 +90,6 @@ class SegmentThread: public utils::Thread {
             words.push_back("-NOT-CJK-");
           it->Next();
         }
-        parser->Release(it);
       }
 
       // Update vocab and total_count with words
@@ -113,12 +111,12 @@ class SegmentThread: public utils::Thread {
     }
     
     delete parser;
+    delete it;
     delete[] buf;
   }
 
  private:
-  Model *model_;
-  int parser_type_;
+  Parser::Options options_;
   ReadableFile *fd_;
   utils::Mutex *fd_mutex_;
   utils::unordered_map<std::string, int> *vocab_;
@@ -185,8 +183,7 @@ class ProgressUpdateThread: public utils::Thread {
 // If any errors occured, status is set to a value != Status::OK()
 int CountWordFrequencyFromFile(
     const char *path,
-    Model *model,
-    int parser_type,
+    const Parser::Options &options,
     int n_threads,
     utils::unordered_map<std::string, int> *vocab,
     void (* progress)(int64_t bytes_processed,
@@ -209,8 +206,7 @@ int CountWordFrequencyFromFile(
 
     for (int i = 0; i < n_threads; ++i) {
       utils::Thread *worker_thread = new SegmentThread(
-          model,
-          parser_type,
+          options,
           fd,
           &fd_mutex,
           vocab,

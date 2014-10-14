@@ -49,6 +49,7 @@ class Phrase::Impl {
  private:
   PhraseExtractor *phrase_extractor_;
   Parser *parser_;
+  Parser::Iterator *it_;
 
   std::vector<PhraseExtractor::Phrase *> phrases_;
   std::vector<Iterator *> iterator_pool_;
@@ -105,6 +106,9 @@ Phrase::Impl::~Impl() {
 
   delete parser_;
   parser_ = NULL;
+
+  delete it_;
+  it_ = NULL;
 }
 
 Phrase::Impl *Phrase::Impl::New(Model *model) {
@@ -118,7 +122,12 @@ Phrase::Impl *Phrase::Impl::New(Model *model) {
 
   // Create the segmenter
   if (global_status.ok()) {
-    self->parser_ = Parser::New(model, Parser::kBigramSegmenter);
+    Parser::Options options;
+    options.SetModel(model);
+    options.UseBigramSegmenter();
+    options.NoPOSTagger();
+
+    self->parser_ = Parser::New(options);
     if (self->parser_ == NULL) {
       global_status = Status::Info(LastError());
     }
@@ -136,12 +145,11 @@ void Phrase::Impl::SegmentTextToDocument(const char *text,
                                          Document *document) {
   document->Clear();
 
-  Parser::Iterator *it = parser_->Parse(text);
-  while (!it->End()) {
-    document->Add(it->word(), it->type());
-    it->Next();
+  parser_->Parse(text, it_);
+  while (!it_->End()) {
+    document->Add(it_->word(), it_->type());
+    it_->Next();
   }
-  parser_->Release(it);
 }
 
 Phrase::Iterator *Phrase::Impl::Extract(const char *text) {

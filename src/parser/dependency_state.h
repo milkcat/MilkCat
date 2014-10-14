@@ -29,6 +29,7 @@
 
 #include <vector>
 #include "parser/dependency_parser.h"
+#include "utils/utils.h"
 
 namespace milkcat {
 
@@ -89,6 +90,9 @@ class DependencyParser::State {
   int input_position_;
 
   bool after_reduce_;
+  double cost_;
+
+  DISALLOW_COPY_AND_ASSIGN(State);
 };
 
 }  // namespace milkcat

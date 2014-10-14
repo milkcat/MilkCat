@@ -33,7 +33,6 @@
 #include <stdio.h>
 #include <map>
 #include <string>
-#include <vector>
 #include "common/milkcat_config.h"
 #include "include/milkcat.h"
 #include "segmenter/segmenter.h"
@@ -78,10 +77,10 @@ PartOfSpeechTagger *PartOfSpeechTaggerFactory(Model::Impl *factory,
 
 class Parser::Impl {
  public:
-  static Impl *New(Model::Impl *model_impl, int type);
+  static Impl *New(const Options &options);
   ~Impl();
 
-  Iterator *Parse(const char *text);
+  void Parse(const char *text, Iterator *iterator);
 
   Segmenter *segmenter() const { return segmenter_; }
   PartOfSpeechTagger *part_of_speech_tagger() const {
@@ -89,10 +88,6 @@ class Parser::Impl {
   }
   DependencyParser *dependency_parser() const {
     return dependency_parser_;
-  }
-
-  void Release(Parser::Iterator *it) {
-    iterator_pool_.push_back(it);
   }
 
   // Get the segmenter for the parser
@@ -105,7 +100,6 @@ class Parser::Impl {
   PartOfSpeechTagger *part_of_speech_tagger_;
   DependencyParser *dependency_parser_;
   Model::Impl *model_impl_;
-  std::vector<Parser::Iterator *> iterator_pool_;
   bool own_model_;
   int iterator_alloced_;
 };
@@ -134,7 +128,7 @@ class Parser::Iterator::Impl {
     return term_instance_->term_text_at(current_position_);
   }
   const char *part_of_speech_tag() const {
-    if (analyzer_->part_of_speech_tagger() != NULL)
+    if (parser_->part_of_speech_tagger() != NULL)
       return part_of_speech_tag_instance_->part_of_speech_tag_at(
           current_position_);
     else
@@ -144,25 +138,25 @@ class Parser::Iterator::Impl {
     return term_instance_->term_type_at(current_position_);
   }
   int head_node() const {
-    if (analyzer_->dependency_parser() != NULL)
+    if (parser_->dependency_parser() != NULL)
       return dependency_instance_->head_node_at(current_position_);
     else
       return 0;
   }
   const char *dependency_type() const {
-    if (analyzer_->dependency_parser() != NULL)
+    if (parser_->dependency_parser() != NULL)
       return dependency_instance_->dependency_type_at(current_position_);
     else
       return "NONE";
   }
 
-  Parser::Impl *analyzer() const { return analyzer_; }
-  void set_analyzer(Parser::Impl *analyzer) {
-    analyzer_ = analyzer;
+  Parser::Impl *parser() const { return parser_; }
+  void set_parser(Parser::Impl *parser) {
+    parser_ = parser;
   }
 
  private:
-  Parser::Impl *analyzer_;
+  Parser::Impl *parser_;
 
   Tokenization *tokenizer_;
   TokenInstance *token_instance_;
