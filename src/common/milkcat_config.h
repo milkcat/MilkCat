@@ -32,18 +32,18 @@
 
 namespace milkcat {
 
-const int kTokenMax = 1000;
-const int kTermMax = kTokenMax;
-const int kFeatureLengthMax = 100;
-const int kTermLengthMax = kFeatureLengthMax;
-const int kPOSTagLengthMax = 10;
-const int kHMMSegmentAndPOSTaggingNBest = 3;
-const int kUserTermIdStart = 0x40000000;
-const double kDefaultCost = 6.0;
+enum {
+  kTokenMax = 1000,
+  kFeatureLengthMax = 100,
+  kTermLengthMax = kFeatureLengthMax,
+  kPOSTagLengthMax = 10,
+  kHMMSegmentAndPOSTaggingNBest = 3,
+  kUserTermIdStart = 0x40000000,
+  kHmmModelMagicNumber = 0x3322,
+  kMulticlassPerceptronModelMagicNumber = 0x1a1a
+};
 
-
-const int kHmmModelMagicNumber = 0x3322;
-const int kDFModelMagicNumber = 0xdfdf;
+const float kDefaultCost = 6.0;
 
 }  // namespace milkcat
 

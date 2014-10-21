@@ -415,7 +415,6 @@ namespace cedar {
 #ifdef USE_REDUCED_TRIE
         if (_array[from].value >= 0) break;
 #endif
-        printf("base = %d, key=%d\n", _array[from].base (), (int)key_[pos]);
         size_t to = static_cast <size_t> (_array[from].base ()); to ^= key_[pos];
         if (_array[to].check != static_cast <int> (from)) return CEDAR_NO_PATH;
         ++pos;

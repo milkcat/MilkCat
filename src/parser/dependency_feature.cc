@@ -29,6 +29,7 @@
 
 #include <map>
 #include "common/trie_tree.h"
+#include "ml/feature_set.h"
 #include "parser/dependency_node.h"
 #include "parser/dependency_state.h"
 #include "segmenter/term_instance.h"
@@ -144,10 +145,11 @@ void DependencyParser::Feature::InitializeFeatureIndex() {
   feature_index_ = DoubleArrayTrieTree::NewFromMap(feature_index);
 }
 
-int DependencyParser::Feature::BuildFeature(
+int DependencyParser::Feature::Extract(
     const State *state,
     const TermInstance *term_instance,
-    const PartOfSpeechTagInstance *part_of_speech_tag_instance) {
+    const PartOfSpeechTagInstance *part_of_speech_tag_instance,
+    FeatureSet *feature_set) {
   Node *node;
   utils::StringBuilder builder;
   int feature_num = 0;
@@ -169,9 +171,11 @@ int DependencyParser::Feature::BuildFeature(
   strlcpy(single_feature_[kSTRCt], STRCt(), kFeatureStringMax);
   strlcpy(single_feature_[kN0LCt], N0LCt(), kFeatureStringMax);
 
+  feature_set->Clear();
   for (std::vector<std::string>::const_iterator
        it = feature_templates_->begin(); it != feature_templates_->end(); ++it) {
-    builder.ChangeBuffer(feature_[feature_num], kFeatureStringMax);
+    builder.ChangeBuffer(feature_set->at(feature_num),
+                         FeatureSet::kFeatureSizeMax);
     const char *templ = it->c_str();
     const char *p = templ, *q = NULL;
     while (*p) {
@@ -194,6 +198,7 @@ int DependencyParser::Feature::BuildFeature(
     LOG(feature_[feature_num]);
     feature_num++;
   }
+  feature_set->set_size(feature_num);
 
   return feature_num;
 }

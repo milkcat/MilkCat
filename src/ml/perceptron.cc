@@ -21,28 +21,5 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 //
-// feature_extractor.h  --- Created at 2013-10-09
+// perceptron.cc --- Created at 2014-10-18
 //
-
-#ifndef SRC_COMMON_FEATURE_EXTRACTOR_H_
-#define SRC_COMMON_FEATURE_EXTRACTOR_H_
-
-#include <stdlib.h>
-#include "common/milkcat_config.h"
-
-namespace milkcat {
-
-class FeatureExtractor {
- public:
-  virtual void ExtractFeatureAt(size_t position,
-                                char (*feature_list)[kFeatureLengthMax],
-                                int list_size) = 0;
-  virtual size_t size() const = 0;
-  virtual ~FeatureExtractor();
-};
-
-inline FeatureExtractor::~FeatureExtractor() {}
-
-}  // namespace milkcat
-
-#endif  // SRC_COMMON_FEATURE_EXTRACTOR_H_

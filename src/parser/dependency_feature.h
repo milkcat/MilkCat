@@ -35,6 +35,7 @@ namespace milkcat {
 class TermInstance;
 class PartOfSpeechTagInstance;
 class TrieTree;
+class FeatureSet;
 
 class DependencyParser::Feature {
  public:
@@ -82,17 +83,14 @@ class DependencyParser::Feature {
   const char *STRCt();
   const char *N0LCt();
 
-  // Get the feature at index fid
-  const char *feature(int fid) const { return feature_[fid]; }
-
-  // Builds the features from current state and stores it in feature_buffer_
+  // Extracts the features from current state and stores it into feature_set
   // Returns the number of features added
-  int BuildFeature(const State *state,
-                   const TermInstance *term_instance,
-                   const PartOfSpeechTagInstance *part_of_speech_tag_instance);
+  int Extract(const State *state,
+              const TermInstance *term_instance,
+              const PartOfSpeechTagInstance *part_of_speech_tag_instance,
+              FeatureSet *feature_set);
 
  private:
-  char feature_[kFeatureMax][kFeatureStringMax];
   char single_feature_[kSingleFeatureNumber][kFeatureStringMax];
   const TermInstance *term_instance_;
   const PartOfSpeechTagInstance *part_of_speech_tag_instance_;

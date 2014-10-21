@@ -21,28 +21,45 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 //
-// feature_extractor.h  --- Created at 2013-10-09
+// feature_set.h  --- Created at 2014-10-18
 //
 
 #ifndef SRC_COMMON_FEATURE_EXTRACTOR_H_
 #define SRC_COMMON_FEATURE_EXTRACTOR_H_
 
-#include <stdlib.h>
-#include "common/milkcat_config.h"
-
 namespace milkcat {
 
-class FeatureExtractor {
+// FeatureSet likes a feature vector that each dimemsion is neither 0 or 1.
+// A feature in the FeatureSet means the value in this dimension is `1`.
+class FeatureSet {
  public:
-  virtual void ExtractFeatureAt(size_t position,
-                                char (*feature_list)[kFeatureLengthMax],
-                                int list_size) = 0;
-  virtual size_t size() const = 0;
-  virtual ~FeatureExtractor();
-};
+  FeatureSet();
 
-inline FeatureExtractor::~FeatureExtractor() {}
+  enum {
+    kFeatureNumberMax = 100,
+    kFeatureSizeMax = 128
+  };
+
+  // Adds a feature string into the feature set
+  void Add(const char *feature_string);
+
+  // Remove all features
+  void Clear() { top_ = 0; }
+
+  // Gets the feature string at `index`
+  char *at(int index) const { 
+    return const_cast<char *>(feature_string_[index]); 
+  }
+
+  // Gets number of features in the set
+  int size() const { return top_; }
+  void set_size(int size) { top_ = size; }
+
+ private:
+  char feature_string_[kFeatureNumberMax][kFeatureSizeMax];
+  int top_;
+};
 
 }  // namespace milkcat
 
-#endif  // SRC_COMMON_FEATURE_EXTRACTOR_H_
+#endif

@@ -31,7 +31,9 @@
 #include <string.h>
 #include <algorithm>
 #include <vector>
-#include "ml/maxent_classifier.h"
+#include "ml/feature_set.h"
+#include "ml/multiclass_perceptron.h"
+#include "ml/multiclass_perceptron_model.h"
 #include "segmenter/term_instance.h"
 #include "parser/dependency_feature.h"
 #include "parser/dependency_instance.h"
@@ -46,21 +48,25 @@ namespace milkcat {
 
 
 NaiveArceagerDependencyParser::NaiveArceagerDependencyParser():
-    maxent_classifier_(NULL),
+    perceptron_(NULL),
     state_(NULL),
     feature_(NULL),
+    feature_set_(NULL),
     node_pool_(NULL) {
 }
 
 NaiveArceagerDependencyParser::~NaiveArceagerDependencyParser() {
-  delete maxent_classifier_;
-  maxent_classifier_ = NULL;
+  delete perceptron_;
+  perceptron_ = NULL;
 
   delete state_;
   state_ = NULL;
 
   delete feature_;
   feature_ = NULL;
+
+  delete feature_set_;
+  feature_set_ = NULL;
 
   delete node_pool_;
   node_pool_ = NULL;
@@ -73,11 +79,13 @@ NaiveArceagerDependencyParser::New(Model::Impl *model_impl,
   NaiveArceagerDependencyParser *self = new NaiveArceagerDependencyParser();
   self->state_ = new State();
   self->node_pool_ = new utils::Pool<Node>();
+  self->feature_set_ = new FeatureSet();
 
-  const MaxentModel *maxent_model = model_impl->DependencyModel(status);
+  MulticlassPerceptronModel *
+  perceptron_model = model_impl->DependencyModel(status);
 
   if (status->ok()) {
-    self->maxent_classifier_ = new MaxentClassifier(maxent_model);
+    self->perceptron_ = new MulticlassPerceptron(perceptron_model);
     feature_templates = model_impl->DependencyTemplate(status);
   }
 
@@ -92,7 +100,7 @@ NaiveArceagerDependencyParser::New(Model::Impl *model_impl,
 }
 
 bool NaiveArceagerDependencyParser::AllowTransition(int label_id) const {
-  const char *transition = maxent_classifier_->yname(label_id);
+  const char *transition = perceptron_->yname(label_id);
   if (strncmp(transition, "LARC", 4) == 0)
     return state_->AllowLeftArc();
   else if (strncmp(transition, "RARC", 4) == 0)
@@ -109,27 +117,24 @@ bool NaiveArceagerDependencyParser::AllowTransition(int label_id) const {
 int NaiveArceagerDependencyParser::NextTransition() {
   const char *feature_buffer[Feature::kFeatureMax];
   std::vector<std::pair<double, int> > 
-  transition_costs(maxent_classifier_->ysize());
+  transition_costs(perceptron_->ysize());
 
-  int feature_num = feature_->BuildFeature(state_,
-                                           term_instance_,
-                                           part_of_speech_tag_instance_);
-  for (int i = 0; i < feature_num; ++i)
-    feature_buffer[i] = feature_->feature(i);
+  int feature_num = feature_->Extract(state_,
+                                      term_instance_,
+                                      part_of_speech_tag_instance_,
+                                      feature_set_);
 
-  int yid = maxent_classifier_->Classify(
-      const_cast<const char **>(feature_buffer),
-      feature_num);
+  int yid = perceptron_->Classify(feature_set_);
 
-  LOG("initial transition = ", maxent_classifier_->yname(yid));
+  LOG("initial transition = ", perceptron_->yname(yid));
 
   // If the first candidate action is not allowed
   if (AllowTransition(yid) == false) {
     // sort the results by its weight
     transition_costs.clear();
-    for (int i = 0; i < maxent_classifier_->ysize(); ++i) {
+    for (int i = 0; i < perceptron_->ysize(); ++i) {
       transition_costs.push_back(
-          std::make_pair(maxent_classifier_->ycost(i), i));
+          std::make_pair(perceptron_->ycost(i), i));
     }
     std::sort(transition_costs.begin(), transition_costs.end());
     do {
@@ -142,7 +147,7 @@ int NaiveArceagerDependencyParser::NextTransition() {
     } while (AllowTransition(yid) == false);
   }
 
-  LOG("final transition = ", maxent_classifier_->yname(yid));
+  LOG("final transition = ", perceptron_->yname(yid));
 
   return yid;
 }
@@ -174,7 +179,7 @@ void NaiveArceagerDependencyParser::Parse(
 
   while (!state_->InputEnd()) {
     int label_id = NextTransition();
-    const char *label_str = maxent_classifier_->yname(label_id);
+    const char *label_str = perceptron_->yname(label_id);
     if (strncmp("SHIF", label_str, 4) == 0) {
       state_->Shift();
     } else if (strncmp("REDU", label_str, 4) == 0) {

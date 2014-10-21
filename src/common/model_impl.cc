@@ -27,6 +27,8 @@
 
 #include "common/model_impl.h"
 
+#include "ml/multiclass_perceptron_model.h"
+
 namespace milkcat {
 
 // Model filenames
@@ -39,7 +41,7 @@ const char *kCrfSegModelFile = "ctb_seg.crf";
 const char *kOovPropertyFile = "oov_property.idx";
 const char *kIdfModelFile = "tfidf.bin";
 const char *kStopwordFile = "stopword.idx";
-const char *kDepengencyFile = "ctb_dep.maxent";
+const char *kDepengencyFilePrefix = "ctb5_dep";
 const char *kDependenctTemplateFile = "depparse.templ";
 
 // ---------- Model::Impl ----------
@@ -57,7 +59,7 @@ Model::Impl::Impl(const char *model_dir_path):
     oov_property_(NULL),
     idf_model_(NULL),
     stopword_(NULL),
-    depengency_(NULL),
+    dependency_(NULL),
     dependency_template_(NULL) {
 }
 
@@ -95,8 +97,8 @@ Model::Impl::~Impl() {
   delete stopword_;
   stopword_ = NULL;
 
-  delete depengency_;
-  depengency_ = NULL;
+  delete dependency_;
+  dependency_ = NULL;
 
   delete dependency_template_;
   dependency_template_ = NULL;
@@ -306,14 +308,14 @@ const TrieTree *Model::Impl::Stopword(Status *status) {
   return stopword_;
 }
 
-const MaxentModel *Model::Impl::DependencyModel(Status *status) {
+MulticlassPerceptronModel *Model::Impl::DependencyModel(Status *status) {
   mutex.Lock();
-  if (depengency_ == NULL) {
-    std::string model_path = model_dir_path_ + kDepengencyFile;
-    depengency_ = MaxentModel::New(model_path.c_str(), status);
+  if (dependency_ == NULL) {
+    std::string prefix = model_dir_path_ + kDepengencyFilePrefix;
+    dependency_ = MulticlassPerceptronModel::Open(prefix.c_str(), status);
   }
   mutex.Unlock();
-  return depengency_;  
+  return dependency_;  
 }
 
 const std::vector<std::string> *

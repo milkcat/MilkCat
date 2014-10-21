@@ -58,7 +58,7 @@ class Beam {
   // Shrink nodes_ array and remain top n_best elements
   void Shrink() {
     if (size_ <= n_best_) return;
-    std::nth_element(nodes_, nodes_ + n_best_, nodes_ + size_, node_ptr_cmp_);
+    std::partial_sort(nodes_, nodes_ + n_best_, nodes_ + size_, node_ptr_cmp_);
     size_ = n_best_;
   }
 

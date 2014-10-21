@@ -41,6 +41,7 @@
 #include "common/trie_tree.h"
 #include "common/word_frequency_count.h"
 #include "ml/maxent_classifier.h"
+#include "ml/multiclass_perceptron_model.h"
 #include "include/milkcat.h"
 #include "phrase/string_value.h"
 #include "tagger/hmm_part_of_speech_tagger.h"
@@ -358,6 +359,31 @@ int MakeMaxentFile(int argc, char **argv) {
   }
 }
 
+int MakeMulticlassPerceptronFile(int argc, char **argv) {
+  Status status;
+
+  if (argc != 4)
+    status = Status::Info("Usage: mc_model multiperc "
+                          "text-model-file binary-model-file");
+
+  printf("Load text formatted model: %s \n", argv[argc - 2]);
+  MulticlassPerceptronModel *
+  perc = MulticlassPerceptronModel::OpenText(argv[argc - 2], &status);
+
+  if (status.ok()) {
+    printf("Save binary formatted model: %s \n", argv[argc - 1]);
+    perc->Save(argv[argc - 1], &status);
+  }
+
+  delete perc;
+  if (status.ok()) {
+    return 0;
+  } else {
+    puts(status.what());
+    return -1;
+  }
+}
+
 void DisplayProgress(int64_t bytes_processed,
                      int64_t file_size,
                      int64_t bytes_per_second) {
@@ -564,6 +590,8 @@ int main(int argc, char **argv) {
     return milkcat::MakeIndexFile(argc, argv);
   } else if (strcmp(tool, "gram") == 0) {
     return milkcat::MakeGramModel(argc, argv);
+  } else if (strcmp(tool, "multiperc") == 0) {
+    return milkcat::MakeMulticlassPerceptronFile(argc, argv);
   } else if (strcmp(tool, "hmm") == 0) {
     return milkcat::MakeHMMTaggerModel(argc, argv);
   } else if (strcmp(tool, "maxent") == 0) {

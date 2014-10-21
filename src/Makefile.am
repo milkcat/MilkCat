@@ -19,6 +19,8 @@ libmilkcat_la_SOURCES = libmilkcat.cc \
                         common/milkcat_config.h \
                         common/model_impl.cc \
                         common/model_impl.h \
+                        common/reimu_trie.h \
+                        common/reimu_trie.cc \
                         common/static_array.h \
                         common/static_hashtable.h \
                         common/trie_tree.cc \
@@ -31,10 +33,16 @@ libmilkcat_la_SOURCES = libmilkcat.cc \
                         ml/crf_model.h \
                         ml/crf_tagger.cc \
                         ml/crf_tagger.h \
+                        ml/feature_set.h \
+                        ml/feature_set.cc \
                         ml/hmm_model.cc \
                         ml/hmm_model.h \
                         ml/maxent_classifier.cc \
                         ml/maxent_classifier.h \
+                        ml/multiclass_perceptron.cc \
+                        ml/multiclass_perceptron.h \
+                        ml/multiclass_perceptron_model.cc \
+                        ml/multiclass_perceptron_model.h \
                         ml/sequence_feature_extractor.h \
                         newword/adjent_entropy.cc \
                         newword/candidate.cc \
@@ -103,8 +111,8 @@ libmilkcat_la_SOURCES = libmilkcat.cc \
                         utils/writable_file.cc \
                         utils/writable_file.h 
 
-TESTS = dependency_test 
-check_PROGRAMS = dependency_test 
+TESTS = dependency_test reimu_trie_test
+check_PROGRAMS = dependency_test reimu_trie_test
 
 dependency_test_SOURCES = tests/dependency_test.cc
 dependency_test_CXXFLAGS = -DMODEL_DIR=\"$(top_srcdir)/data/\" \
@@ -112,3 +120,5 @@ dependency_test_CXXFLAGS = -DMODEL_DIR=\"$(top_srcdir)/data/\" \
 dependency_test_LDFLAGS = -all-static
 dependency_test_LDADD = libmilkcat.la
 
+reimu_trie_test_SOURCES = tests/reimu_trie_test.cc
+reimu_trie_test_LDADD = libmilkcat.la

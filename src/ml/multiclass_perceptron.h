@@ -21,28 +21,41 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 //
-// feature_extractor.h  --- Created at 2013-10-09
+// multiclass_perceptron.h --- Created at 2014-10-10
 //
 
-#ifndef SRC_COMMON_FEATURE_EXTRACTOR_H_
-#define SRC_COMMON_FEATURE_EXTRACTOR_H_
-
-#include <stdlib.h>
-#include "common/milkcat_config.h"
+#ifndef SRC_ML_MULTICLASS_PERCEPTRON_H_
+#define SRC_ML_MULTICLASS_PERCEPTRON_H_
 
 namespace milkcat {
 
-class FeatureExtractor {
- public:
-  virtual void ExtractFeatureAt(size_t position,
-                                char (*feature_list)[kFeatureLengthMax],
-                                int list_size) = 0;
-  virtual size_t size() const = 0;
-  virtual ~FeatureExtractor();
-};
+class FeatureSet;
+class MulticlassPerceptronModel;
 
-inline FeatureExtractor::~FeatureExtractor() {}
+// A perceptron for multiclass classification
+class MulticlassPerceptron {
+ public:
+  MulticlassPerceptron(MulticlassPerceptronModel *model);
+  ~MulticlassPerceptron();
+
+  // Classify the given feature_set, returns the inferenced label id (yid).
+  // Use `yname` to get the string of this label. 
+  int Classify(const FeatureSet *feature_set);
+
+  // Get the name of a label (yid)
+  const char *yname(int yid) const;
+  int ysize() const;
+  float ycost(int yid) const { return ycost_[yid]; }
+
+  // Online training the perceptron with one sample
+  const char *Train(const FeatureSet *feature_set, int label);
+
+ private:
+  MulticlassPerceptronModel *model_;
+  float *ycost_;
+};
 
 }  // namespace milkcat
 
-#endif  // SRC_COMMON_FEATURE_EXTRACTOR_H_
+#endif
+

@@ -33,9 +33,10 @@
 namespace milkcat {
 
 class Status;
-class MaxentClassifier;
+class MulticlassPerceptron;
 class TermInstance;
 class PartOfSpeechTagInstance;
+class FeatureSet;
 
 namespace utils {
 template<class T> class Pool;
@@ -59,9 +60,10 @@ class NaiveArceagerDependencyParser: public DependencyParser {
     const PartOfSpeechTagInstance *part_of_speech_tag_instance);
 
  private:
-  MaxentClassifier *maxent_classifier_;
+  MulticlassPerceptron *perceptron_;
   State *state_;
   Feature *feature_;
+  FeatureSet *feature_set_;
   utils::Pool<Node> *node_pool_;
   const TermInstance *term_instance_;
   const PartOfSpeechTagInstance *part_of_speech_tag_instance_;

@@ -46,6 +46,8 @@
 
 namespace milkcat {
 
+class MulticlassPerceptronModel;
+
 // A factory class that can obtain any model data class needed by MilkCat
 // in singleton mode. All the GetXX fucnctions are thread safe
 class Model::Impl {
@@ -89,7 +91,7 @@ class Model::Impl {
   const TrieTree *Stopword(Status *status);
 
   // Get the dependency model
-  const MaxentModel *DependencyModel(Status *status);
+  MulticlassPerceptronModel *DependencyModel(Status *status);
 
   // Get the feature template for dependency parsing
   const std::vector<std::string> *DependencyTemplate(Status *status);
@@ -109,7 +111,7 @@ class Model::Impl {
   const TrieTree *oov_property_;
   const StringValue<float> *idf_model_;
   const TrieTree *stopword_;
-  const MaxentModel *depengency_;
+  MulticlassPerceptronModel *dependency_;
   const std::vector<std::string> *dependency_template_;
 
   // Load and set the user dictionary data specified by path

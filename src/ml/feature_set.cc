@@ -21,8 +21,23 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 //
-// perceptron.h --- Created at 2014-10-10
+// feature_set.h  --- Created at 2014-10-18
 //
 
-#ifndef 
+#include "ml/feature_set.h"
 
+#include "utils/log.h"
+#include "utils/utils.h"
+
+namespace milkcat {
+
+FeatureSet::FeatureSet(): top_(0) {
+}
+
+void FeatureSet::Add(const char *feature_string) {
+  ASSERT(top_ < kFeatureNumberMax, "Too many features");
+  strlcpy(feature_string_[top_], feature_string, kFeatureSizeMax);
+  top_++;
+}
+
+}  // namespace milkcat
