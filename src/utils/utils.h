@@ -46,7 +46,6 @@
 #endif
 
 namespace milkcat {
-namespace utils {
 
 /*
  * Copy src to string dst of size siz.  At most siz-1 characters
@@ -55,6 +54,8 @@ namespace utils {
  */
 size_t strlcpy(char *dst, const char *src, size_t siz);
 char *trim(char *str);
+
+const char *_filename(const char *path);
 
 // Sleep for seconds
 void Sleep(double seconds);
@@ -71,8 +72,13 @@ template<typename TK, typename TV>
 using unordered_map = std::map<TK, TV>;
 #endif
 
-}  // namespace utils
 }  // namespace milkcat
+
+#ifdef DEBUG
+#define LOG(...)  printf(__VA_ARGS__)
+#else 
+#define LOG(...)
+#endif 
 
 #define ERROR(message) \
         do { \
@@ -84,6 +90,22 @@ using unordered_map = std::map<TK, TV>;
           fputs("\n", stderr); \
           exit(1); \
         } while (0);
+
+
+#ifndef NOASSERT
+#define ASSERT(cond, message) \
+        if (!(cond)) { \
+          fprintf(stderr,  \
+                  "[%s:%d] ASSERT failed: ", \
+                  _filename(__FILE__), \
+                  __LINE__); \
+          fputs(message, stderr); \
+          fputs("\n", stderr); \
+          exit(1); \
+        }
+#else
+#define ASSERT(cond, message)
+#endif  // NOASSERT
 
 #define DISALLOW_COPY_AND_ASSIGN(TypeName) \
         TypeName(const TypeName&); \

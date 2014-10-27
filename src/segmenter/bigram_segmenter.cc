@@ -39,7 +39,6 @@
 #include "include/milkcat.h"
 #include "segmenter/term_instance.h"
 #include "tokenizer/token_instance.h"
-#include "utils/log.h"
 #include "utils/utils.h"
 
 namespace milkcat {
@@ -103,7 +102,7 @@ BigramSegmenter *BigramSegmenter::New(Model::Impl *model_factory,
   BigramSegmenter *self = new BigramSegmenter();
 
   self->beam_size_ = use_bigram? kDefaultBeamSize: 1;
-  self->node_pool_ = new utils::Pool<Node>();
+  self->node_pool_ = new Pool<Node>();
 
   // Initialize the beams_
   for (int i = 0; i < sizeof(self->beams_) / sizeof(Beam<Node> *); ++i) {

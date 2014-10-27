@@ -109,7 +109,7 @@ class HMMPartOfSpeechTagger: public PartOfSpeechTagger {
 
  private:
   Beam<Node> *beams_[kMaxBeams];
-  utils::Pool<Node> *node_pool_;
+  Pool<Node> *node_pool_;
 
   const HMMModel *model_;
   const TrieTree *index_;

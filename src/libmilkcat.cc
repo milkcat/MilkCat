@@ -46,7 +46,6 @@
 #include "parser/dependency_parser.h"
 #include "tokenizer/tokenizer.h"
 #include "tokenizer/token_instance.h"
-#include "utils/log.h"
 #include "utils/utils.h"
 
 namespace milkcat {
@@ -119,8 +118,6 @@ PartOfSpeechTagger *PartOfSpeechTaggerFactory(Model::Impl *factory,
                                               Status *status) {
   const CRFModel *crf_pos_model;
   int tagger_type = analyzer_type & kPartOfSpeechTaggerMask;
-
-  LOG("Tagger type: " << tagger_type);
 
   switch (tagger_type) {
     case kCrfTagger:

@@ -30,7 +30,6 @@
 #include "utils/utils.h"
 
 namespace milkcat {
-namespace utils {
 
 class Mutex {
  public:
@@ -47,7 +46,6 @@ class Mutex {
   DISALLOW_COPY_AND_ASSIGN(Mutex);
 };
 
-}  // namespace utils
 }  // namespace milkcat
 
 #endif  // SRC_UTILS_UTILS_H_

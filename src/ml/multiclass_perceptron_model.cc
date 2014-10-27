@@ -39,7 +39,6 @@
 #include "utils/readable_file.h"
 #include "utils/writable_file.h"
 #include "utils/status.h"
-#include "utils/log.h"
 #include "utils/utils.h"
 
 namespace milkcat {

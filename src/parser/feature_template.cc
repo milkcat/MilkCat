@@ -36,7 +36,6 @@
 #include "parser/state.h"
 #include "segmenter/term_instance.h"
 #include "tagger/part_of_speech_tag_instance.h"
-#include "utils/log.h"
 #include "utils/readable_file.h"
 #include "utils/string_builder.h"
 
@@ -65,7 +64,7 @@ DependencyParser::FeatureTemplate::Open(const char *filename, Status *status) {
   while (status->ok() && !fd->Eof()) {
     fd->ReadLine(line, sizeof(line), status);
     if (status->ok()) {
-      utils::trim(line);
+      trim(line);
       template_vector.push_back(line);
     }
   }
@@ -180,7 +179,7 @@ int DependencyParser::FeatureTemplate::Extract(
     const PartOfSpeechTagInstance *part_of_speech_tag_instance,
     FeatureSet *feature_set) {
   Node *node;
-  utils::StringBuilder builder;
+  StringBuilder builder;
   int feature_num = 0;
 
   state_ = state;
@@ -225,7 +224,6 @@ int DependencyParser::FeatureTemplate::Extract(
         p = q + 1;
       }
     }
-    LOG(feature_[feature_num]);
     feature_num++;
   }
   feature_set->set_size(feature_num);

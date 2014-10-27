@@ -32,8 +32,8 @@
 #include <algorithm>
 #include "ml/feature_set.h"
 #include "ml/multiclass_perceptron_model.h"
-#include "utils/log.h"
 #include "utils/status.h"
+#include "utils/utils.h"
 
 namespace milkcat {
 

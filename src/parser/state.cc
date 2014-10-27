@@ -29,7 +29,6 @@
 
 #include <algorithm>
 #include "parser/node.h"
-#include "utils/log.h"
 #include "utils/pool.h"
 
 namespace milkcat {
@@ -40,7 +39,7 @@ DependencyParser::State::State(): stack_top_(0),
                                   cost_(0.0) {
 }
 
-void DependencyParser::State::Initialize(utils::Pool<Node> *node_pool,
+void DependencyParser::State::Initialize(Pool<Node> *node_pool,
                                          int sentance_length) {
   input_size_ = std::min(sentance_length + 1,
                          static_cast<int>(kMaxInputSize));

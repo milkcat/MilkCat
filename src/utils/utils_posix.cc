@@ -28,7 +28,6 @@
 #include "utils.h"
 
 namespace milkcat {
-namespace utils {
 
 void Sleep(double seconds) {
   int usec = static_cast<int>(seconds * 1e6);
@@ -39,6 +38,5 @@ int HardwareConcurrency() {
   return sysconf(_SC_NPROCESSORS_ONLN);
 }
 
-}  // namespace utils
 }  // namespace milkcat
 

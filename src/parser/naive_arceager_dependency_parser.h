@@ -40,10 +40,7 @@ class MulticlassPerceptron;
 class TermInstance;
 class PartOfSpeechTagInstance;
 class FeatureSet;
-
-namespace utils {
 template<class T> class Pool;
-}  // namespace utils
 
 // This class implemented the original arceager dependency parser. Introduced 
 // by Nivre, Joakim. 
@@ -79,7 +76,7 @@ class NaiveArceagerDependencyParser: public DependencyParser {
   State *state_;
   FeatureTemplate *feature_;
   FeatureSet *feature_set_;
-  utils::Pool<Node> *node_pool_;
+  Pool<Node> *node_pool_;
 
   // Stores the real transition type and label for the predict id (yid) from
   // perceptron

@@ -28,7 +28,6 @@
 #include <pthread.h>
 
 namespace milkcat {
-namespace utils {
 
 class Mutex::MutexImpl {
  public:
@@ -66,5 +65,4 @@ void Mutex::Unlock() {
   impl_->Unlock();
 }
 
-}  // namespace utils
 }  // namespace milkcat

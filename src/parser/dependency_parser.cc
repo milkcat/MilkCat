@@ -34,7 +34,6 @@
 #include "parser/dependency_parser.h"
 #include "segmenter/term_instance.h"
 #include "tagger/part_of_speech_tag_instance.h"
-#include "utils/log.h"
 #include "utils/readable_file.h"
 #include "utils/status.h"
 #include "utils/utils.h"
@@ -53,7 +52,7 @@ void DependencyParser::LoadDependencyTreeInstance(
     fd->ReadLine(buf, sizeof(buf), status);
     if (status->ok()) {
       // NULL line indicates the end of a sentence
-      milkcat::utils::trim(buf);
+      trim(buf);
       if (*buf == '\0') break;
 
       sscanf(buf, "%s %s %d %s", word, tag, &head, type);

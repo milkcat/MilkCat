@@ -30,13 +30,12 @@
 
 #include "parser/dependency_instance.h"
 #include "utils/string_builder.h"
-#include "utils/log.h"
 
 namespace milkcat {
 
 Orcale::Orcale(): instance_(NULL),
                   input_ptr_(0) {
-  string_builer_ = new utils::StringBuilder();
+  string_builer_ = new StringBuilder();
 }
 
 Orcale::~Orcale() {

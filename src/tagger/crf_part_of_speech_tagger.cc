@@ -46,34 +46,32 @@ void PartOfSpeechFeatureExtractor::ExtractFeatureAt(
   switch (term_type) {
    case Parser::kChineseWord:
     // term itself
-    utils::strlcpy(feature_list[0], term_text, kFeatureLengthMax);
+    strlcpy(feature_list[0], term_text, kFeatureLengthMax);
 
     // first character of the term
-    utils::strlcpy(feature_list[1], term_text, 4);
+    strlcpy(feature_list[1], term_text, 4);
 
     // last character of the term
-    utils::strlcpy(feature_list[2],
-                   term_text + term_length - 3,
-                   kFeatureLengthMax);
+    strlcpy(feature_list[2], term_text + term_length - 3, kFeatureLengthMax);
     break;
 
    case Parser::kEnglishWord:
    case Parser::kSymbol:
-    utils::strlcpy(feature_list[0], "A", kFeatureLengthMax);
-    utils::strlcpy(feature_list[1], "A", kFeatureLengthMax);
-    utils::strlcpy(feature_list[2], "A", kFeatureLengthMax);
+    strlcpy(feature_list[0], "A", kFeatureLengthMax);
+    strlcpy(feature_list[1], "A", kFeatureLengthMax);
+    strlcpy(feature_list[2], "A", kFeatureLengthMax);
     break;
 
    case Parser::kNumber:
-    utils::strlcpy(feature_list[0], "1", kFeatureLengthMax);
-    utils::strlcpy(feature_list[1], "1", kFeatureLengthMax);
-    utils::strlcpy(feature_list[2], "1", kFeatureLengthMax);
+    strlcpy(feature_list[0], "1", kFeatureLengthMax);
+    strlcpy(feature_list[1], "1", kFeatureLengthMax);
+    strlcpy(feature_list[2], "1", kFeatureLengthMax);
     break;
 
    default:
-    utils::strlcpy(feature_list[0], ".", kFeatureLengthMax);
-    utils::strlcpy(feature_list[1], ".", kFeatureLengthMax);
-    utils::strlcpy(feature_list[2], ".", kFeatureLengthMax);
+    strlcpy(feature_list[0], ".", kFeatureLengthMax);
+    strlcpy(feature_list[1], ".", kFeatureLengthMax);
+    strlcpy(feature_list[2], ".", kFeatureLengthMax);
     break;
   }
 }

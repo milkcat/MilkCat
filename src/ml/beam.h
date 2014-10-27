@@ -36,7 +36,7 @@ template<class Node>
 class Beam {
  public:
   Beam(int n_best, 
-       utils::Pool<Node> *node_pool, 
+       Pool<Node> *node_pool, 
        int beam_id,
        bool (* node_ptr_cmp)(Node *n1, Node *n2)):
       capability_(n_best * 10),
@@ -83,7 +83,7 @@ class Beam {
   Node **nodes_;
   int capability_;
   int beam_id_;
-  utils::Pool<Node> *node_pool_;
+  Pool<Node> *node_pool_;
   bool (* node_ptr_cmp_)(Node *n1, Node *n2);
   int n_best_;
   int size_;

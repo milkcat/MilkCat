@@ -92,7 +92,7 @@ class BigramSegmenter: public Segmenter {
   Beam<Node> *beams_[kTokenMax + 1];
 
   // NodePool instance to alloc and release node
-  utils::Pool<Node> *node_pool_;
+  Pool<Node> *node_pool_;
 
   // Costs for unigram and bigram.
   const StaticArray<float> *unigram_cost_;

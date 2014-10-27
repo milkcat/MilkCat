@@ -34,10 +34,7 @@
 
 namespace milkcat {
 
-namespace utils {
-template<class T>
-class Pool;
-}  // namespace utils
+template<class T> class Pool;
 
 // State in the dependency parser, including buffer, stack, tree ...
 class DependencyParser::State {
@@ -50,7 +47,7 @@ class DependencyParser::State {
   State();
 
   // Initialize and allocate nodes for the sentence
-  void Initialize(utils::Pool<Node> *node_pool, int sentance_length);
+  void Initialize(Pool<Node> *node_pool, int sentance_length);
 
   // Transitions
   void Shift();

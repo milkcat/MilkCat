@@ -49,7 +49,6 @@
 #include <string>
 #include "common/milkcat_config.h"
 #include "common/trie_tree.h"
-#include "utils/log.h"
 #include "utils/readable_file.h"
 #include "utils/utils.h"
 #include "utils/writable_file.h"
@@ -71,8 +70,6 @@ HMMModel *HMMModel::New(const char *model_path, Status *status) {
   int32_t magic_number = 0;
   if (status->ok()) fd->ReadValue<int32_t>(&magic_number, status);
 
-  LOG_IF(status->ok(), "Magic number is " << magic_number);
-
   if (magic_number != kHmmModelMagicNumber) 
     *status = Status::Corruption(model_path);
 
@@ -82,9 +79,6 @@ HMMModel *HMMModel::New(const char *model_path, Status *status) {
   int tag_num = self->tag_num_;
   int32_t emit_num = 0;
   if (status->ok()) fd->ReadValue<int32_t>(&emit_num, status);
-
-  LOG_IF(status->ok(), "Tag number is " << tag_num);
-  LOG_IF(status->ok(), "Emit number is " << emit_num);
 
   self->tag_str_ = reinterpret_cast<char (*)[kTagStrLenMax]>(
       new char[kTagStrLenMax * tag_num]);
@@ -115,8 +109,6 @@ HMMModel *HMMModel::New(const char *model_path, Status *status) {
                          self->emits_[emit_record.term_id]);
     self->emits_[emit_record.term_id] = emit_node;
   }
-
-  LOG_IF(status->ok(), "File size: " << fd->Size() << ", Tell: " << fd->Tell());
 
   if (status->ok() && fd->Tell() != fd->Size())
     *status = Status::Corruption(model_path);
@@ -156,9 +148,7 @@ void HMMModel::LoadYTagFromText(HMMModel *self,
         new char[kTagStrLenMax * y_tag->size()]);
     std::map<std::string, int>::iterator it;
     for (it = y_tag->begin(); it != y_tag->end(); ++it) {
-      utils::strlcpy(self->tag_str_[it->second],
-                     it->first.c_str(),
-                     kTagStrLenMax);
+      strlcpy(self->tag_str_[it->second], it->first.c_str(), kTagStrLenMax);
     }
     self->tag_num_ = y_tag->size();
 
@@ -355,9 +345,7 @@ void HMMModel::Save(const char *model_path, Status *status) {
       emit_num++;
     }
   }
-
-  LOG_IF(status->ok(), emit_num << "emit record writted");
-
+  
   delete fd;
 }
 

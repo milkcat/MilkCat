@@ -59,7 +59,7 @@ class Model::Impl {
 
   // Sets the user dictionary for the segmenter
   bool SetUserDictionary(const char *path);
-  void SetUserDictionary(const utils::unordered_map<std::string, float> &words);
+  void SetUserDictionary(const unordered_map<std::string, float> &words);
 
   // If the model has loaded the user dictionary
   bool HasUserDictionary() const { return user_index_ != NULL; }
@@ -93,7 +93,7 @@ class Model::Impl {
 
  private:
   std::string model_dir_path_;
-  utils::Mutex mutex;
+  Mutex mutex;
 
   const TrieTree *unigram_index_;
   const TrieTree *user_index_;

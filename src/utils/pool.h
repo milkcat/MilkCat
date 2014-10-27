@@ -30,7 +30,6 @@
 #include <vector>
 
 namespace milkcat {
-namespace utils {
 
 template<class T>
 class Pool {
@@ -62,7 +61,6 @@ class Pool {
   int alloc_index_;
 };
 
-}  // namespace utils
 }  // namespace milkcat
 
 #endif  // SRC_UTILS_POOL_H_

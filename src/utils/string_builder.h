@@ -25,11 +25,9 @@
 //
 
 #include <stdio.h>
-#include "utils/log.h"
 #include "utils/utils.h"
 
 namespace milkcat {
-namespace utils {
 
 // StringBuilder builds a string with a limited size. It writes to the buffer
 // directly instead of use its own buffer.
@@ -71,5 +69,4 @@ class StringBuilder {
   int size_;
 };
 
-}  // utils
 }  // namespace milkcat

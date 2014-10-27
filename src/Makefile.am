@@ -75,8 +75,6 @@ libmilkcat_la_SOURCES = libmilkcat.cc \
                         tokenizer/token_lex.h \
                         tokenizer/tokenizer.cc \
                         tokenizer/tokenizer.h \
-                        utils/log.cc \
-                        utils/log.h \
                         utils/mutex.h \
                         utils/mutex_posix.cc \
                         utils/pool.h \

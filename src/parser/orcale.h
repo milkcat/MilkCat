@@ -33,10 +33,7 @@
 namespace milkcat {
 
 class DependencyInstance;
-
-namespace utils {
 class StringBuilder;
-}
 
 // Given the dependency, output each transitions.
 class Orcale {
@@ -55,7 +52,7 @@ class Orcale {
   std::vector<int> stack_;
   const DependencyInstance *instance_;
   char transition_label_[kLabelSizeMax];
-  utils::StringBuilder *string_builer_;
+  StringBuilder *string_builer_;
   int input_ptr_;
 
   // Returns the head node id and dependency label of `nodeid`

@@ -31,7 +31,6 @@
 #include <ctype.h>
 
 namespace milkcat {
-namespace utils {
 
 char *trim(char *s) {
   char *p = s;
@@ -44,5 +43,12 @@ char *trim(char *s) {
   return s;
 }
 
-}  // namespace utils
+const char *_filename(const char *path) {
+  int len = strlen(path);
+  const char *p = path + len;
+
+  while (*(p - 1) != '/' && *(p - 1) != '\\' && p != path) p--;
+  return p;
+}
+
 }  // namespace milkcat

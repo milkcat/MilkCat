@@ -45,7 +45,6 @@
 #include "parser/orcale.h"
 #include "parser/state.h"
 #include "tagger/part_of_speech_tag_instance.h"
-#include "utils/log.h"
 #include "utils/pool.h"
 #include "utils/readable_file.h"
 #include "utils/status.h"
@@ -53,12 +52,11 @@
 
 namespace milkcat {
 
-
 NaiveArceagerDependencyParser::NaiveArceagerDependencyParser(
     MulticlassPerceptronModel *perceptron_model,
     FeatureTemplate *feature) {
   state_ = new State();
-  node_pool_ = new utils::Pool<Node>();
+  node_pool_ = new Pool<Node>();
   feature_set_ = new FeatureSet();
   perceptron_ = new MulticlassPerceptron(perceptron_model);
   feature_ = feature;

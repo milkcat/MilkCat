@@ -36,7 +36,6 @@
 #include "ml/hmm_model.h"
 #include "segmenter/term_instance.h"
 #include "tagger/part_of_speech_tag_instance.h"
-#include "utils/log.h"
 #include "utils/utils.h"
 
 namespace milkcat {
@@ -257,7 +256,7 @@ HMMPartOfSpeechTagger *HMMPartOfSpeechTagger::New(
     bool use_crf,
     Status *status) {
   HMMPartOfSpeechTagger *self = new HMMPartOfSpeechTagger();
-  self->node_pool_ = new utils::Pool<Node>(); 
+  self->node_pool_ = new Pool<Node>(); 
 
   for (int i = 0; i < kMaxBeams; ++i) {
     self->beams_[i] = new Beam<Node>(kBeamSize,

@@ -131,13 +131,13 @@ void Model::Impl::LoadUserDictionary(const char *path, Status *status) {
 
       // Checks if the entry has a cost
       if (p != NULL) {
-        utils::strlcpy(word, line, p - line + 1);
-        utils::trim(word);
-        utils::trim(p);
+        strlcpy(word, line, p - line + 1);
+        trim(word);
+        trim(p);
         cost = static_cast<float>(atof(p));
       } else {
-        utils::strlcpy(word, line, sizeof(word));
-        utils::trim(word);
+        strlcpy(word, line, sizeof(word));
+        trim(word);
         cost = default_cost;
       }
       term_ids.insert(std::pair<std::string, int>(
@@ -181,12 +181,12 @@ bool Model::Impl::SetUserDictionary(const char *path) {
 }
 
 void Model::Impl::SetUserDictionary(
-    const utils::unordered_map<std::string, float> &words) {
+    const unordered_map<std::string, float> &words) {
   std::map<std::string, int> term_ids;
   std::vector<float> costs;
 
   mutex.Lock();
-  for (utils::unordered_map<std::string, float>::const_iterator
+  for (unordered_map<std::string, float>::const_iterator
        it = words.begin(); it != words.end(); ++it) {
     term_ids.insert(std::make_pair(
         it->first, 
