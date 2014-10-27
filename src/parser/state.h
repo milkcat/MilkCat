@@ -22,10 +22,11 @@
 // THE SOFTWARE.
 //
 // dependency_state.h --- Created at 2014-09-03
+// state.h --- Created at 2014-10-27
 //
 
-#ifndef SRC_PARSER_DEPENDENCY_STATE_H_
-#define SRC_PARSER_DEPENDENCY_STATE_H_
+#ifndef SRC_PARSER_STATE_H_
+#define SRC_PARSER_STATE_H_
 
 #include <vector>
 #include "parser/dependency_parser.h"
@@ -98,4 +99,4 @@ class DependencyParser::State {
 
 }  // namespace milkcat
 
-#endif  // SRC_PARSER_DEPENDENCY_STATE_H_
+#endif  // SRC_PARSER_STATE_H_

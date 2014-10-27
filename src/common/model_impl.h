@@ -30,7 +30,7 @@
 
 #include <string>
 #include <vector>
-#include "parser/dependency_feature.h"
+#include "parser/feature_template.h"
 #include "utils/mutex.h"
 #include "utils/utils.h"
 
@@ -89,7 +89,7 @@ class Model::Impl {
   MulticlassPerceptronModel *DependencyModel(Status *status);
 
   // Get the feature template for dependency parsing
-  DependencyParser::Feature *DependencyTemplate(Status *status);
+  DependencyParser::FeatureTemplate *DependencyTemplate(Status *status);
 
  private:
   std::string model_dir_path_;
@@ -106,7 +106,7 @@ class Model::Impl {
   const TrieTree *oov_property_;
   const TrieTree *stopword_;
   MulticlassPerceptronModel *dependency_;
-  DependencyParser::Feature *dependency_feature_;
+  DependencyParser::FeatureTemplate *dependency_feature_;
 
   // Load and set the user dictionary data specified by path
   void LoadUserDictionary(const char *userdict_path, Status *status);

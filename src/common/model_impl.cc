@@ -302,12 +302,14 @@ MulticlassPerceptronModel *Model::Impl::DependencyModel(Status *status) {
   return dependency_;  
 }
 
-DependencyParser::Feature *Model::Impl::DependencyTemplate(Status *status) {
+DependencyParser::FeatureTemplate *
+Model::Impl::DependencyTemplate(Status *status) {
   mutex.Lock();
   if (dependency_ == NULL) {
     std::string prefix = model_dir_path_ + kDependenctTemplateFile;
-    dependency_feature_ = DependencyParser::Feature::Open(prefix.c_str(),
-                                                          status);
+    dependency_feature_ = DependencyParser::FeatureTemplate::Open(
+        prefix.c_str(),
+        status);
   }
   mutex.Unlock();
   return dependency_feature_;  

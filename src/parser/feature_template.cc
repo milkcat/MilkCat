@@ -23,16 +23,17 @@
 //
 // dependency_parser_features.cc --- Created at 2014-06-03
 // dependency_feature.cc --- Created at 2014-09-15
+// feature_template.cc --- Created at 2014-10-27
 //
 
-#include "parser/dependency_feature.h"
+#include "parser/feature_template.h"
 
 #include <stdio.h>
 #include <map>
 #include "common/trie_tree.h"
 #include "ml/feature_set.h"
-#include "parser/dependency_node.h"
-#include "parser/dependency_state.h"
+#include "parser/node.h"
+#include "parser/state.h"
 #include "segmenter/term_instance.h"
 #include "tagger/part_of_speech_tag_instance.h"
 #include "utils/log.h"
@@ -41,10 +42,10 @@
 
 namespace milkcat {
 
-const char *DependencyParser::Feature::kRootTerm = "ROOT";
-const char *DependencyParser::Feature::kRootTag = "ROOT";
+const char *DependencyParser::FeatureTemplate::kRootTerm = "ROOT";
+const char *DependencyParser::FeatureTemplate::kRootTag = "ROOT";
 
-DependencyParser::Feature::Feature(
+DependencyParser::FeatureTemplate::FeatureTemplate(
     const std::vector<std::string> &feature_template): 
         term_instance_(NULL),
         part_of_speech_tag_instance_(NULL),
@@ -54,8 +55,8 @@ DependencyParser::Feature::Feature(
   InitializeFeatureIndex();
 }
 
-DependencyParser::Feature *
-DependencyParser::Feature::Open(const char *filename, Status *status) {
+DependencyParser::FeatureTemplate *
+DependencyParser::FeatureTemplate::Open(const char *filename, Status *status) {
   // Read template file
   char line[1024];
   std::vector<std::string> template_vector;
@@ -72,91 +73,91 @@ DependencyParser::Feature::Open(const char *filename, Status *status) {
   fd = NULL;
 
   if (status->ok()) {
-    DependencyParser::Feature *
-    self = new DependencyParser::Feature(template_vector);
+    DependencyParser::FeatureTemplate *
+    self = new DependencyParser::FeatureTemplate(template_vector);
     return self;
   } else {
     return NULL;
   }
 }
 
-DependencyParser::Feature::~Feature() {
+DependencyParser::FeatureTemplate::~FeatureTemplate() {
   delete feature_index_;
   feature_index_ = NULL;
 }
 
-inline const char *DependencyParser::Feature::Tag(const Node *node) {
+inline const char *DependencyParser::FeatureTemplate::Tag(const Node *node) {
   if (node == NULL) return "NULL";
   if (node->id() == 0) return kRootTag;
   return part_of_speech_tag_instance_->part_of_speech_tag_at(node->id() - 1);
 }
 
-inline const char *DependencyParser::Feature::Term(const Node *node) {
+inline const char *DependencyParser::FeatureTemplate::Term(const Node *node) {
   if (node == NULL) return "NULL";
   if (node->id() == 0) return kRootTerm;
   return term_instance_->term_text_at(node->id() - 1);  
 }
 
-inline const char *DependencyParser::Feature::STw() {
+inline const char *DependencyParser::FeatureTemplate::STw() {
   const Node *node = state_->Stack(0);
   return Term(node);
 }
 
-inline const char *DependencyParser::Feature::STt() {
+inline const char *DependencyParser::FeatureTemplate::STt() {
   const Node *node = state_->Stack(0);
   return Tag(node);
 }
 
-inline const char *DependencyParser::Feature::N0w() {
+inline const char *DependencyParser::FeatureTemplate::N0w() {
   const Node *node = state_->Input(0);
   return Term(node);
 }
 
-inline const char *DependencyParser::Feature::N0t() {
+inline const char *DependencyParser::FeatureTemplate::N0t() {
   const Node *node = state_->Input(0);
   return Tag(node);
 }
 
-inline const char *DependencyParser::Feature::N1w() {
+inline const char *DependencyParser::FeatureTemplate::N1w() {
   const Node *node = state_->Input(1);
   return Term(node);
 }
 
-inline const char *DependencyParser::Feature::N1t() {
+inline const char *DependencyParser::FeatureTemplate::N1t() {
   const Node *node = state_->Input(1);
   return Tag(node);
 }
 
-inline const char *DependencyParser::Feature::N2t() {
+inline const char *DependencyParser::FeatureTemplate::N2t() {
   const Node *node = state_->Input(2);
   return Tag(node);
 }
 
-inline const char *DependencyParser::Feature::STPt() {
+inline const char *DependencyParser::FeatureTemplate::STPt() {
   const Node *node = state_->Stack(0);
   node = state_->Parent(node);
   return Tag(node);
 }
 
-const char *DependencyParser::Feature::STLCt() {
+const char *DependencyParser::FeatureTemplate::STLCt() {
   const Node *node = state_->Stack(0);
   node = state_->LeftChild(node);
   return Tag(node);
 }
 
-const char *DependencyParser::Feature::STRCt() {
+const char *DependencyParser::FeatureTemplate::STRCt() {
   const Node *node = state_->Stack(0);
   node = state_->RightChild(node);
   return Tag(node);
 }
 
-const char *DependencyParser::Feature::N0LCt() {
+const char *DependencyParser::FeatureTemplate::N0LCt() {
   const Node *node = state_->Input(0);
   node = state_->LeftChild(node);
   return Tag(node);
 }
 
-void DependencyParser::Feature::InitializeFeatureIndex() {
+void DependencyParser::FeatureTemplate::InitializeFeatureIndex() {
   std::map<std::string, int> feature_index;
   feature_index["STw"] = kSTw;
   feature_index["STt"] = kSTt;
@@ -173,7 +174,7 @@ void DependencyParser::Feature::InitializeFeatureIndex() {
   feature_index_ = DoubleArrayTrieTree::NewFromMap(feature_index);
 }
 
-int DependencyParser::Feature::Extract(
+int DependencyParser::FeatureTemplate::Extract(
     const State *state,
     const TermInstance *term_instance,
     const PartOfSpeechTagInstance *part_of_speech_tag_instance,

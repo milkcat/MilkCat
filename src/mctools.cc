@@ -412,8 +412,8 @@ int TestDependendyParser(int argc, char **argv) {
   const char *model_prefix = argv[4];
 
   Status status;
-  DependencyParser::Feature *
-  feature = DependencyParser::Feature::Open(template_file, &status);
+  DependencyParser::FeatureTemplate *
+  feature = DependencyParser::FeatureTemplate::Open(template_file, &status);
 
   MulticlassPerceptronModel *model = NULL;
   if (status.ok()) {

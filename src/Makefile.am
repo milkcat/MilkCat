@@ -38,19 +38,19 @@ libmilkcat_la_SOURCES = libmilkcat.cc \
                         ml/multiclass_perceptron_model.cc \
                         ml/multiclass_perceptron_model.h \
                         ml/sequence_feature_extractor.h \
-                        parser/dependency_feature.h \
-                        parser/dependency_feature.cc \
                         parser/dependency_instance.h \
                         parser/dependency_instance.cc \
-                        parser/dependency_node.h \
                         parser/dependency_parser.cc \
                         parser/dependency_parser.h \
-                        parser/dependency_state.cc \
-                        parser/dependency_state.h \
+                        parser/feature_template.cc \
+                        parser/feature_template.h \
                         parser/naive_arceager_dependency_parser.h \
                         parser/naive_arceager_dependency_parser.cc \
+                        parser/node.h \
                         parser/orcale.cc \
                         parser/orcale.h \
+                        parser/state.cc \
+                        parser/state.h \
                         segmenter/bigram_segmenter.cc \
                         segmenter/bigram_segmenter.h \
                         segmenter/crf_segmenter.cc \

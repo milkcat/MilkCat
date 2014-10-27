@@ -39,11 +39,11 @@
 #include "ml/multiclass_perceptron.h"
 #include "ml/multiclass_perceptron_model.h"
 #include "segmenter/term_instance.h"
-#include "parser/dependency_feature.h"
 #include "parser/dependency_instance.h"
-#include "parser/dependency_node.h"
-#include "parser/dependency_state.h"
+#include "parser/feature_template.h"
+#include "parser/node.h"
 #include "parser/orcale.h"
+#include "parser/state.h"
 #include "tagger/part_of_speech_tag_instance.h"
 #include "utils/log.h"
 #include "utils/pool.h"
@@ -56,7 +56,7 @@ namespace milkcat {
 
 NaiveArceagerDependencyParser::NaiveArceagerDependencyParser(
     MulticlassPerceptronModel *perceptron_model,
-    Feature *feature) {
+    FeatureTemplate *feature) {
   state_ = new State();
   node_pool_ = new utils::Pool<Node>();
   feature_set_ = new FeatureSet();
@@ -107,7 +107,7 @@ NaiveArceagerDependencyParser::New(Model::Impl *model_impl,
   MulticlassPerceptronModel *
   perceptron_model = model_impl->DependencyModel(status);
 
-  Feature *feature_template = NULL;
+  FeatureTemplate *feature_template = NULL;
   if (status->ok()) feature_template = model_impl->DependencyTemplate(status);
 
   NaiveArceagerDependencyParser *self = NULL;
@@ -289,8 +289,8 @@ void NaiveArceagerDependencyParser::Train(
   fd = NULL;
 
   // Read template file
-  Feature *feature = NULL;
-  if (status->ok()) feature = Feature::Open(template_filename, status);
+  FeatureTemplate *feature = NULL;
+  if (status->ok()) feature = FeatureTemplate::Open(template_filename, status);
 
   // Creates perceptron model, percpetron and the parser
   NaiveArceagerDependencyParser *parser = NULL;

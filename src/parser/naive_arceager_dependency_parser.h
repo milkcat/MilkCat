@@ -53,7 +53,7 @@ class NaiveArceagerDependencyParser: public DependencyParser {
  public:
   NaiveArceagerDependencyParser(
       MulticlassPerceptronModel *perceptron_model,
-      Feature *feature);
+      FeatureTemplate *feature);
   ~NaiveArceagerDependencyParser();
 
   static NaiveArceagerDependencyParser *New(Model::Impl *model,
@@ -77,7 +77,7 @@ class NaiveArceagerDependencyParser: public DependencyParser {
  private:
   MulticlassPerceptron *perceptron_;
   State *state_;
-  Feature *feature_;
+  FeatureTemplate *feature_;
   FeatureSet *feature_set_;
   utils::Pool<Node> *node_pool_;
 

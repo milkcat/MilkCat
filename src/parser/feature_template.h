@@ -22,10 +22,11 @@
 // THE SOFTWARE.
 //
 // dependency_feature.h --- Created at 2014-09-15
+// feature_template.h --- Created at 2014-10-27
 //
 
-#ifndef SRC_PARSER_DEPENDENCY_FEATURE_H_
-#define SRC_PARSER_DEPENDENCY_FEATURE_H_
+#ifndef SRC_PARSER_FEATURE_TEMPLATE_H_
+#define SRC_PARSER_FEATURE_TEMPLATE_H_
 
 #include <vector>
 #include "parser/dependency_parser.h"
@@ -38,7 +39,7 @@ class TrieTree;
 class FeatureSet;
 class Status;
 
-class DependencyParser::Feature {
+class DependencyParser::FeatureTemplate {
  public:
   static const int kFeatureMax = 50;
   static const int kFeatureStringMax = 1000;
@@ -63,10 +64,10 @@ class DependencyParser::Feature {
   };
 
   // Get feature template from `filename`. On failed, return NULL
-  static Feature *Open(const char *filename, Status *status);
+  static FeatureTemplate *Open(const char *filename, Status *status);
 
-  Feature(const std::vector<std::string> &feature_template);
-  ~Feature();
+  FeatureTemplate(const std::vector<std::string> &feature_template);
+  ~FeatureTemplate();
 
   // Returns the tag or term string of a node
   const char *Tag(const Node *node);
@@ -107,4 +108,4 @@ class DependencyParser::Feature {
 
 }  // namespace milkcat
 
-#endif  // SRC_PARSER_DEPENDENCY_FEATURE_H_
+#endif  // SRC_PARSER_FEATURE_TEMPLATE_H_

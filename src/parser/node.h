@@ -22,10 +22,11 @@
 // THE SOFTWARE.
 //
 // dependency_node.h --- Created at 2014-09-16
+// node.h --- Created at 2014-10-27
 //
 
-#ifndef SRC_PARSER_DEPENDENCY_NODE_H_
-#define SRC_PARSER_DEPENDENCY_NODE_H_
+#ifndef SRC_PARSER_NODE_H_
+#define SRC_PARSER_NODE_H_
 
 #include "utils/utils.h"
 

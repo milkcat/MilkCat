@@ -22,14 +22,13 @@
 // THE SOFTWARE.
 //
 // dependency_state.cc --- Created at 2014-09-15
+// state.cc --- Created at 2014-10-27
 //
 
-#define DEBUG
-
-#include "parser/dependency_state.h"
+#include "parser/state.h"
 
 #include <algorithm>
-#include "parser/dependency_node.h"
+#include "parser/node.h"
 #include "utils/log.h"
 #include "utils/pool.h"
 

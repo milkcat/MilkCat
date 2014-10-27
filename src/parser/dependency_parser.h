@@ -40,7 +40,7 @@ class ReadableFile;
 class DependencyParser {
  public:
   class Node;
-  class Feature;
+  class FeatureTemplate;
   class State;
 
   virtual ~DependencyParser();
