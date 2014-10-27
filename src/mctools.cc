@@ -40,13 +40,10 @@
 #include "common/darts.h"
 #include "common/static_hashtable.h"
 #include "common/trie_tree.h"
-#include "common/word_frequency_count.h"
-#include "ml/maxent_classifier.h"
 #include "ml/multiclass_perceptron_model.h"
 #include "include/milkcat.h"
 #include "parser/dependency_parser.h"
 #include "parser/naive_arceager_dependency_parser.h"
-#include "phrase/string_value.h"
 #include "tagger/hmm_part_of_speech_tagger.h"
 #include "utils/utils.h"
 #include "utils/readable_file.h"
@@ -374,107 +371,6 @@ void DisplayProgress(int64_t bytes_processed,
           bytes_per_second / static_cast<double>(1024 * 1024));
 }
 
-int CorpusVocabulary(int argc, char **argv) {
-  Status status;
-  char message[1024], 
-       output_file[1024] = "",
-       model_path[1024] = "",
-       user_dict[1024] = "";
-  int c = '\0';
-  Parser::Options options;
-
-  while ((c = getopt(argc, argv, "u:d:m:o:")) != -1 && status.ok()) {
-    switch (c) {
-      case 'd':
-        strcpy(model_path, optarg);
-        if (model_path[strlen(model_path) - 1] != '/') 
-          strcat(model_path, "/");
-        break;
-
-      case 'u':
-        strcpy(user_dict, optarg);
-        break;
-
-      case 'o':
-        strcpy(output_file, optarg);
-        break;
-
-      case 'm':
-        if (strcmp(optarg, "crf_seg") == 0) {
-          options.UseCrfSegmenter();
-          options.NoPOSTagger();
-        } else if (strcmp(optarg, "bigram_seg") == 0) {
-          options.UseBigramSegmenter();
-          options.NoPOSTagger();
-        } else {
-          status = Status::Info("Option -m: invalid method");
-        }
-        break;
-
-      case ':':
-        sprintf(message, "Option -%c: requires an operand\n", optopt);
-        status = Status::Info(message);
-        break;
-
-      case '?':
-        sprintf(message, "Unrecognized option: -%c\n", optopt);
-        status = Status::Info(message);
-        break;
-    }
-  }
-
-  if (status.ok() && argc - optind != 1) {
-    status = Status::Info("");
-  }
-
-  if (!status.ok()) {
-    if (*status.what()) puts(status.what());
-    puts("Usage: mctools vocab [-m crf_seg|bigram_seg] [-d model_dir] "
-         "[-u userdict] -o output_file corpus_file");
-  }
-
-  Model *model = NULL;
-  utils::unordered_map<std::string, int> vocab;
-  if (status.ok()) {
-    const char *corpus_path = argv[optind];
-    model = Model::New(*model_path == '\0'? NULL: model_path);
-    options.SetModel(model);
-    if (*user_dict) model->SetUserDictionary(user_dict);
-    int n_threads = utils::HardwareConcurrency();
-    CountWordFrequencyFromFile(corpus_path,
-                               options,
-                               n_threads,
-                               &vocab,
-                               DisplayProgress,
-                               &status);
-  }
-
-  WritableFile *fd = NULL;
-  if (status.ok()) {
-    fd = WritableFile::New(output_file, &status);
-  }
-
-  if (status.ok()) {
-    for (utils::unordered_map<std::string, int>::iterator
-         it = vocab.begin(); it != vocab.end(); ++it) {
-      sprintf(message, "%s %d", it->first.c_str(), it->second);
-      fd->WriteLine(message, &status);
-      if (!status.ok()) break;
-    }
-  }
-
-  delete fd;
-  delete model;
-
-  if (status.ok()) {
-    puts("Success!");
-    return 0;
-  } else {
-    if (*status.what()) puts(status.what());
-    return -1;
-  }
-}
-
 int TrainNaiveArcEagerDependendyParser(int argc, char **argv) {
   if (argc != 6) {
     fprintf(stderr,
@@ -567,8 +463,6 @@ int main(int argc, char **argv) {
     return milkcat::MakeMulticlassPerceptronFile(argc, argv);
   } else if (strcmp(tool, "hmm") == 0) {
     return milkcat::MakeHMMTaggerModel(argc, argv);
-  } else if (strcmp(tool, "vocab") == 0) {
-    return milkcat::CorpusVocabulary(argc - 1, argv + 1);
   } else if (strcmp(tool, "--depparser-train") == 0) {
     return milkcat::TrainNaiveArcEagerDependendyParser(argc, argv);
   } else if (strcmp(tool, "--depparser-test") == 0) {

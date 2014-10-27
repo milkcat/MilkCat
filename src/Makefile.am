@@ -8,8 +8,6 @@ ACLOCAL_AMFLAGS = -I m4
 include_HEADERS = include/milkcat.h
 
 lib_LTLIBRARIES = libmilkcat.la
-libmilkcat_la_LIBADD = -lpthread
-libmilkcat_la_LDFLAGS = -version-info 0:3:0
 libmilkcat_la_SOURCES = libmilkcat.cc \
                         libmilkcat.h \
                         common/cedar.h \
@@ -25,8 +23,6 @@ libmilkcat_la_SOURCES = libmilkcat.cc \
                         common/static_hashtable.h \
                         common/trie_tree.cc \
                         common/trie_tree.h \
-                        common/word_frequency_count.h \
-                        common/word_frequency_count.cc \
                         include/milkcat.h \
                         ml/beam.h \
                         ml/crf_model.cc \
@@ -37,21 +33,11 @@ libmilkcat_la_SOURCES = libmilkcat.cc \
                         ml/feature_set.cc \
                         ml/hmm_model.cc \
                         ml/hmm_model.h \
-                        ml/maxent_classifier.cc \
-                        ml/maxent_classifier.h \
                         ml/multiclass_perceptron.cc \
                         ml/multiclass_perceptron.h \
                         ml/multiclass_perceptron_model.cc \
                         ml/multiclass_perceptron_model.h \
                         ml/sequence_feature_extractor.h \
-                        newword/adjent_entropy.cc \
-                        newword/candidate.cc \
-                        newword/mutual_information.cc \
-                        newword/newword.cc \
-                        newword/newword.h \
-                        newword/rank.cc \
-                        newword/utf8.h \
-                        newword/vocabulary.cc \
                         parser/dependency_feature.h \
                         parser/dependency_feature.cc \
                         parser/dependency_instance.h \
@@ -65,13 +51,6 @@ libmilkcat_la_SOURCES = libmilkcat.cc \
                         parser/naive_arceager_dependency_parser.cc \
                         parser/orcale.cc \
                         parser/orcale.h \
-                        phrase/document.cc \
-                        phrase/document.h \
-                        phrase/phrase.cc \
-                        phrase/phrase_extractor.h \
-                        phrase/phrase_extractor.cc \
-                        phrase/string_table.h \
-                        phrase/string_value.h \
                         segmenter/bigram_segmenter.cc \
                         segmenter/bigram_segmenter.h \
                         segmenter/crf_segmenter.cc \
@@ -106,8 +85,6 @@ libmilkcat_la_SOURCES = libmilkcat.cc \
                         utils/status.h \
                         utils/string_builder.h \
                         utils/strlcpy.cc \
-                        utils/thread.h \
-                        utils/thread_posix.cc \
                         utils/utils.cc \
                         utils/utils.h \
                         utils/utils_posix.cc \

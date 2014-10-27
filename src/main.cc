@@ -35,10 +35,8 @@
 
 using milkcat::Parser;
 using milkcat::Model;
-using milkcat::Phrase;
 using milkcat::Status;
 using milkcat::ReadableFile;
-using milkcat::Newword;
 
 struct Options {
   Parser::Options parser_options;
@@ -68,10 +66,6 @@ int PrintUsage() {
   printf("Usage:\n");
   printf("    milkcat [parser-options] filename|-i\n");
   printf("        Parses the text from filename or stdin (-i).\n");
-  printf("    milkcat phrase filename\n");
-  printf("        Extracts phrases from filename.\n");
-  printf("    milkcat newword filename\n");
-  printf("        Extracts newwords from filename.\n");
   printf("Parser Options:\n");
   printf("    -d <path>    Set the path of model directory.\n");
   printf("    -u <path>    Set the path of user dictionary file.\n");
@@ -307,114 +301,11 @@ int ParserMain(int argc, char **argv) {
   return 0;
 }
 
-int PhraseMain(int argc, char **argv) {
-  Status status;
-
-  if (argc != 3) {
-    PrintUsage();
-    return 1;
-  }
- 
-  Model *model = NULL;
-  if (status.ok()) {
-    model = Model::New();
-    if (model == NULL) status = Status::Info(milkcat::LastError());
-  }
-
-  Phrase *phrase = NULL;
-  if (status.ok()) {
-    phrase = Phrase::New(model);
-    if (phrase == NULL) status = Status::Info(milkcat::LastError());
-  }
-
-  const char *filename = argv[argc - 1];
-
-  ReadableFile *fd = NULL;
-  if (status.ok()) fd = ReadableFile::New(filename, &status);
-
-  char *text = NULL;
-  if (status.ok()) {
-    int text_size = fd->Size();
-    text = new char[text_size + 1];
-
-    fd->Read(text, text_size, &status);
-    text[text_size] = '\0';
-  }
-
-  Phrase::Iterator *it = NULL;
-  if (status.ok()) {
-    it = phrase->Extract(text);
-    while (!it->End()) {
-      printf("%s %lf\n", it->phrase(), it->weight());
-      it->Next();
-    }
-    phrase->Release(it);
-  }
-
-  delete[] text;
-  delete fd;
-  delete phrase;
-  delete model;
-
-  if (!status.ok()) {
-    fprintf(stderr, "%s\n", status.what());
-    return 1;
-  } else {
-    return 0;
-  }
-}
-
-
-// Display current progress of newword extraction
-void DisplayProgress(int64_t bytes_processed,
-                     int64_t file_size,
-                     int64_t bytes_per_second) {
-  fprintf(stderr,
-          "\rprogress %dMB/%dMB -- %2.1f%% %.3fMB/s",
-          (int)(bytes_processed / (1024 * 1024)),
-          (int)(file_size / (1024 * 1024)),
-          100.0 * bytes_processed / file_size,
-          bytes_per_second / (double)(1024 * 1024));
-  if (bytes_processed == file_size) fputs("\n", stderr);
-  fflush(stderr);
-}
-
-// Display current status of newword extraction
-void DisplayLog(const char *str) {
-  fprintf(stderr, "%s\n", str);
-}
-
-int NekonkeoMain(int argc, char **argv) {
-  if (argc != 3) {
-    PrintUsage();
-    return 1;
-  }
-
-  Newword *nw = Newword::New();
-  nw->set_log_function(DisplayLog);
-  nw->set_progress_function(DisplayProgress);
-
-  Newword::Iterator *it = nw->Extract(argv[2]);
-
-  while (!it->End()) {
-    printf("%s %lf\n", it->word(), it->weight());
-    it->Next();
-  }
-  nw->Release(it);
-
-  delete nw;
-  return 0;
-}
-
 
 int main(int argc, char **argv) {
   if (argc == 1) {
     PrintUsage();
-  } else if (strcmp(argv[1], "phrase") == 0) {
-    return PhraseMain(argc, argv);
-  } else if (strcmp(argv[1], "newword") == 0) {
-    return NekonkeoMain(argc, argv);
-  } else {
-    return ParserMain(argc, argv);
+    return 1;
   }
+  return ParserMain(argc, argv);
 }

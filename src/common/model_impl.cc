@@ -34,8 +34,6 @@
 #include "common/static_hashtable.h"
 #include "ml/crf_model.h"
 #include "ml/hmm_model.h"
-#include "ml/maxent_classifier.h"
-#include "phrase/string_value.h"
 
 namespace milkcat {
 
