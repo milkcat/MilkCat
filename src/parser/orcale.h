@@ -27,12 +27,45 @@
 #ifndef SRC_PARSER_ORCALE_H_
 #define SRC_PARSER_ORCALE_H_
 
+#include <vector>
+#include "common/milkcat_config.h"
+
 namespace milkcat {
 
-class Orcale {
+class DependencyInstance;
 
+namespace utils {
+class StringBuilder;
+}
+
+// Given the dependency, output each transitions.
+class Orcale {
+ public:
+  Orcale();
+  ~Orcale();
+
+  // Parses the `instance`
+  void Parse(const DependencyInstance *instance);
+
+  // Returns the label of next transition. When no more transitions, returns
+  // NULL
+  const char *Next();
+
+ private:
+  std::vector<int> stack_;
+  const DependencyInstance *instance_;
+  char transition_label_[kLabelSizeMax];
+  utils::StringBuilder *string_builer_;
+  int input_ptr_;
+
+  // Returns the head node id and dependency label of `nodeid`
+  int Head(int nodeid);
+  const char *Label(int nodeid);
+  
+  // If current state needs a reduce transition
+  bool IsReduce();
 };
 
-}
+}  // namespace milkcat
 
 #endif

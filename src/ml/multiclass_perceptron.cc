@@ -28,6 +28,7 @@
 
 #include "ml/multiclass_perceptron.h"
 
+#include <math.h>
 #include <algorithm>
 #include "ml/feature_set.h"
 #include "ml/multiclass_perceptron_model.h"
@@ -45,7 +46,8 @@ int MulticlassPerceptron::ysize() const {
 }
 
 MulticlassPerceptron::MulticlassPerceptron(MulticlassPerceptronModel *model): 
-    model_(model) {
+    model_(model),
+    count_(0.0) {
   ycost_ = new float[model->ysize()];
 }
 
@@ -61,7 +63,7 @@ int MulticlassPerceptron::Classify(const FeatureSet *feature_set) {
     int xid = model_->xid(feature_set->at(i));
     if (xid >= 0) {
       for (int yid = 0; yid < ysize(); ++yid) {
-        ycost_[yid] += model_->cost(yid, xid);
+        ycost_[yid] += model_->cost(xid, yid);
       }
     }
   }
@@ -70,6 +72,28 @@ int MulticlassPerceptron::Classify(const FeatureSet *feature_set) {
   float *maximum_y = std::max_element(ycost_, ycost_ + ysize());
   int maximum_yid = maximum_y - ycost_;
   return maximum_yid;  
+}
+
+bool MulticlassPerceptron::Train(const FeatureSet *feature_set,
+                                 const char *label) {
+  int predict_yid = Classify(feature_set);
+  int correct_yid = model_->yid(label);
+  ASSERT(correct_yid >= 0, "Unexcpected label");
+  ++count_;
+
+  if (predict_yid != correct_yid) {
+    // Update: w = w + F(x, y) - F(x, y_)
+    for (int i = 0; i < feature_set->size(); ++i) {
+      // LOG(feature_set->at(i));
+      int xid = model_->GetOrInsertXId(feature_set->at(i));
+      
+      model_->set_cost(xid, correct_yid, model_->cost(xid, correct_yid) + 1.0);
+      model_->set_cost(xid, predict_yid, model_->cost(xid, predict_yid) - 1.0);
+    }
+    return false;
+  } else {
+    return true;
+  }
 }
 
 }  // namespace milkcat

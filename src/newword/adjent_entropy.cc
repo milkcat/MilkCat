@@ -34,6 +34,7 @@
 #include <utility>
 #include "libmilkcat.h"
 #include "common/model_impl.h"
+#include "common/trie_tree.h"
 #include "include/milkcat.h"
 #include "utils/readable_file.h"
 #include "utils/status.h"

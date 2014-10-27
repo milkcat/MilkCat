@@ -274,4 +274,20 @@ int MulticlassPerceptronModel::xid(const char *xname) const {
   }
 }
 
+float MulticlassPerceptronModel::cost(int xid, int yid) const {
+  ASSERT(xid < xsize_, "Unexpected xid");
+  ASSERT(yid < ysize(), "Unexpected xid");
+  int idx = xid * ysize() + yid;
+  ASSERT(idx < cost_.size(), "Invalid index in cost");
+  return cost_[idx];
+}
+
+void MulticlassPerceptronModel::set_cost(int xid, int yid, float cost) {
+  ASSERT(xid < xsize_, "Unexpected xid");
+  ASSERT(yid < ysize(), "Unexpected xid");
+  int idx = xid * ysize() + yid;
+  ASSERT(idx < cost_.size(), "Invalid index in cost");
+  cost_[idx] = cost;
+}
+
 }  // namespace milkcat

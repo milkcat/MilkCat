@@ -25,6 +25,8 @@
 // Reimu x Marisa :P
 //
 
+#define BENCHMARK
+
 #include "common/reimu_trie.h"
 
 #include <assert.h>
@@ -37,8 +39,8 @@
 #include "common/cedar.h"
 #endif
 
-#define N 1000000
-#define HALF_N 500000
+#define N 100000
+#define HALF_N 50000
 
 using milkcat::ReimuTrie;
 

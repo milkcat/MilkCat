@@ -21,8 +21,11 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 //
-// dependency_parser.h --- Created at 2013-08-10
+// dependency_parser.h
+// naive_arceager_dependency_parser.h --- Created at 2013-08-10
 //
+
+#define DEBUG
 
 #include "parser/naive_arceager_dependency_parser.h"
 
@@ -30,6 +33,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <algorithm>
+#include <set>
 #include <vector>
 #include "ml/feature_set.h"
 #include "ml/multiclass_perceptron.h"
@@ -39,20 +43,47 @@
 #include "parser/dependency_instance.h"
 #include "parser/dependency_node.h"
 #include "parser/dependency_state.h"
+#include "parser/orcale.h"
 #include "tagger/part_of_speech_tag_instance.h"
+#include "utils/log.h"
 #include "utils/pool.h"
+#include "utils/readable_file.h"
 #include "utils/status.h"
 #include "utils/utils.h"
 
 namespace milkcat {
 
 
-NaiveArceagerDependencyParser::NaiveArceagerDependencyParser():
-    perceptron_(NULL),
-    state_(NULL),
-    feature_(NULL),
-    feature_set_(NULL),
-    node_pool_(NULL) {
+NaiveArceagerDependencyParser::NaiveArceagerDependencyParser(
+    MulticlassPerceptronModel *perceptron_model,
+    Feature *feature) {
+  state_ = new State();
+  node_pool_ = new utils::Pool<Node>();
+  feature_set_ = new FeatureSet();
+  perceptron_ = new MulticlassPerceptron(perceptron_model);
+  feature_ = feature;
+
+  // Initialize the yid information from the prediction of perceptron
+  yid_transition_.resize(perceptron_model->ysize());
+  yid_label_.resize(perceptron_model->ysize());
+  for (int yid = 0; yid < perceptron_model->ysize(); ++yid) {
+    const char *yname = perceptron_model->yname(yid);
+    if (strncmp(yname, "leftarc", 7) == 0) {
+      yid_transition_[yid] = kLeftArc;
+      yid_label_[yid] = yname + 8;
+    } else if (strncmp(yname, "rightarc", 8) == 0) {
+      yid_transition_[yid] = kRightArc;
+      yid_label_[yid] = yname + 9;
+    } else if (strcmp(yname, "shift") == 0) {
+      yid_transition_[yid] = kShift;
+    } else if (strcmp(yname, "reduce") == 0) {
+      yid_transition_[yid] = kReduce;
+    } else {
+      std::string err = "Unexpected label: ";
+      err += yname;
+      ERROR(err.c_str());
+    }
+  }
 }
 
 NaiveArceagerDependencyParser::~NaiveArceagerDependencyParser() {
@@ -61,9 +92,6 @@ NaiveArceagerDependencyParser::~NaiveArceagerDependencyParser() {
 
   delete state_;
   state_ = NULL;
-
-  delete feature_;
-  feature_ = NULL;
 
   delete feature_set_;
   feature_set_ = NULL;
@@ -75,21 +103,19 @@ NaiveArceagerDependencyParser::~NaiveArceagerDependencyParser() {
 NaiveArceagerDependencyParser *
 NaiveArceagerDependencyParser::New(Model::Impl *model_impl,
                                    Status *status) {
-  const std::vector<std::string> *feature_templates = NULL;
-  NaiveArceagerDependencyParser *self = new NaiveArceagerDependencyParser();
-  self->state_ = new State();
-  self->node_pool_ = new utils::Pool<Node>();
-  self->feature_set_ = new FeatureSet();
 
   MulticlassPerceptronModel *
   perceptron_model = model_impl->DependencyModel(status);
 
-  if (status->ok()) {
-    self->perceptron_ = new MulticlassPerceptron(perceptron_model);
-    feature_templates = model_impl->DependencyTemplate(status);
-  }
+  Feature *feature_template = NULL;
+  if (status->ok()) feature_template = model_impl->DependencyTemplate(status);
 
-  if (status->ok()) self->feature_ = new Feature(feature_templates);
+  NaiveArceagerDependencyParser *self = NULL;
+
+  if (status->ok()) {
+    self = new NaiveArceagerDependencyParser(perceptron_model,
+                                             feature_template);
+  }
 
   if (status->ok()) {
     return self;
@@ -99,56 +125,64 @@ NaiveArceagerDependencyParser::New(Model::Impl *model_impl,
   }  
 }
 
-bool NaiveArceagerDependencyParser::AllowTransition(int label_id) const {
-  const char *transition = perceptron_->yname(label_id);
-  if (strncmp(transition, "LARC", 4) == 0)
-    return state_->AllowLeftArc();
-  else if (strncmp(transition, "RARC", 4) == 0)
-    return state_->AllowRightArc();
-  else if (strncmp(transition, "REDU", 4) == 0)
-    return state_->AllowReduce();
-  else if (strncmp(transition, "SHIF", 4) == 0)
-    return state_->AllowShift();
-  
-  ASSERT(false, "Illegal transition");
-  return true;
+bool NaiveArceagerDependencyParser::AllowTransition(int yid) const {
+  int transition = yid_transition_[yid];
+  switch (transition) {
+    case kLeftArc:
+      return state_->AllowLeftArc();
+    case kRightArc:
+      return state_->AllowRightArc();
+    case kShift:
+      return state_->AllowShift();
+    case kReduce:
+      return state_->AllowReduce();
+    default:
+      ERROR("Unexpected transition");
+      return true;
+  }
 }
 
-int NaiveArceagerDependencyParser::NextTransition() {
-  const char *feature_buffer[Feature::kFeatureMax];
-  std::vector<std::pair<double, int> > 
-  transition_costs(perceptron_->ysize());
+// Compare the yid by cost in `perceptron`
+class IdxCostPairCmp {
+ public:
+  IdxCostPairCmp(MulticlassPerceptron *perceptron): 
+      perceptron_(perceptron) {
+  }
+  bool operator()(int y1, int y2) {
+    return perceptron_->ycost(y1) < perceptron_->ycost(y2);
+  }
+ private:
+  MulticlassPerceptron *perceptron_;
+};
 
+int NaiveArceagerDependencyParser::Next() {  
   int feature_num = feature_->Extract(state_,
                                       term_instance_,
                                       part_of_speech_tag_instance_,
                                       feature_set_);
-
   int yid = perceptron_->Classify(feature_set_);
-
-  LOG("initial transition = ", perceptron_->yname(yid));
 
   // If the first candidate action is not allowed
   if (AllowTransition(yid) == false) {
-    // sort the results by its weight
-    transition_costs.clear();
-    for (int i = 0; i < perceptron_->ysize(); ++i) {
-      transition_costs.push_back(
-          std::make_pair(perceptron_->ycost(i), i));
-    }
-    std::sort(transition_costs.begin(), transition_costs.end());
+    // sort the results by its cost
+    std::vector<int> idheap(perceptron_->ysize());
+    for (int i = 0; i < perceptron_->ysize(); ++i) idheap[i] = i;
+
+    // Comparetor of index
+    IdxCostPairCmp comp(perceptron_);
+    std::make_heap(idheap.begin(), idheap.end(), comp);
     do {
-      yid = transition_costs.back().second;
-      transition_costs.pop_back();
-      if (transition_costs.size() == 0) {
-        yid = 0; // SHIFT
-        break;
+      if (idheap.size() == 0) {
+        ERROR("No allowed trainsition");
       }
+
+      std::pop_heap(idheap.begin(), idheap.end(), comp);
+      yid = idheap.back();
+      idheap.pop_back();
     } while (AllowTransition(yid) == false);
   }
 
-  LOG("final transition = ", perceptron_->yname(yid));
-
+  // puts(perceptron_->yname(yid));
   return yid;
 }
 
@@ -167,35 +201,168 @@ void NaiveArceagerDependencyParser::StoreResult(
   dependency_instance->set_size(state_->input_size() - 1);
 }
 
-void NaiveArceagerDependencyParser::Parse(
-    DependencyInstance *dependency_instance,
+void NaiveArceagerDependencyParser::Step(int yid) {
+  int transition = yid_transition_[yid];
+  const char *label = yid_label_[yid].c_str();
+
+  switch (transition) {
+    case kLeftArc:
+      state_->LeftArc(label);
+      break;
+    case kRightArc:
+      state_->RightArc(label);
+      break;
+    case kShift:
+      state_->Shift();
+      break;
+    case kReduce:
+      state_->Reduce();
+      break;
+    default:
+      ERROR("Unexpected transition");
+  }  
+}
+
+
+// Do some preparing work
+void NaiveArceagerDependencyParser::StartParse(
     const TermInstance *term_instance,
     const PartOfSpeechTagInstance *part_of_speech_tag_instance) {
   term_instance_ = term_instance;
   part_of_speech_tag_instance_ = part_of_speech_tag_instance;
   
   node_pool_->ReleaseAll();
-  state_->Initialize(node_pool_, term_instance->size());
+  state_->Initialize(node_pool_, term_instance->size());  
+}
 
-  while (!state_->InputEnd()) {
-    int label_id = NextTransition();
-    const char *label_str = perceptron_->yname(label_id);
-    if (strncmp("SHIF", label_str, 4) == 0) {
-      state_->Shift();
-    } else if (strncmp("REDU", label_str, 4) == 0) {
-      state_->Reduce();
-    } else if (strncmp("LARC", label_str, 4) == 0) {
-      state_->LeftArc(label_str + 5);
-    } else if (strncmp("RARC", label_str, 4) == 0) {
-      state_->RightArc(label_str + 5);    
-    } else {
-      ASSERT(false, "Unknown transition");
-    }
+void NaiveArceagerDependencyParser::Parse(
+    DependencyInstance *dependency_instance,
+    const TermInstance *term_instance,
+    const PartOfSpeechTagInstance *part_of_speech_tag_instance) {
+  StartParse(term_instance, part_of_speech_tag_instance);
+
+  while (!(state_->InputEnd())) {
+    int yid = Next();
+    Step(yid);
   }
   
   StoreResult(dependency_instance,
               term_instance,
               part_of_speech_tag_instance);
+}
+
+void NaiveArceagerDependencyParser::Train(
+    const char *training_corpus,
+    const char *template_filename,
+    const char *model_prefix,
+    int max_iteration,
+    Status *status) {
+  // Some instances
+  TermInstance *term_instance = new TermInstance();
+  PartOfSpeechTagInstance *tag_instance = new PartOfSpeechTagInstance();
+  DependencyInstance *dependency_instance_correct = new DependencyInstance();
+  DependencyInstance *dependency_instance = new DependencyInstance();
+
+  // Orcale to predict correct transitions
+  Orcale *orcale = new Orcale();
+
+  // Gets the label name of transitions
+  ReadableFile *fd;
+  std::set<std::string> yname_set;
+  const char *label = NULL;
+  if (status->ok()) fd = ReadableFile::New(training_corpus, status);
+  while (status->ok() && !fd->Eof()) {
+    LoadDependencyTreeInstance(
+        fd,
+        term_instance,
+        tag_instance,
+        dependency_instance,
+        status);
+    if (status->ok()) {
+      orcale->Parse(dependency_instance);
+      while ((label = orcale->Next()) != NULL) {
+        yname_set.insert(label);
+      }
+    }
+  }
+  delete fd;
+  fd = NULL;
+
+  // Read template file
+  Feature *feature = NULL;
+  if (status->ok()) feature = Feature::Open(template_filename, status);
+
+  // Creates perceptron model, percpetron and the parser
+  NaiveArceagerDependencyParser *parser = NULL;
+  MulticlassPerceptronModel *model = NULL;
+  MulticlassPerceptron *percpetron = NULL;
+  if (status->ok()) {
+    std::vector<std::string> yname(yname_set.begin(), yname_set.end());
+    model = new MulticlassPerceptronModel(yname);
+    parser = new NaiveArceagerDependencyParser(model, feature);
+    percpetron = new MulticlassPerceptron(model);
+  }
+
+  // Start training
+  for (int iter = 0; iter < max_iteration && status->ok(); ++iter) {
+    const char *label;
+    int yid;
+    int correct = 0, total = 0;
+    if (status->ok()) fd = ReadableFile::New(training_corpus, status);
+    while (status->ok() && !fd->Eof()) {
+      LoadDependencyTreeInstance(
+          fd,
+          term_instance,
+          tag_instance,
+          dependency_instance_correct,
+          status);
+      if (status->ok()) {
+        orcale->Parse(dependency_instance_correct);
+        parser->StartParse(term_instance, tag_instance);
+        while ((label = orcale->Next()) != NULL) {
+          yid = model->yid(label);
+          ASSERT(yid != MulticlassPerceptronModel::kIdNone, "Unexpected label");
+
+          // Generates feature set
+          parser->Next();
+          if (percpetron->Train(parser->feature_set_, label)) {
+            ++correct;
+          }
+          parser->Step(yid);
+          ++total;
+        }
+
+#ifdef DEBUG
+        parser->StoreResult(dependency_instance, term_instance, tag_instance);
+        // Check whether the orcale is correct
+        for (int i = 0; i < dependency_instance->size(); ++i) {
+          ASSERT(dependency_instance->head_node_at(i) == 
+                 dependency_instance_correct->head_node_at(i),
+                 "Orcale failed");
+        }
+#endif
+      }
+    }
+    delete fd;
+    fd = NULL;
+    
+    printf("Iter %d: p = %.3f\n",
+           iter + 1,
+           static_cast<float>(correct) / total);
+           
+  }
+
+  if (status->ok()) model->Save(model_prefix, status);
+  if (!status->ok()) puts(status->what());
+
+  delete term_instance;
+  delete tag_instance;
+  delete dependency_instance_correct;
+  delete dependency_instance;
+  delete orcale;
+  delete model;
+  delete parser;
+  delete percpetron;
 }
 
 }  // namespace milkcat

@@ -28,6 +28,14 @@
 #include "common/model_impl.h"
 
 #include "ml/multiclass_perceptron_model.h"
+#include "common/milkcat_config.h"
+#include "common/trie_tree.h"
+#include "common/static_array.h"
+#include "common/static_hashtable.h"
+#include "ml/crf_model.h"
+#include "ml/hmm_model.h"
+#include "ml/maxent_classifier.h"
+#include "phrase/string_value.h"
 
 namespace milkcat {
 
@@ -39,7 +47,6 @@ const char *kHmmPosModelFile = "ctb_pos.hmm";
 const char *kCrfPosModelFile = "ctb_pos.crf";
 const char *kCrfSegModelFile = "ctb_seg.crf";
 const char *kOovPropertyFile = "oov_property.idx";
-const char *kIdfModelFile = "tfidf.bin";
 const char *kStopwordFile = "stopword.idx";
 const char *kDepengencyFilePrefix = "ctb5_dep";
 const char *kDependenctTemplateFile = "depparse.templ";
@@ -57,10 +64,9 @@ Model::Impl::Impl(const char *model_dir_path):
     crf_pos_model_(NULL),
     hmm_pos_model_(NULL),
     oov_property_(NULL),
-    idf_model_(NULL),
     stopword_(NULL),
     dependency_(NULL),
-    dependency_template_(NULL) {
+    dependency_feature_(NULL) {
 }
 
 Model::Impl::~Impl() {
@@ -91,17 +97,14 @@ Model::Impl::~Impl() {
   delete oov_property_;
   oov_property_ = NULL;
 
-  delete idf_model_;
-  idf_model_ = NULL;
-
   delete stopword_;
   stopword_ = NULL;
 
   delete dependency_;
   dependency_ = NULL;
 
-  delete dependency_template_;
-  dependency_template_ = NULL;
+  delete dependency_feature_;
+  dependency_feature_ = NULL;
 }
 
 const TrieTree *Model::Impl::Index(Status *status) {
@@ -281,23 +284,6 @@ const TrieTree *Model::Impl::OOVProperty(Status *status) {
   return oov_property_;
 }
 
-const StringValue<float> *Model::Impl::IDFModel(Status *status) {
-  // Load the index file first
-  Index(status);
-  if (!status->ok()) return NULL;
-
-  mutex.Lock();
-  if (idf_model_ == NULL) {
-    std::string model_path = model_dir_path_ + kIdfModelFile;
-    idf_model_ = StringValue<float>::New(model_path.c_str(),
-                                         unigram_index_,
-                                         0.0f,
-                                         status);
-  }
-  mutex.Unlock();
-  return idf_model_;
-}
-
 const TrieTree *Model::Impl::Stopword(Status *status) {
   mutex.Lock();
   if (stopword_ == NULL) {
@@ -318,29 +304,15 @@ MulticlassPerceptronModel *Model::Impl::DependencyModel(Status *status) {
   return dependency_;  
 }
 
-const std::vector<std::string> *
-Model::Impl::DependencyTemplate(Status *status) {
-  char line[1024];
-  std::vector<std::string> *template_vector = new std::vector<std::string>();
-  ReadableFile *fd = NULL;
-  std::string model_path = model_dir_path_ + kDependenctTemplateFile;
-  if (status->ok()) fd = ReadableFile::New(model_path.c_str(), status);
-
-  while (status->ok() && !fd->Eof()) {
-    fd->ReadLine(line, sizeof(line), status);
-    if (status->ok()) {
-      utils::trim(line);
-      template_vector->push_back(line);
-    }
+DependencyParser::Feature *Model::Impl::DependencyTemplate(Status *status) {
+  mutex.Lock();
+  if (dependency_ == NULL) {
+    std::string prefix = model_dir_path_ + kDependenctTemplateFile;
+    dependency_feature_ = DependencyParser::Feature::Open(prefix.c_str(),
+                                                          status);
   }
-
-  delete fd;
-  if (status->ok()) {
-    return template_vector;
-  } else {
-    delete template_vector;
-    return NULL;
-  }
+  mutex.Unlock();
+  return dependency_feature_;  
 }
 
 }  // namespace milkcat

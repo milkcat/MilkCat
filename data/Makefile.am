@@ -8,5 +8,4 @@ dist_pkgdata_DATA = bigram.bin \
                     unigram.idx \
                     stopword.idx \
                     tfidf.bin \
-                    ctb_dep.maxent \
                     depparse.templ

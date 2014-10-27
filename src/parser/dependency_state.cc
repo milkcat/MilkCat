@@ -38,7 +38,6 @@ namespace milkcat {
 DependencyParser::State::State(): stack_top_(0),
                                   input_size_(0),
                                   input_position_(0),
-                                  after_reduce_(false),
                                   cost_(0.0) {
 }
 
@@ -46,7 +45,6 @@ void DependencyParser::State::Initialize(utils::Pool<Node> *node_pool,
                                          int sentance_length) {
   input_size_ = std::min(sentance_length + 1,
                          static_cast<int>(kMaxInputSize));
-  after_reduce_ = false;
 
 
   for (int i = 0; i < sentance_length + 1; ++i) {
@@ -70,14 +68,12 @@ void DependencyParser::State::Shift() {
   stack_[stack_top_] = input_[input_position_];
   input_position_++;
   stack_top_++;
-  after_reduce_ = false;
 }
 
 void DependencyParser::State::Reduce() {
   ASSERT(!StackEmpty(), "Stack empty");
 
   stack_top_--;
-  after_reduce_ = true;
 }
 
 void DependencyParser::State::LeftArc(const char *label) {
@@ -91,7 +87,6 @@ void DependencyParser::State::LeftArc(const char *label) {
   stack_top_--;
 
   input0->AddChild(stack0->id());
-  after_reduce_ = false;
 }
 
 void DependencyParser::State::RightArc(const char *label) {
@@ -108,27 +103,25 @@ void DependencyParser::State::RightArc(const char *label) {
   stack0->AddChild(input0->id());
   stack_[stack_top_] = input0;
   stack_top_++;
-
-  after_reduce_ = false;
 }
 
 bool DependencyParser::State::AllowShift() {
   if (StackFull()) return false;
   if (InputEnd()) return false;
-  if (after_reduce_ == true) return false;
+  if (input_size_ - 1 == input_position_) return false;
   return true;
 }
 
 bool DependencyParser::State::AllowReduce() {
   if (StackEmpty()) return false;
-  
   if (stack_[stack_top_ - 1]->id() == 0) return false;
-  if (stack_[stack_top_ - 1]->head_id() == Node::kNone) return false;
+  // if (stack_[stack_top_ - 1]->head_id() == Node::kNone) return false;
   return true;
 }
 
 bool DependencyParser::State::AllowLeftArc() {
   if (StackEmpty()) return false;
+  if (InputEnd()) return false;
   if (stack_[stack_top_ - 1]->id() == 0) return false;
   if (stack_[stack_top_ - 1]->head_id() != Node::kNone) return false;
   return true;

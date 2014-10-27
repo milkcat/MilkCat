@@ -57,11 +57,14 @@ libmilkcat_la_SOURCES = libmilkcat.cc \
                         parser/dependency_instance.h \
                         parser/dependency_instance.cc \
                         parser/dependency_node.h \
+                        parser/dependency_parser.cc \
                         parser/dependency_parser.h \
                         parser/dependency_state.cc \
                         parser/dependency_state.h \
                         parser/naive_arceager_dependency_parser.h \
                         parser/naive_arceager_dependency_parser.cc \
+                        parser/orcale.cc \
+                        parser/orcale.h \
                         phrase/document.cc \
                         phrase/document.h \
                         phrase/phrase.cc \
@@ -111,14 +114,13 @@ libmilkcat_la_SOURCES = libmilkcat.cc \
                         utils/writable_file.cc \
                         utils/writable_file.h 
 
-TESTS = dependency_test reimu_trie_test
-check_PROGRAMS = dependency_test reimu_trie_test
-
-dependency_test_SOURCES = tests/dependency_test.cc
-dependency_test_CXXFLAGS = -DMODEL_DIR=\"$(top_srcdir)/data/\" \
-                           -DPRIVATE_DIR=\"$(top_srcdir)/private/\"
-dependency_test_LDFLAGS = -all-static
-dependency_test_LDADD = libmilkcat.la
+TESTS = dependency_test reimu_trie_test orcale_test
+check_PROGRAMS = dependency_test reimu_trie_test orcale_test 
 
 reimu_trie_test_SOURCES = tests/reimu_trie_test.cc
 reimu_trie_test_LDADD = libmilkcat.la
+
+orcale_test_SOURCES = tests/orcale_test.cc
+orcale_test_LDADD = libmilkcat.la
+
+

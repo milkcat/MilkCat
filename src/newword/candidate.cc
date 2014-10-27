@@ -34,6 +34,7 @@
 #include "libmilkcat.h"
 #include "common/milkcat_config.h"
 #include "common/model_impl.h"
+#include "common/trie_tree.h"
 #include "ml/maxent_classifier.h"
 #include "newword/utf8.h"
 #include "utils/log.h"

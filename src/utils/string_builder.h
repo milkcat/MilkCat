@@ -39,7 +39,7 @@ class StringBuilder {
   }
 
   // Changes the buffer writes to
-  void ChangeBuffer(char *buffer, int capability) {
+  void SetOutput(char *buffer, int capability) {
     buffer_ = buffer;
     capability_ = capability;
     size_ = 0;

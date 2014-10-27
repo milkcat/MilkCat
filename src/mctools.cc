@@ -28,6 +28,7 @@
 //
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <math.h>
 #include <stdint.h>
 #include <assert.h>
@@ -43,6 +44,8 @@
 #include "ml/maxent_classifier.h"
 #include "ml/multiclass_perceptron_model.h"
 #include "include/milkcat.h"
+#include "parser/dependency_parser.h"
+#include "parser/naive_arceager_dependency_parser.h"
 #include "phrase/string_value.h"
 #include "tagger/hmm_part_of_speech_tagger.h"
 #include "utils/utils.h"
@@ -335,30 +338,6 @@ int MakeHMMTaggerModel(int argc, char **argv) {
   }
 }
 
-int MakeMaxentFile(int argc, char **argv) {
-  Status status;
-
-  if (argc != 4)
-    status = Status::Info("Usage: mc_model maxent "
-                          "text-model-file binary-model-file");
-
-  printf("Load text formatted model: %s \n", argv[argc - 2]);
-  MaxentModel *maxent = MaxentModel::NewFromText(argv[argc - 2], &status);
-
-  if (status.ok()) {
-    printf("Save binary formatted model: %s \n", argv[argc - 1]);
-    maxent->Save(argv[argc - 1], &status);
-  }
-
-  delete maxent;
-  if (status.ok()) {
-    return 0;
-  } else {
-    puts(status.what());
-    return -1;
-  }
-}
-
 int MakeMulticlassPerceptronFile(int argc, char **argv) {
   Status status;
 
@@ -496,84 +475,78 @@ int CorpusVocabulary(int argc, char **argv) {
   }
 }
 
-// Make the binary IDF model from text model file
-int IDFModel(int argc, char **argv) {
-  if (argc != 5) {
-    puts("Usage mctools idf index-file from-file to-file");
+int TrainNaiveArcEagerDependendyParser(int argc, char **argv) {
+  if (argc != 6) {
+    fprintf(stderr,
+            "Usage: milkcat-tools --depparser-train corpus_file template_file "
+            "model_file iteration\n");
     return 1;
   }
+  const char *corpus_file = argv[2];
+  const char *template_file = argv[3];
+  const char *model_prefix = argv[4];
+  int max_iteration = atol(argv[5]);
 
-  const char *index_file = argv[argc - 3];
-  const char *from_file = argv[argc - 2];
-  const char *to_file = argv[argc - 1];
   Status status;
-
-  TrieTree *index = DoubleArrayTrieTree::New(index_file, &status);
-
-  const StringValue<float> *tfidf_model = NULL;
-  if (status.ok()) {
-    tfidf_model = StringValue<float>::NewFromText(
-        from_file,
-        index,
-        0.0f,
-        &status);
-  }
+  NaiveArceagerDependencyParser::Train(
+      corpus_file,
+      template_file,
+      model_prefix,
+      max_iteration,
+      &status);
 
   if (status.ok()) {
-    tfidf_model->Save(to_file, &status);
-  }
-
-  delete index;
-  delete tfidf_model;
-
-  if (status.ok()) {
-    puts("Success");
+    puts("Success!");
     return 0;
-    
   } else {
     puts(status.what());
     return 1;
   }
 }
 
-// Make the word-class model from text model file
-int WordClass(int argc, char **argv) {
+int TestDependendyParser(int argc, char **argv) {
   if (argc != 5) {
-    puts("Usage mctools wordcls index-file from-file to-file");
+    fprintf(stderr,
+            "Usage: milkcat-tools --depparser-test corpus_file template_file "
+            "model_file\n");
     return 1;
   }
+  const char *corpus_file = argv[2];
+  const char *template_file = argv[3];
+  const char *model_prefix = argv[4];
 
-  const char *index_file = argv[argc - 3];
-  const char *from_file = argv[argc - 2];
-  const char *to_file = argv[argc - 1];
   Status status;
+  DependencyParser::Feature *
+  feature = DependencyParser::Feature::Open(template_file, &status);
 
-  TrieTree *index = DoubleArrayTrieTree::New(index_file, &status);
-
-  const StringValue<int> *word_class = NULL;
+  MulticlassPerceptronModel *model = NULL;
   if (status.ok()) {
-    word_class = StringValue<int>::NewFromText(
-        from_file,
-        index,
-        -1,
+    model = MulticlassPerceptronModel::Open(model_prefix, &status);
+  } 
+
+  DependencyParser *parser = NULL;
+  double LAS, UAS;
+  if (status.ok()) {
+    parser = new NaiveArceagerDependencyParser(model, feature);
+    DependencyParser::Test(
+        corpus_file,
+        parser,
+        &LAS,
+        &UAS,
         &status);
   }
 
   if (status.ok()) {
-    word_class->Save(to_file, &status);
+    printf("LAS: %lf\n", LAS);
+    printf("UAS: %lf\n", UAS);
   }
 
-  delete index;
-  delete word_class;
+  if (!status.ok()) puts(status.what());
 
-  if (status.ok()) {
-    puts("Success");
-    return 0;
-    
-  } else {
-    puts(status.what());
-    return 1;
-  }
+  delete feature;
+  delete model;
+  delete parser;
+  return 0;
 }
 
 }  // namespace milkcat
@@ -594,14 +567,12 @@ int main(int argc, char **argv) {
     return milkcat::MakeMulticlassPerceptronFile(argc, argv);
   } else if (strcmp(tool, "hmm") == 0) {
     return milkcat::MakeHMMTaggerModel(argc, argv);
-  } else if (strcmp(tool, "maxent") == 0) {
-    return milkcat::MakeMaxentFile(argc, argv);
   } else if (strcmp(tool, "vocab") == 0) {
     return milkcat::CorpusVocabulary(argc - 1, argv + 1);
-  } else if (strcmp(tool, "idf") == 0) {
-    return milkcat::IDFModel(argc, argv);
-  } else if (strcmp(tool, "wordcls") == 0) {
-    return milkcat::WordClass(argc, argv);
+  } else if (strcmp(tool, "--depparser-train") == 0) {
+    return milkcat::TrainNaiveArcEagerDependendyParser(argc, argv);
+  } else if (strcmp(tool, "--depparser-test") == 0) {
+    return milkcat::TestDependendyParser(argc, argv);
   } else {
     fprintf(stderr, "Usage: mc_model [dict|gram|hmm|maxent|vocab|tfidf]\n");
     return 1;

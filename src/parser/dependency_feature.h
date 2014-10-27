@@ -36,6 +36,7 @@ class TermInstance;
 class PartOfSpeechTagInstance;
 class TrieTree;
 class FeatureSet;
+class Status;
 
 class DependencyParser::Feature {
  public:
@@ -61,7 +62,10 @@ class DependencyParser::Feature {
     kSingleFeatureNumber
   };
 
-  Feature(const std::vector<std::string> *feature_templates);
+  // Get feature template from `filename`. On failed, return NULL
+  static Feature *Open(const char *filename, Status *status);
+
+  Feature(const std::vector<std::string> &feature_template);
   ~Feature();
 
   // Returns the tag or term string of a node
@@ -96,7 +100,7 @@ class DependencyParser::Feature {
   const PartOfSpeechTagInstance *part_of_speech_tag_instance_;
   const State *state_;
   TrieTree *feature_index_;
-  const std::vector<std::string> *feature_templates_;
+  const std::vector<std::string> feature_template_;
 
   void InitializeFeatureIndex();
 };

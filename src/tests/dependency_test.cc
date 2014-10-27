@@ -24,6 +24,8 @@
 // dependency_test.cc --- Created at 2014-06-15
 //
 
+#define DEBUG
+
 #include "common/model_impl.h"
 #include "include/milkcat.h"
 #include "parser/dependency_instance.h"
@@ -51,7 +53,7 @@ void LoadSentence(ReadableFile *fd,
                   Status *status) {
   char buf[1024], word[1024], tag[1024], type[1024];
   int term_num = 0, head = 0;
-  while (status->ok()) {
+  while (!fd->Eof() && status->ok()) {
     fd->ReadLine(buf, sizeof(buf), status);
     if (status->ok()) {
       // NULL line indicates the end of a sentence
@@ -73,72 +75,7 @@ void LoadSentence(ReadableFile *fd,
   }
 }
 
-int TestDependency(const char *gold_filename) {
-  Status status;
 
-  ReadableFile *fd = ReadableFile::New(gold_filename, &status);
-  if (!status.ok()) return 77;
-
-  Model::Impl *model_impl = new Model::Impl(MODEL_DIR);
-  DependencyParser *parser = NaiveArceagerDependencyParser::New(
-        model_impl,
-        &status);
-  ASSERT(status.ok(), status.what());
-
-  int total = 0;
-  int las_count = 0;
-  int uas_count = 0;
-
-  TermInstance *term_instance = new TermInstance();
-  PartOfSpeechTagInstance *tag_instance = new PartOfSpeechTagInstance();
-  DependencyInstance *dependency_instance_gold = new DependencyInstance();
-  DependencyInstance *dependency_instance = new DependencyInstance();
-
-  while (!fd->Eof()) {
-    LoadSentence(fd,
-                 term_instance,
-                 tag_instance,
-                 dependency_instance_gold,
-                 &status);
-
-    ASSERT(status.ok(), status.what());
-    parser->Parse(dependency_instance, term_instance, tag_instance);
-
-    for (int i = 0; i < term_instance->size(); ++i) {
-      
-      // printf("%s %s %d %s %d %s\n", 
-      //        term_instance->term_text_at(i),
-      //        tag_instance->part_of_speech_tag_at(i),
-      //        dependency_instance_gold->head_node_at(i),
-      //        dependency_instance_gold->dependency_type_at(i),
-      //        dependency_instance->head_node_at(i),
-      //        dependency_instance->dependency_type_at(i)); 
-      if (strcmp(tag_instance->part_of_speech_tag_at(i), "PU") == 0)
-        continue;
-      total++;
-      if (dependency_instance_gold->head_node_at(i) == 
-          dependency_instance->head_node_at(i)) {
-        uas_count++;
-        if (strcmp(dependency_instance_gold->dependency_type_at(i),
-                   dependency_instance->dependency_type_at(i)) == 0) {
-          las_count++;
-        }
-      }
-    }
-  }
-
-  printf("LAS: %.3lf\n", static_cast<double>(las_count) / total);
-  printf("UAS: %.3lf\n", static_cast<double>(uas_count) / total);
-
-  delete term_instance;
-  delete tag_instance;
-  delete dependency_instance_gold;
-  delete dependency_instance;
-  delete parser;
-  delete model_impl;
-
-  return 0;
-}
 
 int main() {
   return TestDependency(PRIVATE_DIR "ctb7-test.malt");

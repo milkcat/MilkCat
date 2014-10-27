@@ -75,12 +75,14 @@ class DependencyParser::State {
   // Input and stack status
   bool InputEnd() const { return input_size_ == input_position_; }
   bool StackEmpty() const { return stack_top_ == 0; }
+  bool StackOnlyOneElement() const { return stack_top_ == 1; }
   bool StackFull() const { return stack_top_ == kMaxStackSize - 1; }
 
   // The n-th node in the input buffer
   const Node *node_at(int n) { return input_[n]; }
 
   int input_size() const { return input_size_; }
+  int stack_top() const { return stack_top_; }
 
  private:
   Node *stack_[kMaxStackSize];
@@ -89,7 +91,6 @@ class DependencyParser::State {
   int input_size_;
   int input_position_;
 
-  bool after_reduce_;
   double cost_;
 
   DISALLOW_COPY_AND_ASSIGN(State);

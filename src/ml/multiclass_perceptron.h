@@ -42,17 +42,19 @@ class MulticlassPerceptron {
   // Use `yname` to get the string of this label. 
   int Classify(const FeatureSet *feature_set);
 
-  // Get the name of a label (yid)
+  // Get the name of a label (yid) or get yid by name
   const char *yname(int yid) const;
   int ysize() const;
   float ycost(int yid) const { return ycost_[yid]; }
 
-  // Online training the perceptron with one sample
-  const char *Train(const FeatureSet *feature_set, int label);
+  // Online training the perceptron with one sample. Returns true if the weights
+  // have not been updated (prediction is correct), else, returns false. 
+  bool Train(const FeatureSet *feature_set, const char *label);
 
  private:
   MulticlassPerceptronModel *model_;
   float *ycost_;
+  double count_;
 };
 
 }  // namespace milkcat

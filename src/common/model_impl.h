@@ -30,14 +30,7 @@
 
 #include <string>
 #include <vector>
-#include "common/milkcat_config.h"
-#include "common/trie_tree.h"
-#include "common/static_array.h"
-#include "common/static_hashtable.h"
-#include "ml/crf_model.h"
-#include "ml/hmm_model.h"
-#include "ml/maxent_classifier.h"
-#include "phrase/string_value.h"
+#include "parser/dependency_feature.h"
 #include "utils/mutex.h"
 #include "utils/utils.h"
 
@@ -47,6 +40,11 @@
 namespace milkcat {
 
 class MulticlassPerceptronModel;
+class TrieTree;
+template <class T> class StaticArray;
+template <class K, class V> class StaticHashTable;
+class CRFModel;
+class HMMModel;
 
 // A factory class that can obtain any model data class needed by MilkCat
 // in singleton mode. All the GetXX fucnctions are thread safe
@@ -84,9 +82,6 @@ class Model::Impl {
   // Get the character's property in out-of-vocabulary word recognition
   const TrieTree *OOVProperty(Status *status);
 
-  // Get the TFIDF model
-  const StringValue<float> *IDFModel(Status *status);
-
   // Get the stopword list as an trietree index
   const TrieTree *Stopword(Status *status);
 
@@ -94,7 +89,7 @@ class Model::Impl {
   MulticlassPerceptronModel *DependencyModel(Status *status);
 
   // Get the feature template for dependency parsing
-  const std::vector<std::string> *DependencyTemplate(Status *status);
+  DependencyParser::Feature *DependencyTemplate(Status *status);
 
  private:
   std::string model_dir_path_;
@@ -109,10 +104,9 @@ class Model::Impl {
   const CRFModel *crf_pos_model_;
   const HMMModel *hmm_pos_model_;
   const TrieTree *oov_property_;
-  const StringValue<float> *idf_model_;
   const TrieTree *stopword_;
   MulticlassPerceptronModel *dependency_;
-  const std::vector<std::string> *dependency_template_;
+  DependencyParser::Feature *dependency_feature_;
 
   // Load and set the user dictionary data specified by path
   void LoadUserDictionary(const char *userdict_path, Status *status);

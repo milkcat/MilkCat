@@ -27,6 +27,7 @@
 
 #include "parser/dependency_feature.h"
 
+#include <stdio.h>
 #include <map>
 #include "common/trie_tree.h"
 #include "ml/feature_set.h"
@@ -35,6 +36,7 @@
 #include "segmenter/term_instance.h"
 #include "tagger/part_of_speech_tag_instance.h"
 #include "utils/log.h"
+#include "utils/readable_file.h"
 #include "utils/string_builder.h"
 
 namespace milkcat {
@@ -43,13 +45,39 @@ const char *DependencyParser::Feature::kRootTerm = "ROOT";
 const char *DependencyParser::Feature::kRootTag = "ROOT";
 
 DependencyParser::Feature::Feature(
-    const std::vector<std::string> *feature_templates): 
+    const std::vector<std::string> &feature_template): 
         term_instance_(NULL),
         part_of_speech_tag_instance_(NULL),
         state_(NULL),
         feature_index_(NULL),
-        feature_templates_(feature_templates) {
+        feature_template_(feature_template) {
   InitializeFeatureIndex();
+}
+
+DependencyParser::Feature *
+DependencyParser::Feature::Open(const char *filename, Status *status) {
+  // Read template file
+  char line[1024];
+  std::vector<std::string> template_vector;
+  ReadableFile *fd = ReadableFile::New(filename, status);
+
+  while (status->ok() && !fd->Eof()) {
+    fd->ReadLine(line, sizeof(line), status);
+    if (status->ok()) {
+      utils::trim(line);
+      template_vector.push_back(line);
+    }
+  }
+  delete fd;
+  fd = NULL;
+
+  if (status->ok()) {
+    DependencyParser::Feature *
+    self = new DependencyParser::Feature(template_vector);
+    return self;
+  } else {
+    return NULL;
+  }
 }
 
 DependencyParser::Feature::~Feature() {
@@ -172,10 +200,11 @@ int DependencyParser::Feature::Extract(
   strlcpy(single_feature_[kN0LCt], N0LCt(), kFeatureStringMax);
 
   feature_set->Clear();
-  for (std::vector<std::string>::const_iterator
-       it = feature_templates_->begin(); it != feature_templates_->end(); ++it) {
-    builder.ChangeBuffer(feature_set->at(feature_num),
-                         FeatureSet::kFeatureSizeMax);
+  for (std::vector<std::string>::const_iterator 
+       it = feature_template_.begin();
+       it != feature_template_.end();
+       ++it) {
+    builder.SetOutput(feature_set->at(feature_num), FeatureSet::kFeatureSizeMax);
     const char *templ = it->c_str();
     const char *p = templ, *q = NULL;
     while (*p) {

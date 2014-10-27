@@ -31,6 +31,7 @@
 #include <string.h>
 #include "libmilkcat.h"
 #include "common/model_impl.h"
+#include "common/trie_tree.h"
 #include "include/milkcat.h"
 #include "segmenter/crf_segmenter.h"
 #include "tokenizer/token_instance.h"

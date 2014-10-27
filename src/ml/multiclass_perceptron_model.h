@@ -27,8 +27,10 @@
 #ifndef SRC_ML_MULTICLASS_PERCEPTRON_MODEL_H_
 #define SRC_ML_MULTICLASS_PERCEPTRON_MODEL_H_
 
+#include <assert.h>
 #include <string>
 #include <vector>
+#include <stdio.h>
 
 namespace milkcat {
 
@@ -51,17 +53,12 @@ class MulticlassPerceptronModel {
   void Save(const char *filename, Status *status);
 
   // Gets or sets the cost of a feature(xid) with its label(yid) in the model
-  float cost(int yid, int xid) const {
-    return cost_[xid * ysize() + yid];
-  }
-  void set_cost(int yid, int xid, float cost) {
-    cost_[xid * ysize() + yid] = cost;
-  }
+  float cost(int xid, int yid) const;
+  void set_cost(int xid, int yid, float cost);
 
   // If the feature_str does not exists in feature set, use this value instead
   enum {
     kIdNone = -1,
-    kLabelSizeMax = 64
   };
 
   // Get the number of labels(y) in the model

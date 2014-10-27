@@ -27,12 +27,15 @@
 #ifndef SRC_PARSER_NAIVE_ARCEAGER_DEPENDENCY_PARSER_H_
 #define SRC_PARSER_NAIVE_ARCEAGER_DEPENDENCY_PARSER_H_
 
-#include "parser/dependency_parser.h"
+#include <vector>
+#include <string>
 #include "common/model_impl.h"
+#include "parser/dependency_parser.h"
 
 namespace milkcat {
 
 class Status;
+class MulticlassPerceptronModel;
 class MulticlassPerceptron;
 class TermInstance;
 class PartOfSpeechTagInstance;
@@ -48,16 +51,28 @@ template<class T> class Pool;
 // Computational Linguistics 34.4 (2008): 513-553.
 class NaiveArceagerDependencyParser: public DependencyParser {
  public:
-  NaiveArceagerDependencyParser();
+  NaiveArceagerDependencyParser(
+      MulticlassPerceptronModel *perceptron_model,
+      Feature *feature);
   ~NaiveArceagerDependencyParser();
 
   static NaiveArceagerDependencyParser *New(Model::Impl *model,
                                             Status *status);
   // Overrides DependencyParser::Parse
   void Parse(
-    DependencyInstance *dependency_instance,
-    const TermInstance *term_instance,
-    const PartOfSpeechTagInstance *part_of_speech_tag_instance);
+      DependencyInstance *dependency_instance,
+      const TermInstance *term_instance,
+      const PartOfSpeechTagInstance *part_of_speech_tag_instance);
+
+  // Training the NaiveArceagerDependencyParser from `training_corpus` with
+  // the feature template from `template_filename` and stores the model into
+  // `model_prefix`
+  static void Train(
+      const char *training_corpus,
+      const char *template_filename,
+      const char *model_prefix,
+      int max_iteration,
+      Status *status);
 
  private:
   MulticlassPerceptron *perceptron_;
@@ -65,12 +80,31 @@ class NaiveArceagerDependencyParser: public DependencyParser {
   Feature *feature_;
   FeatureSet *feature_set_;
   utils::Pool<Node> *node_pool_;
+
+  // Stores the real transition type and label for the predict id (yid) from
+  // perceptron
+  enum {
+    kLeftArc, kRightArc, kShift, kReduce
+  };
+  std::vector<int> yid_transition_;
+  std::vector<std::string> yid_label_;
+
   const TermInstance *term_instance_;
   const PartOfSpeechTagInstance *part_of_speech_tag_instance_;
 
-  // Choose next transition from classifier and current state
-  int NextTransition();
-  bool AllowTransition(int transition_id) const;
+  // Returns true if current state allows transition `yid`
+  bool AllowTransition(int yid) const;
+
+  // Predict next transition from current state
+  int Next();
+
+  // Do the transition `yid` and step to next state
+  void Step(int yid);
+
+  // Do some preparing work
+  void StartParse(
+      const TermInstance *term_instance,
+      const PartOfSpeechTagInstance *part_of_speech_tag_instance);
 
   // Stores the parsing result into dependency_instance
   void StoreResult(DependencyInstance *dependency_instance,

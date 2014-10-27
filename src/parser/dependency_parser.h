@@ -33,6 +33,8 @@ namespace milkcat {
 class TermInstance;
 class PartOfSpeechTagInstance;
 class DependencyInstance;
+class Status;
+class ReadableFile;
 
 // Base class for dependency parser
 class DependencyParser {
@@ -47,6 +49,24 @@ class DependencyParser {
     DependencyInstance *dependency_instance,
     const TermInstance *term_instance,
     const PartOfSpeechTagInstance *part_of_speech_tag_instance) = 0;
+
+  // Load a dependency tree from training corpus, Stores it into term_instance,
+  // tag_instance and dependency_instance
+  static void LoadDependencyTreeInstance(
+      ReadableFile *fd,
+      TermInstance *term_instance,
+      PartOfSpeechTagInstance *tag_instance,
+      DependencyInstance *dependency_instance,
+      Status *status);
+
+  // Gets the Unlabeled Attachment Score (UAS) and Labeled Attachment Score
+  // (LAS) of the `parser` in `test_corpus`. Stores them into `UAS` and `LAS`
+  static void Test(
+      const char *test_corpus,
+      DependencyParser *parser,
+      double *LAS,
+      double *UAS,
+      Status *status);
 };
 
 inline DependencyParser::~DependencyParser() {

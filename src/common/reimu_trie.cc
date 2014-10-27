@@ -32,7 +32,7 @@
 #include <stdlib.h>
 #include <vector>
 
-#define _assert(x)
+#define _assert(x) assert(x)
 #define XOR(a, b) ((a) ^ (b))
 #define CALC_BASE_FROM_TO_AND_LABEL(to, label) ((to) ^ (label))
 #define CALC_LABEL_FROM_BASE_AND_TO(base, to) ((base) ^ (to))
@@ -360,7 +360,6 @@ void ReimuTrie::Impl::Put(const char *key, int32 value) {
   to = Next(from, 0);
 
   array_[to].set_value(value);
-  array_[to].set_check(from);
 }
 
 int ReimuTrie::Impl::AddBlock() {
@@ -596,7 +595,15 @@ void ReimuTrie::Impl::MoveSubTree(int from,
 int ReimuTrie::Impl::ResolveConflict(int *from, int base, uint8 label) {
   int node_idx = XOR(base, label);
   int conflicted_from = array_[node_idx].check();
-  int conflicted_base = array_[conflicted_from].base();
+  int conflicted_base;
+  if (conflicted_from == node_idx) {
+    // When it is a value node
+    conflicted_base = conflicted_from;
+  } else {
+    conflicted_base = array_[conflicted_from].base();
+  }
+  _assert(NODE_INDEX_TO_BLOCK_INDEX(conflicted_base) ==
+          NODE_INDEX_TO_BLOCK_INDEX(base));
 
   // Determine which tree to remove
   uint8 child[256];

@@ -21,31 +21,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 //
-// config.h
-// milkcat_config.h --- Created at 2013-09-17
+// dependency_parser_train.cc --- Created at 2014-10-27
 //
 
-#ifndef SRC_COMMON_MILKCAT_CONFIG_H_
-#define SRC_COMMON_MILKCAT_CONFIG_H_
-
-#include <stdlib.h>
-
-namespace milkcat {
-
-enum {
-  kTokenMax = 1000,
-  kFeatureLengthMax = 100,
-  kTermLengthMax = kFeatureLengthMax,
-  kPOSTagLengthMax = 10,
-  kHMMSegmentAndPOSTaggingNBest = 3,
-  kUserTermIdStart = 0x40000000,
-  kHmmModelMagicNumber = 0x3322,
-  kMulticlassPerceptronModelMagicNumber = 0x1a1a,
-  kLabelSizeMax = 64
-};
-
-const float kDefaultCost = 6.0;
-
-}  // namespace milkcat
-
-#endif  // SRC_COMMON_MILKCAT_CONFIG_H_
+#include ""
