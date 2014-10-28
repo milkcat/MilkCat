@@ -77,6 +77,7 @@ class NaiveArceagerDependencyParser: public DependencyParser {
   FeatureTemplate *feature_;
   FeatureSet *feature_set_;
   Pool<Node> *node_pool_;
+  int reduce_yid_;
 
   // Stores the real transition type and label for the predict id (yid) from
   // perceptron

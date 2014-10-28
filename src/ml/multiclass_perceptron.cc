@@ -46,8 +46,7 @@ int MulticlassPerceptron::ysize() const {
 }
 
 MulticlassPerceptron::MulticlassPerceptron(MulticlassPerceptronModel *model): 
-    model_(model),
-    count_(0.0) {
+    model_(model) {
   ycost_ = new float[model->ysize()];
 }
 
@@ -79,7 +78,9 @@ bool MulticlassPerceptron::Train(const FeatureSet *feature_set,
   int predict_yid = Classify(feature_set);
   int correct_yid = model_->yid(label);
   ASSERT(correct_yid >= 0, "Unexcpected label");
-  ++count_;
+
+  // Increase in count (for Averaged multiclass perceptron)
+  IncCount();
 
   if (predict_yid != correct_yid) {
     // Update: w = w + F(x, y) - F(x, y_)
@@ -89,11 +90,19 @@ bool MulticlassPerceptron::Train(const FeatureSet *feature_set,
       
       model_->set_cost(xid, correct_yid, model_->cost(xid, correct_yid) + 1.0);
       model_->set_cost(xid, predict_yid, model_->cost(xid, predict_yid) - 1.0);
+
+      UpdateCachedCost(xid, correct_yid, 1.0f);
+      UpdateCachedCost(xid, predict_yid, -1.0f);
     }
     return false;
   } else {
     return true;
   }
 }
+
+// Do nothing in normal multiclass perceptron
+void MulticlassPerceptron::UpdateCachedCost(int, int, float) {}
+void MulticlassPerceptron::IncCount() {}
+void MulticlassPerceptron::FinishTrain() {}
 
 }  // namespace milkcat

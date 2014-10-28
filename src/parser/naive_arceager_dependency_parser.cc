@@ -36,6 +36,7 @@
 #include <set>
 #include <vector>
 #include "ml/feature_set.h"
+#include "ml/averaged_multiclass_perceptron.h"
 #include "ml/multiclass_perceptron.h"
 #include "ml/multiclass_perceptron_model.h"
 #include "segmenter/term_instance.h"
@@ -76,6 +77,7 @@ NaiveArceagerDependencyParser::NaiveArceagerDependencyParser(
       yid_transition_[yid] = kShift;
     } else if (strcmp(yname, "reduce") == 0) {
       yid_transition_[yid] = kReduce;
+      reduce_yid_ = yid;
     } else {
       std::string err = "Unexpected label: ";
       err += yname;
@@ -298,7 +300,7 @@ void NaiveArceagerDependencyParser::Train(
     std::vector<std::string> yname(yname_set.begin(), yname_set.end());
     model = new MulticlassPerceptronModel(yname);
     parser = new NaiveArceagerDependencyParser(model, feature);
-    percpetron = new MulticlassPerceptron(model);
+    percpetron = new AveragedMulticlassPerceptron(model);
   }
 
   // Start training
@@ -350,7 +352,10 @@ void NaiveArceagerDependencyParser::Train(
            
   }
 
-  if (status->ok()) model->Save(model_prefix, status);
+  if (status->ok()) {
+    percpetron->FinishTrain();
+    model->Save(model_prefix, status);
+  }
   if (!status->ok()) puts(status->what());
 
   delete term_instance;

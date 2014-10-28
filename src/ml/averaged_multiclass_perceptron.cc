@@ -24,34 +24,46 @@
 // averaged_multiclass_perceptron.h --- Created at 2014-10-23
 //
 
-#ifndef SRC_ML_AVERAGED_MULTICLASS_PERCEPTRON_H_
-#define SRC_ML_AVERAGED_MULTICLASS_PERCEPTRON_H_
-
-#include "ml/multiclass_perceptron.h"
-#include "ml/multiclass_perceptron_model.h"
-#include <vector>
+#include "ml/averaged_multiclass_perceptron.h"
+#include "utils/utils.h"
 
 namespace milkcat {
 
-class AveragedMulticlassPerceptron: public MulticlassPerceptron {
- public:
-  AveragedMulticlassPerceptron(MulticlassPerceptronModel *model);
-  ~AveragedMulticlassPerceptron();
+AveragedMulticlassPerceptron::AveragedMulticlassPerceptron(
+    MulticlassPerceptronModel *model):
+        MulticlassPerceptron(model),
+        count_(0) {
+}
 
-  // Increase count
-  void IncCount();
+AveragedMulticlassPerceptron::~AveragedMulticlassPerceptron() {
+}
 
-  // Updates the cost of xid, yid, set cost[xid][yid] += `value`
-  void UpdateCachedCost(int xid, int yid, float value);
+// Increase count
+void AveragedMulticlassPerceptron::IncCount() {
+  count_ += 1;
+}
 
-  // Averaged the cost
-  void FinishTrain();
+void AveragedMulticlassPerceptron::UpdateCachedCost(
+    int xid, int yid, float value) {
+  // Keep cached_cost_ the same size as `model_->cost_size()`
+  if (model_->cost_size() > cached_cost_.size()) {
+    cached_cost_.resize(model_->cost_size());
+  }
 
- private:
-  std::vector<double> cached_cost_;
-  int count_;
-};
+  int idx = xid * model_->ysize() + yid;
+  ASSERT(idx < cached_cost_.size(), "Invalid xid and yid");
+
+  cached_cost_[idx] += count_ * value;
+}
+
+void AveragedMulticlassPerceptron::FinishTrain() {
+  for (int xid = 0; xid < model_->xsize(); ++xid) {
+    for (int yid = 0; yid < model_->ysize(); ++yid) {
+      int idx = xid * model_->ysize() + yid;
+      float cost = model_->cost(xid, yid);
+      model_->set_cost(xid, yid, cost - cached_cost_[idx] / count_);
+    }
+  }
+}
 
 }  // namespace milkcat
-
-#endif 

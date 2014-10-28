@@ -36,7 +36,7 @@ class MulticlassPerceptronModel;
 class MulticlassPerceptron {
  public:
   MulticlassPerceptron(MulticlassPerceptronModel *model);
-  ~MulticlassPerceptron();
+  virtual ~MulticlassPerceptron();
 
   // Classify the given feature_set, returns the inferenced label id (yid).
   // Use `yname` to get the string of this label. 
@@ -51,10 +51,17 @@ class MulticlassPerceptron {
   // have not been updated (prediction is correct), else, returns false. 
   bool Train(const FeatureSet *feature_set, const char *label);
 
- private:
+
+  // Used in `AveragedMulticlassPerceptron`
+  virtual void UpdateCachedCost(int xid, int yid, float value);
+  virtual void IncCount();
+  virtual void FinishTrain();
+
+ protected:
   MulticlassPerceptronModel *model_;
+
+ private:
   float *ycost_;
-  double count_;
 };
 
 }  // namespace milkcat

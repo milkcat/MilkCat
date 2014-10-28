@@ -56,6 +56,9 @@ class MulticlassPerceptronModel {
   float cost(int xid, int yid) const;
   void set_cost(int xid, int yid, float cost);
 
+  // Size of cost array
+  int cost_size() const { return cost_.size(); }
+
   // If the feature_str does not exists in feature set, use this value instead
   enum {
     kIdNone = -1,
@@ -63,6 +66,7 @@ class MulticlassPerceptronModel {
 
   // Get the number of labels(y) in the model
   int ysize() const { return yname_.size(); }
+  int xsize() const { return cost_.size() / ysize(); }
 
   // Gets label name by id or gets label id by name
   // If the name is not in the model, `GetOrInsertYId` inserts the label into

@@ -21,6 +21,8 @@ libmilkcat_la_SOURCES = src/libmilkcat.cc \
                         src/common/trie_tree.cc \
                         src/common/trie_tree.h \
                         src/include/milkcat.h \
+                        src/ml/averaged_multiclass_perceptron.cc \
+                        src/ml/averaged_multiclass_perceptron.h \
                         src/ml/beam.h \
                         src/ml/crf_model.cc \
                         src/ml/crf_model.h \
