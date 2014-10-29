@@ -37,6 +37,8 @@ namespace milkcat {
 template<class T> class Pool;
 
 // State in the dependency parser, including buffer, stack, tree ...
+// Implemented the unshift transition in (Nivre, 14) Arc-Eager Parsing with the
+// Tree Constraint
 class DependencyParser::State {
  public:
   enum {
@@ -51,6 +53,7 @@ class DependencyParser::State {
 
   // Transitions
   void Shift();
+  void Unshift();
   void Reduce();
   void LeftArc(const char *label);
   void RightArc(const char *label);
@@ -71,7 +74,7 @@ class DependencyParser::State {
   const Node *RightChild(const Node *node) const;
 
   // Input and stack status
-  bool InputEnd() const { return input_size_ == input_position_; }
+  bool InputEnd() const { return input_top_ == 0; }
   bool StackEmpty() const { return stack_top_ == 0; }
   bool StackOnlyOneElement() const { return stack_top_ == 1; }
   bool StackFull() const { return stack_top_ == kMaxStackSize - 1; }
@@ -85,11 +88,14 @@ class DependencyParser::State {
  private:
   Node *stack_[kMaxStackSize];
   Node *input_[kMaxInputSize];
+  
+  // For the unshift transition
+  Node *input_stack_[kMaxInputSize];
   int stack_top_;
   int input_size_;
-  int input_position_;
+  int input_top_;
 
-  double cost_;
+  bool end_reached_;
 
   DISALLOW_COPY_AND_ASSIGN(State);
 };

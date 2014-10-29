@@ -35,8 +35,8 @@ namespace milkcat {
 
 DependencyParser::State::State(): stack_top_(0),
                                   input_size_(0),
-                                  input_position_(0),
-                                  cost_(0.0) {
+                                  input_top_(0),
+                                  end_reached_(false) {
 }
 
 void DependencyParser::State::Initialize(Pool<Node> *node_pool,
@@ -49,23 +49,35 @@ void DependencyParser::State::Initialize(Pool<Node> *node_pool,
     Node *node = node_pool->Alloc();
     node->Initialize(i);
     input_[i] = node;
+    input_stack_[sentance_length - i] = node;
   }
 
   // Push the root node
   stack_[0] = input_[0];
 
-  // Root node has already pushed to the stack
-  input_position_ = 1;
+  // Root node has already pushed to the stack, `input_stack[sentance_length]`
+  // is the root node
+  input_top_ = sentance_length;
   stack_top_ = 1;
+  end_reached_ = false;
 }
 
 void DependencyParser::State::Shift() {
   ASSERT(!InputEnd(), "Out of bound");
   ASSERT(!StackFull(), "Stack overflow");
 
-  stack_[stack_top_] = input_[input_position_];
-  input_position_++;
+  stack_[stack_top_] = input_stack_[input_top_ - 1];
+  input_top_--;
   stack_top_++;
+
+  if (InputEnd()) end_reached_ = true;
+}
+
+void DependencyParser::State::Unshift() {
+  ASSERT(!StackOnlyOneElement(), "Stack empty");
+  input_stack_[input_top_] = stack_[stack_top_ - 1];
+  input_top_++;
+  stack_top_--;
 }
 
 void DependencyParser::State::Reduce() {
@@ -76,9 +88,10 @@ void DependencyParser::State::Reduce() {
 
 void DependencyParser::State::LeftArc(const char *label) {
   ASSERT(!StackEmpty(), "Stack empty");
+  ASSERT(!InputEnd(), "Out of bound");
 
   Node *stack0 = stack_[stack_top_ - 1];
-  Node *input0 = input_[input_position_];
+  Node *input0 = input_stack_[input_top_ - 1];
 
   stack0->set_head_id(input0->id());
   stack0->set_dependency_label(label);
@@ -92,28 +105,31 @@ void DependencyParser::State::RightArc(const char *label) {
   ASSERT(!StackFull(), "Stack overflow");
 
   Node *stack0 = stack_[stack_top_ - 1];
-  Node *input0 = input_[input_position_];
+  Node *input0 = input_stack_[input_top_ - 1];
 
   input0->set_head_id(stack0->id());
   input0->set_dependency_label(label);
-  input_position_++;
+  input_top_--;
 
   stack0->AddChild(input0->id());
   stack_[stack_top_] = input0;
   stack_top_++;
+
+  if (InputEnd()) end_reached_ = true;
 }
 
 bool DependencyParser::State::AllowShift() {
   if (StackFull()) return false;
   if (InputEnd()) return false;
-  if (input_size_ - 1 == input_position_) return false;
+  if (input_top_ == 0) return false;
+  if (end_reached_) return false;
   return true;
 }
 
 bool DependencyParser::State::AllowReduce() {
   if (StackEmpty()) return false;
   if (stack_[stack_top_ - 1]->id() == 0) return false;
-  // if (stack_[stack_top_ - 1]->head_id() == Node::kNone) return false;
+  if (stack_[stack_top_ - 1]->head_id() == Node::kNone) return false;
   return true;
 }
 
@@ -140,9 +156,9 @@ const DependencyParser::Node *DependencyParser::State::Stack(int idx) const {
 }
 
 const DependencyParser::Node *DependencyParser::State::Input(int idx) const {
-  int input_position = input_position_ + idx;
-  if (input_position < input_size_) 
-    return input_[input_position];
+  int input_top = input_top_ - idx;
+  if (input_top >= 0) 
+    return input_stack_[input_top - 1];
   else
     return NULL;
 }

@@ -80,13 +80,9 @@ bool Orcale::IsReduce() {
 const char *Orcale::Next() {
   // OK, no more node in input
   if (input_ptr_  == instance_->size()) {
-    // Only root node lefts
-    return NULL;
-    /*
     if (stack_.size() == 1) return NULL;
     stack_.pop_back();
     return "reduce";
-    */
   } 
 
   string_builer_->SetOutput(transition_label_, kLabelSizeMax);

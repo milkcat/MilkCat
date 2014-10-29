@@ -172,9 +172,8 @@ int NaiveArceagerDependencyParser::Next() {
     IdxCostPairCmp comp(perceptron_);
     std::make_heap(idheap.begin(), idheap.end(), comp);
     do {
-      if (idheap.size() == 0) {
-        ERROR("No allowed trainsition");
-      }
+      // Unshift transition
+      if (idheap.size() == 0) return -1;
 
       std::pop_heap(idheap.begin(), idheap.end(), comp);
       yid = idheap.back();
@@ -202,7 +201,7 @@ void NaiveArceagerDependencyParser::StoreResult(
 }
 
 void NaiveArceagerDependencyParser::Step(int yid) {
-  int transition = yid_transition_[yid];
+  int transition = yid >= 0? yid_transition_[yid]: kUnshift;
   const char *label = yid_label_[yid].c_str();
 
   switch (transition) {
@@ -217,6 +216,9 @@ void NaiveArceagerDependencyParser::Step(int yid) {
       break;
     case kReduce:
       state_->Reduce();
+      break;
+    case kUnshift:
+      state_->Unshift();
       break;
     default:
       ERROR("Unexpected transition");
@@ -241,7 +243,7 @@ void NaiveArceagerDependencyParser::Parse(
     const PartOfSpeechTagInstance *part_of_speech_tag_instance) {
   StartParse(term_instance, part_of_speech_tag_instance);
 
-  while (!(state_->InputEnd())) {
+  while (!(state_->InputEnd() && state_->StackOnlyOneElement())) {
     int yid = Next();
     Step(yid);
   }
