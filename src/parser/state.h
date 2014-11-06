@@ -59,10 +59,10 @@ class DependencyParser::State {
   void RightArc(const char *label);
 
   // Indicates whether current status allows these transitions
-  bool AllowShift();
-  bool AllowReduce();
-  bool AllowLeftArc();
-  bool AllowRightArc();
+  bool AllowShift() const;
+  bool AllowReduce() const;
+  bool AllowLeftArc() const;
+  bool AllowRightArc() const;
 
   // Get node from stack or input
   const Node *Stack(int idx) const;
@@ -85,17 +85,26 @@ class DependencyParser::State {
   int input_size() const { return input_size_; }
   int stack_top() const { return stack_top_; }
 
+  // Copy current state to `target_state`
+  void CopyTo(State *target_state) const;
+
+  double weight() const { return weight_; }
+  void weight_add(double val) { weight_ += val; }
+
  private:
-  Node *stack_[kMaxStackSize];
-  Node *input_[kMaxInputSize];
+  Pool<Node> *node_pool_;
   
-  // For the unshift transition
-  Node *input_stack_[kMaxInputSize];
+  // Stores the index of node in input_
+  int stack_[kMaxStackSize];
+  int input_stack_[kMaxInputSize];
+  
+  Node *input_[kMaxInputSize];
   int stack_top_;
   int input_size_;
   int input_top_;
 
   bool end_reached_;
+  double weight_;
 
   DISALLOW_COPY_AND_ASSIGN(State);
 };

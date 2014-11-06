@@ -28,6 +28,8 @@
 #ifndef SRC_PERSER_DEPENDENCY_PARSER_H_
 #define SRC_PERSER_DEPENDENCY_PARSER_H_
 
+#include <vector>
+
 namespace milkcat {
 
 class TermInstance;
@@ -35,6 +37,11 @@ class PartOfSpeechTagInstance;
 class DependencyInstance;
 class Status;
 class ReadableFile;
+class MulticlassPerceptronModel;
+class MulticlassPerceptron;
+class FeatureTemplate;
+class FeatureSet;
+template <class T> class Pool;
 
 // Base class for dependency parser
 class DependencyParser {
@@ -43,6 +50,8 @@ class DependencyParser {
   class FeatureTemplate;
   class State;
 
+  DependencyParser(MulticlassPerceptronModel *perceptron_model,
+                   FeatureTemplate *feature);
   virtual ~DependencyParser();
 
   virtual void Parse(
@@ -67,10 +76,34 @@ class DependencyParser {
       double *LAS,
       double *UAS,
       Status *status);
-};
 
-inline DependencyParser::~DependencyParser() {
-}
+ protected:
+  MulticlassPerceptron *perceptron_;
+  FeatureTemplate *feature_;
+  FeatureSet *feature_set_;
+  Pool<Node> *node_pool_;
+  int reduce_yid_;
+
+  // Stores the real transition type and label for the predict id (yid) from
+  // perceptron
+  enum {
+    kLeftArc, kRightArc, kShift, kReduce, kUnshift
+  };
+  std::vector<int> yid_transition_;
+  std::vector<std::string> yid_label_;
+
+  const TermInstance *term_instance_;
+  const PartOfSpeechTagInstance *part_of_speech_tag_instance_;
+
+  // Returns true if `state` allows transition `yid`
+  bool Allow(const State *state, int yid) const;
+
+  // Makes a transition `yid` to `state` 
+  void StatusStep(State *state, int yid) const;
+
+  // Store the result in `state` into dependency instrance
+  void StoreStateIntoInstance(State *state, DependencyInstance *instance) const;
+};
 
 }  // namespace milkcat
 

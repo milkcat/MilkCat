@@ -51,7 +51,6 @@ class MulticlassPerceptron {
   // have not been updated (prediction is correct), else, returns false. 
   bool Train(const FeatureSet *feature_set, const char *label);
 
-
   // Used in `AveragedMulticlassPerceptron`
   virtual void UpdateCachedCost(int xid, int yid, float value);
   virtual void IncCount();

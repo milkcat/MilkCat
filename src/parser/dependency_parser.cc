@@ -24,21 +24,121 @@
 // dependency_parser.cc --- Created at 2014-10-27
 //
 
-#include "dependency_parser.h"
+#include "parser/dependency_parser.h"
 
 #include <stdio.h>
 #include <set>
 #include <string>
-#include <vector>
+#include "ml/feature_set.h"
+#include "ml/averaged_multiclass_perceptron.h"
+#include "ml/multiclass_perceptron.h"
+#include "ml/multiclass_perceptron_model.h"
 #include "parser/dependency_instance.h"
 #include "parser/dependency_parser.h"
+#include "parser/node.h"
+#include "parser/state.h"
 #include "segmenter/term_instance.h"
 #include "tagger/part_of_speech_tag_instance.h"
+#include "utils/pool.h"
 #include "utils/readable_file.h"
 #include "utils/status.h"
 #include "utils/utils.h"
 
 namespace milkcat {
+
+DependencyParser::DependencyParser(MulticlassPerceptronModel *perceptron_model,
+                                   FeatureTemplate *feature) {
+  node_pool_ = new Pool<Node>();
+  feature_set_ = new FeatureSet();
+  perceptron_ = new MulticlassPerceptron(perceptron_model);
+  feature_ = feature;
+
+  // Initialize the yid information from the prediction of perceptron
+  yid_transition_.resize(perceptron_model->ysize());
+  yid_label_.resize(perceptron_model->ysize());
+  for (int yid = 0; yid < perceptron_model->ysize(); ++yid) {
+    const char *yname = perceptron_model->yname(yid);
+    if (strncmp(yname, "leftarc", 7) == 0) {
+      yid_transition_[yid] = kLeftArc;
+      yid_label_[yid] = yname + 8;
+    } else if (strncmp(yname, "rightarc", 8) == 0) {
+      yid_transition_[yid] = kRightArc;
+      yid_label_[yid] = yname + 9;
+    } else if (strcmp(yname, "shift") == 0) {
+      yid_transition_[yid] = kShift;
+    } else if (strcmp(yname, "reduce") == 0) {
+      yid_transition_[yid] = kReduce;
+    } else {
+      std::string err = "Unexpected label: ";
+      err += yname;
+      ERROR(err.c_str());
+    }
+  }
+}
+
+void DependencyParser::StatusStep(State *state, int yid) const {
+  int transition = yid >= 0? yid_transition_[yid]: kUnshift;
+  const char *label = yid_label_[yid].c_str();
+
+  switch (transition) {
+    case kLeftArc:
+      state->LeftArc(label);
+      break;
+    case kRightArc:
+      state->RightArc(label);
+      break;
+    case kShift:
+      state->Shift();
+      break;
+    case kReduce:
+      state->Reduce();
+      break;
+    case kUnshift:
+      state->Unshift();
+      break;
+    default:
+      ERROR("Unexpected transition");
+  }  
+}
+
+bool DependencyParser::Allow(const State *state, int yid) const {
+  int transition = yid_transition_[yid];
+  switch (transition) {
+    case kLeftArc:
+      return state->AllowLeftArc();
+    case kRightArc:
+      return state->AllowRightArc();
+    case kShift:
+      return state->AllowShift();
+    case kReduce:
+      return state->AllowReduce();
+    default:
+      ERROR("Unexpected transition");
+      return true;
+  }
+}
+
+void DependencyParser::StoreStateIntoInstance(
+    State *state,
+    DependencyInstance *instance) const {
+  for (int i = 0; i < state->input_size() - 1; ++i) {
+    // ignore the ROOT node
+    const Node *node = state->node_at(i + 1);
+    instance->set_value_at(i,  node->dependency_label(), node->head_id());
+  }
+  instance->set_size(state->input_size() - 1);
+}
+
+DependencyParser::~DependencyParser() {
+  delete perceptron_;
+  perceptron_ = NULL;
+
+  delete feature_set_;
+  feature_set_ = NULL;
+
+  delete node_pool_;
+  node_pool_ = NULL;
+}
 
 void DependencyParser::LoadDependencyTreeInstance(
     ReadableFile *fd,
@@ -132,5 +232,7 @@ void DependencyParser::Test(
   delete dependency_instance;
   delete fd;
 }
+
+
 
 }  // namespace milkcat

@@ -74,7 +74,7 @@ class DependencyParser::Node {
   }
 
   // Copy to another node instande
-  void Copy(Node *node) const {
+  void CopyTo(Node *node) const {
     node->id_ = id_;
     node->head_id_ = head_id_;
     node->left_child_id_ = left_child_id_;

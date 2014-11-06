@@ -21,11 +21,11 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 //
-// naive_arceager_dependency_parser.h --- Created at 2014-09-16
+// beam_arceager_dependency_parser.h --- Created at 2014-10-31
 //
 
-#ifndef SRC_PARSER_NAIVE_ARCEAGER_DEPENDENCY_PARSER_H_
-#define SRC_PARSER_NAIVE_ARCEAGER_DEPENDENCY_PARSER_H_
+#ifndef SRC_PARSER_BEAM_ARCEAGER_DEPENDENCY_PARSER_H_
+#define SRC_PARSER_BEAM_ARCEAGER_DEPENDENCY_PARSER_H_
 
 #include <vector>
 #include <string>
@@ -42,55 +42,45 @@ class PartOfSpeechTagInstance;
 class FeatureSet;
 template<class T> class Pool;
 
-// This class implemented the original arceager dependency parser. Introduced 
-// by Nivre, Joakim. 
-// "Algorithms for deterministic incremental dependency parsing."
-// Computational Linguistics 34.4 (2008): 513-553.
-class NaiveArceagerDependencyParser: public DependencyParser {
+
+class BeamArceagerDependencyParser: public DependencyParser {
  public:
-  NaiveArceagerDependencyParser(
+  BeamArceagerDependencyParser(
       MulticlassPerceptronModel *perceptron_model,
       FeatureTemplate *feature);
-  ~NaiveArceagerDependencyParser();
+  ~BeamArceagerDependencyParser();
 
-  static NaiveArceagerDependencyParser *New(Model::Impl *model,
-                                            Status *status);
+  static BeamArceagerDependencyParser *New(Model::Impl *model,
+                                           Status *status);
   // Overrides DependencyParser::Parse
   void Parse(
       DependencyInstance *dependency_instance,
       const TermInstance *term_instance,
       const PartOfSpeechTagInstance *part_of_speech_tag_instance);
 
-  // Training the NaiveArceagerDependencyParser from `training_corpus` with
-  // the feature template from `template_filename` and stores the model into
-  // `model_prefix`
-  static void Train(
-      const char *training_corpus,
-      const char *template_filename,
-      const char *model_prefix,
-      int max_iteration,
-      Status *status);
-
  private:
-  State *state_;
+  enum {
+    kBeamSize = 3
+  };
+  Pool<State> *state_pool_;
+  float *agent_;
+  State **beam_;
+  State **next_beam_;
+  int beam_size_;
+  int agent_size_;
 
-  // Predict next transition from current state
-  int Next();
+  // Step to next transtions
+  void Step();
 
-  // Do the transition `yid` and step to next state
-  void Step(int yid);
-
-  // Do some preparing work
+  // Start to parse the sentence
   void StartParse(
       const TermInstance *term_instance,
       const PartOfSpeechTagInstance *part_of_speech_tag_instance);
 
   // Stores the parsing result into dependency_instance
-  void StoreResult(DependencyInstance *dependency_instance,
-                   const TermInstance *term_instance,
-                   const PartOfSpeechTagInstance *part_of_speech_tag_instance);
+  void StoreResult(DependencyInstance *dependency_instance);
 };
 
 }  // namespace milkcat
 
-#endif  // SRC_PARSER_NAIVE_ARCEAGER_DEPENDENCY_PARSER_H_
+#endif  // SRC_PARSER_BEAM_ARCEAGER_DEPENDENCY_PARSER_H_

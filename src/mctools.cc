@@ -42,6 +42,7 @@
 #include "common/trie_tree.h"
 #include "ml/multiclass_perceptron_model.h"
 #include "include/milkcat.h"
+#include "parser/beam_arceager_dependency_parser.h"
 #include "parser/dependency_parser.h"
 #include "parser/naive_arceager_dependency_parser.h"
 #include "tagger/hmm_part_of_speech_tagger.h"
@@ -423,7 +424,7 @@ int TestDependendyParser(int argc, char **argv) {
   DependencyParser *parser = NULL;
   double LAS, UAS;
   if (status.ok()) {
-    parser = new NaiveArceagerDependencyParser(model, feature);
+    parser = new BeamArceagerDependencyParser(model, feature);
     DependencyParser::Test(
         corpus_file,
         parser,

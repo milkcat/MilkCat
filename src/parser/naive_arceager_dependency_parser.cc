@@ -55,55 +55,18 @@ namespace milkcat {
 
 NaiveArceagerDependencyParser::NaiveArceagerDependencyParser(
     MulticlassPerceptronModel *perceptron_model,
-    FeatureTemplate *feature) {
+    FeatureTemplate *feature): DependencyParser(perceptron_model, feature) {
   state_ = new State();
-  node_pool_ = new Pool<Node>();
-  feature_set_ = new FeatureSet();
-  perceptron_ = new MulticlassPerceptron(perceptron_model);
-  feature_ = feature;
-
-  // Initialize the yid information from the prediction of perceptron
-  yid_transition_.resize(perceptron_model->ysize());
-  yid_label_.resize(perceptron_model->ysize());
-  for (int yid = 0; yid < perceptron_model->ysize(); ++yid) {
-    const char *yname = perceptron_model->yname(yid);
-    if (strncmp(yname, "leftarc", 7) == 0) {
-      yid_transition_[yid] = kLeftArc;
-      yid_label_[yid] = yname + 8;
-    } else if (strncmp(yname, "rightarc", 8) == 0) {
-      yid_transition_[yid] = kRightArc;
-      yid_label_[yid] = yname + 9;
-    } else if (strcmp(yname, "shift") == 0) {
-      yid_transition_[yid] = kShift;
-    } else if (strcmp(yname, "reduce") == 0) {
-      yid_transition_[yid] = kReduce;
-      reduce_yid_ = yid;
-    } else {
-      std::string err = "Unexpected label: ";
-      err += yname;
-      ERROR(err.c_str());
-    }
-  }
 }
 
 NaiveArceagerDependencyParser::~NaiveArceagerDependencyParser() {
-  delete perceptron_;
-  perceptron_ = NULL;
-
   delete state_;
   state_ = NULL;
-
-  delete feature_set_;
-  feature_set_ = NULL;
-
-  delete node_pool_;
-  node_pool_ = NULL;
 }
 
 NaiveArceagerDependencyParser *
 NaiveArceagerDependencyParser::New(Model::Impl *model_impl,
                                    Status *status) {
-
   MulticlassPerceptronModel *
   perceptron_model = model_impl->DependencyModel(status);
 
@@ -123,23 +86,6 @@ NaiveArceagerDependencyParser::New(Model::Impl *model_impl,
     delete self;
     return NULL;
   }  
-}
-
-bool NaiveArceagerDependencyParser::AllowTransition(int yid) const {
-  int transition = yid_transition_[yid];
-  switch (transition) {
-    case kLeftArc:
-      return state_->AllowLeftArc();
-    case kRightArc:
-      return state_->AllowRightArc();
-    case kShift:
-      return state_->AllowShift();
-    case kReduce:
-      return state_->AllowReduce();
-    default:
-      ERROR("Unexpected transition");
-      return true;
-  }
 }
 
 // Compare the yid by cost in `perceptron`
@@ -163,7 +109,7 @@ int NaiveArceagerDependencyParser::Next() {
   int yid = perceptron_->Classify(feature_set_);
 
   // If the first candidate action is not allowed
-  if (AllowTransition(yid) == false) {
+  if (Allow(state_, yid) == false) {
     // sort the results by its cost
     std::vector<int> idheap(perceptron_->ysize());
     for (int i = 0; i < perceptron_->ysize(); ++i) idheap[i] = i;
@@ -178,7 +124,7 @@ int NaiveArceagerDependencyParser::Next() {
       std::pop_heap(idheap.begin(), idheap.end(), comp);
       yid = idheap.back();
       idheap.pop_back();
-    } while (AllowTransition(yid) == false);
+    } while (Allow(state_, yid) == false);
   }
 
   // puts(perceptron_->yname(yid));
@@ -189,40 +135,11 @@ void NaiveArceagerDependencyParser::StoreResult(
     DependencyInstance *dependency_instance,
     const TermInstance *term_instance,
     const PartOfSpeechTagInstance *part_of_speech_tag_instance) {
-  for (int i = 0; i < state_->input_size() - 1; ++i) {
-    // ignore the ROOT node
-    const Node *node = state_->node_at(i + 1);
-    dependency_instance->set_value_at(i, 
-                                      node->dependency_label(),
-                                      node->head_id());
-  }
-
-  dependency_instance->set_size(state_->input_size() - 1);
+  StoreStateIntoInstance(state_, dependency_instance);
 }
 
 void NaiveArceagerDependencyParser::Step(int yid) {
-  int transition = yid >= 0? yid_transition_[yid]: kUnshift;
-  const char *label = yid_label_[yid].c_str();
-
-  switch (transition) {
-    case kLeftArc:
-      state_->LeftArc(label);
-      break;
-    case kRightArc:
-      state_->RightArc(label);
-      break;
-    case kShift:
-      state_->Shift();
-      break;
-    case kReduce:
-      state_->Reduce();
-      break;
-    case kUnshift:
-      state_->Unshift();
-      break;
-    default:
-      ERROR("Unexpected transition");
-  }  
+  StatusStep(state_, yid);
 }
 
 
@@ -351,7 +268,6 @@ void NaiveArceagerDependencyParser::Train(
     printf("Iter %d: p = %.3f\n",
            iter + 1,
            static_cast<float>(correct) / total);
-           
   }
 
   if (status->ok()) {

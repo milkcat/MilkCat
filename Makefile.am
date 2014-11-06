@@ -37,6 +37,8 @@ libmilkcat_la_SOURCES = src/libmilkcat.cc \
                         src/ml/multiclass_perceptron_model.cc \
                         src/ml/multiclass_perceptron_model.h \
                         src/ml/sequence_feature_extractor.h \
+                        src/parser/beam_arceager_dependency_parser.h \
+                        src/parser/beam_arceager_dependency_parser.cc \
                         src/parser/dependency_instance.h \
                         src/parser/dependency_instance.cc \
                         src/parser/dependency_parser.cc \
