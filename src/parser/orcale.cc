@@ -28,7 +28,7 @@
 
 #include "parser/orcale.h"
 
-#include "parser/dependency_instance.h"
+#include "parser/tree_instance.h"
 #include "utils/string_builder.h"
 
 namespace milkcat {
@@ -43,7 +43,7 @@ Orcale::~Orcale() {
   string_builer_ = NULL;
 }
 
-void Orcale::Parse(const DependencyInstance *instance) {
+void Orcale::Parse(const TreeInstance *instance) {
   instance_ = instance;
   input_ptr_ = 0;
 

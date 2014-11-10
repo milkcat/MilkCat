@@ -36,6 +36,7 @@
 #include "ml/hmm_model.h"
 #include "segmenter/term_instance.h"
 #include "tagger/part_of_speech_tag_instance.h"
+#include "utils/pool.h"
 #include "utils/utils.h"
 
 namespace milkcat {
@@ -141,6 +142,15 @@ HMMModel::Emit *CRFEmitGetter::GetEmits(TermInstance *term_instance,
   return emit;
 }
 
+// Compare two node potiners by its cost value
+class HMMPartOfSpeechTagger::NodeComparator {
+ public:
+  bool operator()(HMMPartOfSpeechTagger::Node *n1, 
+                  HMMPartOfSpeechTagger::Node *n2) {
+    return n1->cost < n2->cost;
+  }
+};
+
 HMMPartOfSpeechTagger::HMMPartOfSpeechTagger(): node_pool_(NULL),
                                                 model_(NULL),
                                                 index_(NULL),
@@ -188,12 +198,6 @@ HMMPartOfSpeechTagger::~HMMPartOfSpeechTagger() {
 
 namespace {
 
-// Compare two node potiners by its cost value
-bool HmmNodePtrCmp(HMMPartOfSpeechTagger::Node *n1, 
-                   HMMPartOfSpeechTagger::Node *n2) {
-  return n1->cost < n2->cost;
-}
-
 // New an emit node for tag specified by tag_str. If tag_str not exist in model
 // return a NULL and status indicates an corruption error.
 HMMModel::Emit *NewEmitFromTag(const char *tag_str,
@@ -211,6 +215,7 @@ HMMModel::Emit *NewEmitFromTag(const char *tag_str,
 }
 
 }  // namespace
+
 
 void HMMPartOfSpeechTagger::InitEmit(HMMPartOfSpeechTagger *self,
                                      Status *status) {
@@ -259,10 +264,7 @@ HMMPartOfSpeechTagger *HMMPartOfSpeechTagger::New(
   self->node_pool_ = new Pool<Node>(); 
 
   for (int i = 0; i < kMaxBeams; ++i) {
-    self->beams_[i] = new Beam<Node>(kBeamSize,
-                                     self->node_pool_,
-                                     i,
-                                     HmmNodePtrCmp);
+    self->beams_[i] = new Beam<Node, NodeComparator>(kBeamSize);
   }
 
   self->model_ = model_factory->HMMPosModel(status);
@@ -344,7 +346,7 @@ inline void HMMPartOfSpeechTagger::AddBOSNodeToBeam() {
 inline void HMMPartOfSpeechTagger::GetBestPOSTagFromBeam(
     PartOfSpeechTagInstance *part_of_speech_tag_instance) {
   int position = term_instance_->size() - 1;
-  const Node *node = beams_[position + 2]->MinimalNode();
+  const Node *node = beams_[position + 2]->Best();
 
   while (node->tag != BOS_tagid_) {
     part_of_speech_tag_instance->set_value_at(position,
@@ -382,8 +384,8 @@ void HMMPartOfSpeechTagger::BuildBeam(int position) {
   const Node *leftleft_node, *left_node;
   int leftleft_tag, left_tag;
 
-  Beam<Node> *previous_beam = beams_[beam_position - 1];
-  Beam<Node> *beam = beams_[beam_position];
+  Beam<Node, NodeComparator> *previous_beam = beams_[beam_position - 1];
+  Beam<Node, NodeComparator> *beam = beams_[beam_position];
 
   previous_beam->Shrink();
   beam->Clear();
@@ -394,7 +396,7 @@ void HMMPartOfSpeechTagger::BuildBeam(int position) {
     min_cost = 1e38;
     min_left_node = NULL;
     for (int i = 0; i < previous_beam->size(); ++i) {
-      left_node = previous_beam->node_at(i);
+      left_node = previous_beam->at(i);
       leftleft_node = left_node->prevoius_node;
 
       leftleft_tag = leftleft_node->tag;

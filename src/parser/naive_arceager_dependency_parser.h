@@ -57,19 +57,9 @@ class NaiveArceagerDependencyParser: public DependencyParser {
                                             Status *status);
   // Overrides DependencyParser::Parse
   void Parse(
-      DependencyInstance *dependency_instance,
+      TreeInstance *tree_instance,
       const TermInstance *term_instance,
       const PartOfSpeechTagInstance *part_of_speech_tag_instance);
-
-  // Training the NaiveArceagerDependencyParser from `training_corpus` with
-  // the feature template from `template_filename` and stores the model into
-  // `model_prefix`
-  static void Train(
-      const char *training_corpus,
-      const char *template_filename,
-      const char *model_prefix,
-      int max_iteration,
-      Status *status);
 
  private:
   State *state_;
@@ -81,12 +71,11 @@ class NaiveArceagerDependencyParser: public DependencyParser {
   void Step(int yid);
 
   // Do some preparing work
-  void StartParse(
-      const TermInstance *term_instance,
-      const PartOfSpeechTagInstance *part_of_speech_tag_instance);
+  void Start(const TermInstance *term_instance,
+             const PartOfSpeechTagInstance *part_of_speech_tag_instance);
 
-  // Stores the parsing result into dependency_instance
-  void StoreResult(DependencyInstance *dependency_instance,
+  // Stores the parsing result into tree_instance
+  void StoreResult(TreeInstance *tree_instance,
                    const TermInstance *term_instance,
                    const PartOfSpeechTagInstance *part_of_speech_tag_instance);
 };

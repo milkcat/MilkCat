@@ -30,6 +30,7 @@
 #include <vector>
 #include <string>
 #include "common/model_impl.h"
+#include "ml/beam.h"
 #include "parser/dependency_parser.h"
 
 namespace milkcat {
@@ -41,7 +42,6 @@ class TermInstance;
 class PartOfSpeechTagInstance;
 class FeatureSet;
 template<class T> class Pool;
-
 
 class BeamArceagerDependencyParser: public DependencyParser {
  public:
@@ -64,38 +64,43 @@ class BeamArceagerDependencyParser: public DependencyParser {
                                            Status *status);
   // Overrides DependencyParser::Parse
   void Parse(
-      DependencyInstance *dependency_instance,
+      TreeInstance *tree_instance,
       const TermInstance *term_instance,
       const PartOfSpeechTagInstance *part_of_speech_tag_instance);
 
  private:
+  class StateCmp;
+
   enum {
-    kBeamSize = 64
+    kBeamSize = 2
   };
   Pool<State> *state_pool_;
   float *agent_;
-  State **beam_;
-  State **next_beam_;
-  int beam_size_;
+  Beam<State, StateCmp> *beam_;
+  Beam<State, StateCmp> *next_beam_;
   int agent_size_;
+
+  // Copys `state` and applies transition `yid` to the new state
+  State *StateCopyAndMove(State *state, int yid);
 
   // Step to next transtions. Returns false indicates the end reached
   bool Step();
 
   // Start to parse the sentence
-  void StartParse(
-      const TermInstance *term_instance,
-      const PartOfSpeechTagInstance *part_of_speech_tag_instance);
+  void Start(const TermInstance *term_instance,
+             const PartOfSpeechTagInstance *part_of_speech_tag_instance);
 
-  // Stores the parsing result into dependency_instance
-  void StoreResult(DependencyInstance *dependency_instance);
+  // Stores the parsing result into tree_instance
+  void StoreResult(TreeInstance *tree_instance);
 
   // Dumps the beam data (Just for debugging)
   void DumpBeam();
 
-  // Training `perceptron` with an correct (orcale) and incorrect state pair,
-  // returns the last correct state
-  static State *TrainState(
+  // Extracts features from `state` and put into `feature_set_`
+  void ExtractFeatureFromState(const State* state);
+
+  // Training `perceptron` with an correct (orcale) and incorrect state pair
+  static void UpdateWeightForState(
       State *incorrect_state,
       State *orcale_state,
       BeamArceagerDependencyParser *parser,

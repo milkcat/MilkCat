@@ -22,18 +22,19 @@
 // THE SOFTWARE.
 //
 // depengency_instance.cc --- Created at 2014-06-03
+// tree_instance.cc --- Created at 2014-11-10
 //
 
 #include "common/milkcat_config.h"
-#include "parser/dependency_instance.h"
+#include "parser/tree_instance.h"
 
 namespace milkcat {
 
-DependencyInstance::DependencyInstance() {
+TreeInstance::TreeInstance() {
   instance_data_ = new InstanceData(1, 1, kTokenMax);
 }
 
-DependencyInstance::~DependencyInstance() {
+TreeInstance::~TreeInstance() {
   delete instance_data_;
 }
 

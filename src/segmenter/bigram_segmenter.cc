@@ -65,15 +65,13 @@ struct BigramSegmenter::Node {
   }
 };
 
-namespace {
-
 // Compare two Node in cost
-static inline bool NodePtrCmp(BigramSegmenter::Node *n1,
-                              BigramSegmenter::Node *n2) {
-  return n1->cost < n2->cost;
-}
-
-}  // namespace
+class BigramSegmenter::NodeComparator {
+ public:
+  bool operator()(BigramSegmenter::Node *n1, BigramSegmenter::Node *n2) {
+    return n1->cost < n2->cost;
+  }
+};
 
 BigramSegmenter::BigramSegmenter(): beam_size_(0),
                                     node_pool_(NULL),
@@ -90,7 +88,9 @@ BigramSegmenter::~BigramSegmenter() {
   delete node_pool_;
   node_pool_ = NULL;
 
-  for (int i = 0; i < sizeof(beams_) / sizeof(Beam<Node> *); ++i) {
+  for (int i = 0;
+       i < sizeof(beams_) / sizeof(Beam<Node, NodeComparator> *);
+       ++i) {
     delete beams_[i];
     beams_[i] = NULL;
   }
@@ -105,11 +105,10 @@ BigramSegmenter *BigramSegmenter::New(Model::Impl *model_factory,
   self->node_pool_ = new Pool<Node>();
 
   // Initialize the beams_
-  for (int i = 0; i < sizeof(self->beams_) / sizeof(Beam<Node> *); ++i) {
-    self->beams_[i] = new Beam<Node>(self->beam_size_,
-                                     self->node_pool_,
-                                     i,
-                                     NodePtrCmp);
+  for (int i = 0;
+       i < sizeof(self->beams_) / sizeof(Beam<Node, NodeComparator> *);
+       ++i) {
+    self->beams_[i] = new Beam<Node, NodeComparator>(self->beam_size_);
   }
 
   self->index_ = model_factory->Index(status);
@@ -267,7 +266,7 @@ void BigramSegmenter::BuildBeamFromPosition(TokenInstance *token_instance,
       for (int node_id = 0;
            node_id < beams_[position]->size();
            ++node_id) {
-        node = beams_[position]->node_at(node_id);
+        node = beams_[position]->at(node_id);
         double cost = CalculateBigramCost(node->term_id,
                                           term_id,
                                           node->cost,
@@ -290,7 +289,7 @@ void BigramSegmenter::BuildBeamFromPosition(TokenInstance *token_instance,
         for (int node_id = 0;
              node_id < beams_[position]->size();
              ++node_id) {
-          node = beams_[position]->node_at(node_id);
+          node = beams_[position]->at(node_id);
           cost = node->cost + 20;
 
           if (cost < min_cost) {
@@ -312,7 +311,7 @@ void BigramSegmenter::BuildBeamFromPosition(TokenInstance *token_instance,
 void BigramSegmenter::FindTheBestResult(TermInstance *term_instance, 
                                         TokenInstance *token_instance) {
   // Find the best result from decoding graph
-  const Node *node = beams_[token_instance->size()]->MinimalNode();
+  const Node *node = beams_[token_instance->size()]->Best();
 
   // Set the cost data for RecentSegCost()
   cost_ = node->cost;

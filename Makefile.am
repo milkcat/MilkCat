@@ -39,8 +39,6 @@ libmilkcat_la_SOURCES = src/libmilkcat.cc \
                         src/ml/sequence_feature_extractor.h \
                         src/parser/beam_arceager_dependency_parser.h \
                         src/parser/beam_arceager_dependency_parser.cc \
-                        src/parser/dependency_instance.h \
-                        src/parser/dependency_instance.cc \
                         src/parser/dependency_parser.cc \
                         src/parser/dependency_parser.h \
                         src/parser/feature_template.cc \
@@ -52,6 +50,8 @@ libmilkcat_la_SOURCES = src/libmilkcat.cc \
                         src/parser/orcale.h \
                         src/parser/state.cc \
                         src/parser/state.h \
+                        src/parser/tree_instance.cc \
+                        src/parser/tree_instance.h \
                         src/segmenter/bigram_segmenter.cc \
                         src/segmenter/bigram_segmenter.h \
                         src/segmenter/crf_segmenter.cc \

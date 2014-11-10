@@ -27,39 +27,38 @@
 #ifndef SRC_PARSER_BEAM_H_
 #define SRC_PARSER_BEAM_H_
 
+#include <assert.h>
+#include <stdio.h>
 #include <algorithm>
-#include "utils/pool.h"
+#include "utils/utils.h"
 
 namespace milkcat {
 
-template<class Node>
+template<class T, class Comparator>
 class Beam {
  public:
-  Beam(int n_best, 
-       Pool<Node> *node_pool, 
-       int beam_id,
-       bool (* node_ptr_cmp)(Node *n1, Node *n2)):
-      capability_(n_best * 10),
-      beam_id_(beam_id),
-      node_pool_(node_pool),
-      node_ptr_cmp_(node_ptr_cmp),
-      n_best_(n_best),
+  Beam(int beam_size):
+      capability_(beam_size * 10),
+      beam_size_(beam_size),
       size_(0) {
-    nodes_ = new Node *[capability_];
+    items_ = new T *[capability_];
   }
 
   ~Beam() {
-    delete[] nodes_;
+    delete[] items_;
   }
 
   int size() const { return size_; }
-  const Node *node_at(int index) const { return nodes_[index]; }
+  T *at(int index) const {
+    ASSERT(index < beam_size_, "Beam index overflow");
+    return items_[index];
+  }
 
-  // Shrink nodes_ array and remain top n_best elements
+  // Shrink items_ array and remain top n_best elements
   void Shrink() {
-    if (size_ <= n_best_) return;
-    std::partial_sort(nodes_, nodes_ + n_best_, nodes_ + size_, node_ptr_cmp_);
-    size_ = n_best_;
+    if (size_ <= beam_size_) return;
+    std::partial_sort(items_, items_ + beam_size_, items_ + size_, comparator_);
+    size_ = beam_size_;
   }
 
   // Clear all elements in bucket
@@ -67,25 +66,24 @@ class Beam {
     size_ = 0;
   }
 
-  // Get min node in the bucket
-  const Node *MinimalNode() {
-    return *std::min_element(nodes_, nodes_ + size_, node_ptr_cmp_);
+  // Get minimal node in the bucket
+  T *Best() {
+    ASSERT(size_ != 0, "No item in beam");
+    return *std::min_element(items_, items_ + size_, comparator_);
   }
 
   // Add an arc to decode graph
-  void Add(Node *node) {
-    nodes_[size_] = node;
+  void Add(T *item) {
+    items_[size_] = item;
     size_++;
     if (size_ >= capability_) Shrink();
   }
 
  private:
-  Node **nodes_;
+  T **items_;
   int capability_;
-  int beam_id_;
-  Pool<Node> *node_pool_;
-  bool (* node_ptr_cmp_)(Node *n1, Node *n2);
-  int n_best_;
+  Comparator comparator_;
+  int beam_size_;
   int size_;
 };
 

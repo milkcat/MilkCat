@@ -108,7 +108,9 @@ class HMMPartOfSpeechTagger: public PartOfSpeechTagger {
                                     Status *status);
 
  private:
-  Beam<Node> *beams_[kMaxBeams];
+  class NodeComparator;
+
+  Beam<Node, NodeComparator> *beams_[kMaxBeams];
   Pool<Node> *node_pool_;
 
   const HMMModel *model_;

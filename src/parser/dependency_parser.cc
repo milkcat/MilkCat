@@ -33,11 +33,11 @@
 #include "ml/averaged_multiclass_perceptron.h"
 #include "ml/multiclass_perceptron.h"
 #include "ml/multiclass_perceptron_model.h"
-#include "parser/dependency_instance.h"
 #include "parser/dependency_parser.h"
 #include "parser/node.h"
 #include "parser/orcale.h"
 #include "parser/state.h"
+#include "parser/tree_instance.h"
 #include "segmenter/term_instance.h"
 #include "tagger/part_of_speech_tag_instance.h"
 #include "utils/pool.h"
@@ -82,7 +82,7 @@ DependencyParser::DependencyParser(MulticlassPerceptronModel *perceptron_model,
   }
 }
 
-void DependencyParser::StateStep(State *state, int yid) const {
+void DependencyParser::StateMove(State *state, int yid) const {
   int transition = yid >= 0? yid_transition_[yid]: kUnshift;
   const char *label = yid_label_[yid].c_str();
   state->set_last_transition(yid);
@@ -127,7 +127,7 @@ bool DependencyParser::Allow(const State *state, int yid) const {
 
 void DependencyParser::StoreStateIntoInstance(
     State *state,
-    DependencyInstance *instance) const {
+    TreeInstance *instance) const {
   for (int i = 0; i < state->input_size() - 1; ++i) {
     // ignore the ROOT node
     const Node *node = state->node_at(i + 1);
@@ -151,7 +151,7 @@ void DependencyParser::LoadDependencyTreeInstance(
     ReadableFile *fd,
     TermInstance *term_instance,
     PartOfSpeechTagInstance *tag_instance,
-    DependencyInstance *dependency_instance,
+    TreeInstance *tree_instance,
     Status *status) {
   char buf[1024], word[1024], tag[1024], type[1024];
   int term_num = 0, head = 0;
@@ -165,7 +165,7 @@ void DependencyParser::LoadDependencyTreeInstance(
       sscanf(buf, "%s %s %d %s", word, tag, &head, type);
       term_instance->set_value_at(term_num, word, 0, 0);
       tag_instance->set_value_at(term_num, tag);
-      dependency_instance->set_value_at(term_num, type, head);
+      tree_instance->set_value_at(term_num, type, head);
       term_num++;
     }
   }
@@ -173,7 +173,7 @@ void DependencyParser::LoadDependencyTreeInstance(
   if (status->ok()) {
     term_instance->set_size(term_num);
     tag_instance->set_size(term_num);
-    dependency_instance->set_size(term_num);
+    tree_instance->set_size(term_num);
   }
 }
 
@@ -189,8 +189,8 @@ void DependencyParser::Test(
 
   TermInstance *term_instance = new TermInstance();
   PartOfSpeechTagInstance *tag_instance = new PartOfSpeechTagInstance();
-  DependencyInstance *dependency_instance_gold = new DependencyInstance();
-  DependencyInstance *dependency_instance = new DependencyInstance();
+  TreeInstance *tree_instance_gold = new TreeInstance();
+  TreeInstance *tree_instance = new TreeInstance();
 
   ReadableFile *fd = ReadableFile::New(test_corpus, status);
 
@@ -199,27 +199,27 @@ void DependencyParser::Test(
         fd,
         term_instance,
         tag_instance,
-        dependency_instance_gold,
+        tree_instance_gold,
         status);
     if (!status->ok()) break;
 
-    parser->Parse(dependency_instance, term_instance, tag_instance);
+    parser->Parse(tree_instance, term_instance, tag_instance);
     for (int i = 0; i < term_instance->size(); ++i) {      
 
       // Ignore punctions
       if (strcmp(tag_instance->part_of_speech_tag_at(i), "PU") == 0)
         continue;
       total++;
-      if (dependency_instance_gold->head_node_at(i) == 
-          dependency_instance->head_node_at(i)) {
+      if (tree_instance_gold->head_node_at(i) == 
+          tree_instance->head_node_at(i)) {
         uas_count++;
-        if (strcmp(dependency_instance_gold->dependency_type_at(i),
-                   dependency_instance->dependency_type_at(i)) == 0) {
+        if (strcmp(tree_instance_gold->dependency_type_at(i),
+                   tree_instance->dependency_type_at(i)) == 0) {
           las_count++;
         }
       }
     }
-    // parser->PrintCorrectTranstion(dependency_instance_gold);
+    // parser->PrintCorrectTranstion(tree_instance_gold);
   }
 
   if (status->ok()) {
@@ -229,12 +229,12 @@ void DependencyParser::Test(
 
   delete term_instance;
   delete tag_instance;
-  delete dependency_instance_gold;
-  delete dependency_instance;
+  delete tree_instance_gold;
+  delete tree_instance;
   delete fd;
 }
 
-void DependencyParser::PrintCorrectTranstion(DependencyInstance *instance) {
+void DependencyParser::PrintCorrectTranstion(TreeInstance *instance) {
   Orcale *orcale = new Orcale();
   orcale->Parse(instance);
   const char *label = NULL;

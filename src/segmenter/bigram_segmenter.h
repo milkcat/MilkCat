@@ -84,12 +84,14 @@ class BigramSegmenter: public Segmenter {
   }
 
  private:
+  class NodeComparator;
+
   static const int kDefaultBeamSize = 3;
   // Number of Node in each buckets_
   int beam_size_;
 
   // Buckets contain nodes for viterbi decoding
-  Beam<Node> *beams_[kTokenMax + 1];
+  Beam<Node, NodeComparator> *beams_[kTokenMax + 1];
 
   // NodePool instance to alloc and release node
   Pool<Node> *node_pool_;

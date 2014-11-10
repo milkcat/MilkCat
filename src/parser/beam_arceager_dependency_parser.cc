@@ -32,13 +32,14 @@
 #include <set>
 #include "common/model_impl.h"
 #include "ml/averaged_multiclass_perceptron.h"
+#include "ml/feature_set.h"
 #include "ml/multiclass_perceptron.h"
 #include "ml/multiclass_perceptron_model.h"
-#include "parser/dependency_instance.h"
 #include "parser/feature_template.h"
 #include "parser/node.h"
 #include "parser/orcale.h"
 #include "parser/state.h"
+#include "parser/tree_instance.h"
 #include "tagger/part_of_speech_tag_instance.h"
 #include "utils/pool.h"
 #include "utils/readable_file.h"
@@ -46,15 +47,22 @@
 
 namespace milkcat {
 
+class BeamArceagerDependencyParser::StateCmp {
+ public:
+  // Since in `Beam` the least is the `Best`. So use `>` instead of '<'
+  bool operator()(const State *s1, const State *s2) {
+    return s1->weight() > s2->weight();
+  }
+};
+
 BeamArceagerDependencyParser::BeamArceagerDependencyParser(
     MulticlassPerceptronModel *perceptron_model,
     FeatureTemplate *feature):
         DependencyParser(perceptron_model, feature) {
   state_pool_ = new Pool<State>();
   agent_ = new float[perceptron_model->ysize() * kBeamSize];
-  beam_ = new State *[kBeamSize];
-  next_beam_ = new State *[kBeamSize];
-  beam_size_ = 0;
+  beam_ = new Beam<State, StateCmp>(kBeamSize);
+  next_beam_ = new Beam<State, StateCmp>(kBeamSize);
   agent_size_ = 0;
 }
 
@@ -62,10 +70,10 @@ BeamArceagerDependencyParser::~BeamArceagerDependencyParser() {
   delete state_pool_;
   state_pool_ = NULL;
 
-  delete[] beam_;
+  delete beam_;
   beam_ = NULL;
 
-  delete[] next_beam_;
+  delete next_beam_;
   next_beam_ = NULL;
 
   delete[] agent_;
@@ -104,6 +112,7 @@ class CompareIdxByCostInArray {
   }
   bool operator()(int idx1, int idx2) {
     ASSERT(idx1 < array_size_ && idx2 < array_size_, "Idx overflow");
+    // To make a minimum heap, use `>` instead '<'
     return array_[idx1] > array_[idx2];
   }
  private:
@@ -112,7 +121,7 @@ class CompareIdxByCostInArray {
 };
 
 // Start to parse the sentence
-void BeamArceagerDependencyParser::StartParse(
+void BeamArceagerDependencyParser::Start(
     const TermInstance *term_instance,
     const PartOfSpeechTagInstance *part_of_speech_tag_instance) {
   state_pool_->ReleaseAll();
@@ -124,106 +133,101 @@ void BeamArceagerDependencyParser::StartParse(
   // Push root state into `beam_`
   State *root_state = state_pool_->Alloc();
   root_state->Initialize(node_pool_, term_instance->size());
-  beam_[0] = root_state;
-  beam_size_ = 1;
+  beam_->Clear();
+  next_beam_->Clear();
+  beam_->Add(root_state);
+}
+
+BeamArceagerDependencyParser::State *
+BeamArceagerDependencyParser::StateCopyAndMove(State *state, int yid) {
+  State *next_state = state_pool_->Alloc();
+  state->CopyTo(next_state);
+
+  // Make a transition `yid`
+  StateMove(next_state, yid);
+  next_state->set_previous(state);
+
+  return next_state;
 }
 
 bool BeamArceagerDependencyParser::Step() {
   // Calculate the cost of transitions in each state of `beam_`, store them into
   // `agent_` 
   int transition_num = perceptron_->ysize();
-  for (int i = 0; i < beam_size_; ++i) {
-    int feature_num = feature_->Extract(beam_[i],
-                                        term_instance_,
-                                        part_of_speech_tag_instance_,
-                                        feature_set_);
+  for (int beam_idx = 0; beam_idx < beam_->size(); ++beam_idx) {
+    ExtractFeatureFromState(beam_->at(beam_idx));
     int yid = perceptron_->Classify(feature_set_);
     for (int yid = 0; yid < transition_num; ++yid) {
-      agent_[i * transition_num + yid] = perceptron_->ycost(yid) + 
-                                         beam_[i]->weight();
+      agent_[beam_idx * transition_num + yid] = perceptron_->ycost(yid) + 
+                                                beam_->at(beam_idx)->weight();
     }
   }
-  agent_size_ = beam_size_ * transition_num;
+  agent_size_ = beam_->size() * transition_num;
 
   // Partial sorts the agent to get the N-best transitions (N = kBeamSize)
   CompareIdxByCostInArray cmp(agent_, agent_size_);
   std::vector<int> idx_heap;
-  for (int i = 0; i < agent_size_; ++i) {
-    int yid = i % transition_num;
-    int state_idx = i / transition_num;
-    if (Allow(beam_[state_idx], yid)) {
+  for (int agent_idx = 0; agent_idx < agent_size_; ++agent_idx) {
+    int yid = agent_idx % transition_num;
+    int beam_idx = agent_idx / transition_num;
+    if (Allow(beam_->at(beam_idx), yid)) {
       // If state allows transition `yid`, stores them into `idx_heap`
       if (idx_heap.size() < kBeamSize) {
-        idx_heap.push_back(i);
+        idx_heap.push_back(agent_idx);
         std::push_heap(idx_heap.begin(), idx_heap.end(), cmp);
-      } else if (cmp(idx_heap[0], i) == false) {
+      } else if (cmp(idx_heap[0], agent_idx) == false) {
         // agent_[idx_heap[0]] < agent_[i]
         std::pop_heap(idx_heap.begin(), idx_heap.end(), cmp);
-        idx_heap.back() = i;
+        idx_heap.back() = agent_idx;
         std::push_heap(idx_heap.begin(), idx_heap.end(), cmp);
       }
     }
   }
 
   // Create new states into `next_beam_` from `idx_heap`
+  next_beam_->Clear();
   for (std::vector<int>::iterator
        it = idx_heap.begin(); it != idx_heap.end(); ++it) {
     int yid = *it % transition_num;
-    int state_idx = *it / transition_num;
+    int beam_idx = *it / transition_num;
 
     // Copy the statue from beam
-    State *state = state_pool_->Alloc();
-    beam_[state_idx]->CopyTo(state);
-
-    // Make a transition `yid`
-    StateStep(state, yid);
+    State *state = StateCopyAndMove(beam_->at(beam_idx), yid);
     state->set_weight(agent_[*it]);
-    state->set_previous(beam_[state_idx]);
-
-    int to_idx = it - idx_heap.begin();
-    next_beam_[to_idx] = state;
+    next_beam_->Add(state);
   }
 
+  // If no transition could perform, just remains `beam_` to the last state and
+  // return false
+  if (next_beam_->size() == 0) return false;
+
   // Swap beam_ and next_beam_
-  State **t_beam = beam_;
+  Beam<State, StateCmp> *t_beam = beam_;
   beam_ = next_beam_;
   next_beam_ = t_beam;
 
-  beam_size_ = idx_heap.size();
-
-  if (beam_size_ == 0)
-    return false;
-  else 
-    return true;
-}
-
-inline bool StateCmp(const DependencyParser::State *s1,
-                     const DependencyParser::State *s2) {
-  return s1->weight() < s2->weight();
+  return true;
 }
 
 void BeamArceagerDependencyParser::StoreResult(
-    DependencyInstance *dependency_instance) {
-  State *max_state = *std::max_element(beam_, beam_ + beam_size_, StateCmp);
-  StoreStateIntoInstance(max_state, dependency_instance);
+    TreeInstance *tree_instance) {
+  State *max_state = beam_->Best();
+  StoreStateIntoInstance(max_state, tree_instance);
 }
 
 void BeamArceagerDependencyParser::Parse(
-    DependencyInstance *dependency_instance,
+    TreeInstance *tree_instance,
     const TermInstance *term_instance,
     const PartOfSpeechTagInstance *part_of_speech_tag_instance) {
-  StartParse(term_instance, part_of_speech_tag_instance);
+  Start(term_instance, part_of_speech_tag_instance);
   int len = term_instance->size();
-  for (int i = 0; i < 2 * len; ++i) {
-    if (false == Step()) break;
-  }
-  // DumpBeam();
-  StoreResult(dependency_instance);
+  while (false != Step());
+  StoreResult(tree_instance);
 }
 
 void BeamArceagerDependencyParser::DumpBeam() {
-  for (int beam_idx = 0; beam_idx < beam_size_; ++beam_idx) {
-    State *state = beam_[beam_idx];
+  for (int beam_idx = 0; beam_idx < beam_->size(); ++beam_idx) {
+    State *state = beam_->at(beam_idx);
     std::vector<int> sequence;
     std::vector<bool> corr_sequence;
     while (state->previous() != NULL) {
@@ -239,38 +243,37 @@ void BeamArceagerDependencyParser::DumpBeam() {
       sequence.pop_back();
       corr_sequence.pop_back();
     }
-    printf(", weight = %f\n", beam_[beam_idx]->weight());
+    printf(", weight = %f\n", beam_->at(beam_idx)->weight());
   }
 }
 
-DependencyParser::State *BeamArceagerDependencyParser::TrainState(
+void BeamArceagerDependencyParser::ExtractFeatureFromState(
+    const State* state) {
+  int feature_num = feature_->Extract(state,
+                                      term_instance_,
+                                      part_of_speech_tag_instance_,
+                                      feature_set_);
+}
+
+// Training `perceptron` with an correct (orcale) and incorrect state pair,
+void BeamArceagerDependencyParser::UpdateWeightForState(
     DependencyParser::State *incorrect_state,
-    DependencyParser::State *orcale_state,
+    DependencyParser::State *correct_state,
     BeamArceagerDependencyParser *parser,
     MulticlassPerceptron *percpetron) {
   // Find the first incorrect state in the history of `incorrect_state`
   while (incorrect_state->correct() == false) {
-    int correct_yid = orcale_state->last_transition();
+    int correct_yid = correct_state->last_transition();
     int incorrect_yid = incorrect_state->last_transition();
     incorrect_state = incorrect_state->previous();
-    orcale_state = orcale_state->previous();
-
-    parser->feature_->Extract(
-        orcale_state,
-        parser->term_instance_,
-        parser->part_of_speech_tag_instance_,
-        parser->feature_set_);
+    correct_state = correct_state->previous();
+    
+    parser->ExtractFeatureFromState(correct_state);
     percpetron->Update(parser->feature_set_, correct_yid, 1.0f);
 
-    parser->feature_->Extract(
-        incorrect_state,
-        parser->term_instance_,
-        parser->part_of_speech_tag_instance_,
-        parser->feature_set_);
+    parser->ExtractFeatureFromState(incorrect_state);
     percpetron->Update(parser->feature_set_, incorrect_yid, -1.0f);
   }
-
-  return orcale_state;
 }
 
 void BeamArceagerDependencyParser::Train(
@@ -282,14 +285,14 @@ void BeamArceagerDependencyParser::Train(
   // Some instances
   TermInstance *term_instance = new TermInstance();
   PartOfSpeechTagInstance *tag_instance = new PartOfSpeechTagInstance();
-  DependencyInstance *dependency_instance_correct = new DependencyInstance();
-  DependencyInstance *dependency_instance = new DependencyInstance();
+  TreeInstance *tree_instance_correct = new TreeInstance();
+  TreeInstance *tree_instance = new TreeInstance();
 
   // Orcale to predict correct transitions
   Orcale *orcale = new Orcale();
 
   // Gets the label name of transitions
-  ReadableFile *fd;
+  ReadableFile *fd = NULL;
   std::set<std::string> yname_set;
   const char *label = NULL;
   if (status->ok()) fd = ReadableFile::New(training_corpus, status);
@@ -299,10 +302,10 @@ void BeamArceagerDependencyParser::Train(
         fd,
         term_instance,
         tag_instance,
-        dependency_instance,
+        tree_instance,
         status);
     if (status->ok()) {
-      orcale->Parse(dependency_instance);
+      orcale->Parse(tree_instance);
       while ((label = orcale->Next()) != NULL) {
         yname_set.insert(label);
       }
@@ -327,9 +330,8 @@ void BeamArceagerDependencyParser::Train(
     perceptron = new AveragedMulticlassPerceptron(model);
   }
 
-  // Start training
-  std::vector<int> correct_sequence;
-  State *orcale_state = NULL;
+  // Start training 
+  State *correct_state = NULL;
   for (int iter = 0; iter < max_iteration && status->ok(); ++iter) {
     const char *label;
     int yid;
@@ -337,96 +339,80 @@ void BeamArceagerDependencyParser::Train(
     if (status->ok()) fd = ReadableFile::New(training_corpus, status);
     int instance_num = 0;
     while (status->ok() && !fd->Eof()) {
-      correct_sequence.clear();
       LoadDependencyTreeInstance(
           fd,
           term_instance,
           tag_instance,
-          dependency_instance_correct,
+          tree_instance_correct,
           status);
       ++instance_num;
-      for (int i = 0; i < term_instance->size(); ++i) {
-        LOG("%s %s %d %s\n", 
-               term_instance->term_text_at(i),
-               tag_instance->part_of_speech_tag_at(i),
-               dependency_instance_correct->head_node_at(i),
-               dependency_instance_correct->dependency_type_at(i)); 
-      }
       if (status->ok()) {
-        orcale->Parse(dependency_instance_correct);
-        parser->StartParse(term_instance, tag_instance);
-        orcale_state = parser->state_pool_->Alloc();
-        orcale_state->Initialize(parser->node_pool_, term_instance->size());
+        orcale->Parse(tree_instance_correct);
+        parser->Start(term_instance, tag_instance);
+
+        // `correct_state` always stores the current correct state from orcale
+        correct_state = parser->state_pool_->Alloc();
+        correct_state->Initialize(parser->node_pool_, term_instance->size());
         while ((label = orcale->Next()) != NULL) {
           yid = model->yid(label);
 
-          // Move `orcale_state` according to `orcale`
-          State *s = parser->state_pool_->Alloc();
-          orcale_state->CopyTo(s);
-          parser->StateStep(s, yid);
-          s->set_previous(orcale_state);
-          orcale_state = s;
+          // Move `correct_state` according to `orcale`
+          correct_state = parser->StateCopyAndMove(correct_state, yid);
           ASSERT(yid != MulticlassPerceptronModel::kIdNone, "Unexpected label");
 
-          // Marks correct = true for the correct state
+          // Marks `correct = true` for the correct state in beam_
           parser->Step();
           bool correct = false;
-          for (int i = 0; i < parser->beam_size_; ++i) {
-            if (parser->beam_[i]->last_transition() == yid &&
-                parser->beam_[i]->previous()->correct() == true) {
-              parser->beam_[i]->set_correct(true);
+          for (int beam_idx = 0; beam_idx < parser->beam_->size(); ++beam_idx) {
+            if (parser->beam_->at(beam_idx)->last_transition() == yid &&
+                parser->beam_->at(beam_idx)->previous()->correct() == true) {
+              // If previous state is correct and current transition is correct
+              parser->beam_->at(beam_idx)->set_correct(true);
               correct = true;
             } else {
-              parser->beam_[i]->set_correct(false);
+              parser->beam_->at(beam_idx)->set_correct(false);
             }
           }
-#ifdef DEBUG
-          parser->DumpBeam();
-#endif
+
           perceptron->IncCount();
           // If no state in the beam is correct
           if (correct == false) {
             
             // Update model
-            State *max_state = *std::max_element(
-                parser->beam_,
-                parser->beam_ + parser->beam_size_,
-                StateCmp);
-            TrainState(max_state, orcale_state, parser, perceptron);
+            State *max_state = parser->beam_->Best();
+            UpdateWeightForState(max_state, correct_state, parser, perceptron);
 
             // Push the correct status into beam
-            State *s = parser->state_pool_->Alloc();
-            orcale_state->CopyTo(s);
-            parser->beam_[0] = s;
-            parser->beam_size_ = 1;
+            State *state = parser->state_pool_->Alloc();
+            correct_state->CopyTo(state);
+            parser->beam_->Clear();
+            parser->beam_->Add(state);
 
             error++;
           }  // if (correct == false)
         }  // while ((label = orcale->Next()) != NULL)
 
-        State *max_state = *std::max_element(
-            parser->beam_,
-            parser->beam_ + parser->beam_size_,
-            StateCmp);
+        State *max_state = parser->beam_->Best();
         if (max_state->correct() == false) {
-          TrainState(max_state, orcale_state, parser, perceptron);
+          UpdateWeightForState(max_state, correct_state, parser, perceptron);
           error++;
         }   
 
-      }  // End if
-
-      if (instance_num % 100 == 1) {
-        printf("\rIter %d, %.2f%%, err = %d",
-               iter + 1,
-               100.0f * instance_num / total_instance,
-               error);
-        fflush(stdout);
-      }
-    }
+        if (instance_num % 100 == 0) {
+          printf("\r#%d, %.2f%%, err = %d",
+                 iter + 1,
+                 100.0f * instance_num / total_instance,
+                 error);
+          fflush(stdout);
+        }
+      }  // if (statuc->ok())
+    }  // while (status->ok() && !fd->Eof())
     delete fd;
     fd = NULL;
-    
-    printf("\rIter %d, err = %d, OK            \n", iter + 1, error);
+
+    putchar('\r');
+    for (int _ = 0; _ < 64; ++_) putchar(' ');
+    printf("\r#%d, err = %d, OK\n", iter + 1, error);
   }
 
   if (status->ok()) {
@@ -437,8 +423,8 @@ void BeamArceagerDependencyParser::Train(
 
   delete term_instance;
   delete tag_instance;
-  delete dependency_instance_correct;
-  delete dependency_instance;
+  delete tree_instance_correct;
+  delete tree_instance;
   delete orcale;
   delete model;
   delete parser;

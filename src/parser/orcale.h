@@ -32,7 +32,7 @@
 
 namespace milkcat {
 
-class DependencyInstance;
+class TreeInstance;
 class StringBuilder;
 
 // Given the dependency, output each transitions.
@@ -42,7 +42,7 @@ class Orcale {
   ~Orcale();
 
   // Parses the `instance`
-  void Parse(const DependencyInstance *instance);
+  void Parse(const TreeInstance *instance);
 
   // Returns the label of next transition. When no more transitions, returns
   // NULL
@@ -50,7 +50,7 @@ class Orcale {
 
  private:
   std::vector<int> stack_;
-  const DependencyInstance *instance_;
+  const TreeInstance *instance_;
   char transition_label_[kLabelSizeMax];
   StringBuilder *string_builer_;
   int input_ptr_;

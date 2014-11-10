@@ -39,9 +39,9 @@
 #include "segmenter/term_instance.h"
 #include "tagger/part_of_speech_tagger.h"
 #include "tagger/part_of_speech_tag_instance.h"
-#include "parser/dependency_instance.h"
 #include "parser/dependency_parser.h"
 #include "parser/naive_arceager_dependency_parser.h"
+#include "parser/tree_instance.h"
 #include "tokenizer/tokenizer.h"
 #include "utils/mutex.h"
 #include "utils/utils.h"
@@ -139,13 +139,13 @@ class Parser::Iterator::Impl {
   }
   int head_node() const {
     if (parser_->dependency_parser() != NULL)
-      return dependency_instance_->head_node_at(current_position_);
+      return tree_instance_->head_node_at(current_position_);
     else
       return 0;
   }
   const char *dependency_type() const {
     if (parser_->dependency_parser() != NULL)
-      return dependency_instance_->dependency_type_at(current_position_);
+      return tree_instance_->dependency_type_at(current_position_);
     else
       return "NONE";
   }
@@ -161,7 +161,7 @@ class Parser::Iterator::Impl {
   Tokenization *tokenizer_;
   TokenInstance *token_instance_;
   TermInstance *term_instance_;
-  DependencyInstance *dependency_instance_;
+  TreeInstance *tree_instance_;
   PartOfSpeechTagInstance *part_of_speech_tag_instance_;
 
   int sentence_length_;

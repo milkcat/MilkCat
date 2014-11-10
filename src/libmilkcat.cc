@@ -42,8 +42,8 @@
 #include "tagger/crf_part_of_speech_tagger.h"
 #include "tagger/hmm_part_of_speech_tagger.h"
 #include "tagger/part_of_speech_tag_instance.h"
-#include "parser/dependency_instance.h"
 #include "parser/dependency_parser.h"
+#include "parser/tree_instance.h"
 #include "tokenizer/tokenizer.h"
 #include "tokenizer/token_instance.h"
 #include "utils/utils.h"
@@ -184,7 +184,7 @@ Parser::Iterator::Impl::Impl():
     tokenizer_(TokenizerFactory(kTextTokenizer)),
     token_instance_(new TokenInstance()),
     term_instance_(new TermInstance()),
-    dependency_instance_(new DependencyInstance()),
+    tree_instance_(new TreeInstance()),
     part_of_speech_tag_instance_(new PartOfSpeechTagInstance()),
     sentence_length_(0),
     current_position_(0),
@@ -204,8 +204,8 @@ Parser::Iterator::Impl::~Impl() {
   delete part_of_speech_tag_instance_;
   part_of_speech_tag_instance_ = NULL;
 
-  delete dependency_instance_;
-  dependency_instance_ = NULL;
+  delete tree_instance_;
+  tree_instance_ = NULL;
 
   parser_ = NULL;
 }
@@ -237,7 +237,7 @@ void Parser::Iterator::Impl::Next() {
 
       // Dependency Parsing
       if (parser_->dependency_parser()) {
-        parser_->dependency_parser()->Parse(dependency_instance_,
+        parser_->dependency_parser()->Parse(tree_instance_,
                                             term_instance_,
                                             part_of_speech_tag_instance_);
       }

@@ -34,7 +34,7 @@ namespace milkcat {
 
 class TermInstance;
 class PartOfSpeechTagInstance;
-class DependencyInstance;
+class TreeInstance;
 class Status;
 class ReadableFile;
 class MulticlassPerceptronModel;
@@ -55,17 +55,17 @@ class DependencyParser {
   virtual ~DependencyParser();
 
   virtual void Parse(
-    DependencyInstance *dependency_instance,
+    TreeInstance *tree_instance,
     const TermInstance *term_instance,
     const PartOfSpeechTagInstance *part_of_speech_tag_instance) = 0;
 
   // Load a dependency tree from training corpus, Stores it into term_instance,
-  // tag_instance and dependency_instance
+  // tag_instance and tree_instance
   static void LoadDependencyTreeInstance(
       ReadableFile *fd,
       TermInstance *term_instance,
       PartOfSpeechTagInstance *tag_instance,
-      DependencyInstance *dependency_instance,
+      TreeInstance *tree_instance,
       Status *status);
 
   // Gets the Unlabeled Attachment Score (UAS) and Labeled Attachment Score
@@ -98,14 +98,14 @@ class DependencyParser {
   // Returns true if `state` allows transition `yid`
   bool Allow(const State *state, int yid) const;
 
-  // Makes a transition `yid` to `state` 
-  void StateStep(State *state, int yid) const;
+  // Applies a transition `yid` to `state` 
+  void StateMove(State *state, int yid) const;
 
   // Store the result in `state` into dependency instrance
-  void StoreStateIntoInstance(State *state, DependencyInstance *instance) const;
+  void StoreStateIntoInstance(State *state, TreeInstance *instance) const;
 
   // Prints the correct sequence of transitions (for debugging)
-  void PrintCorrectTranstion(DependencyInstance *instance);
+  void PrintCorrectTranstion(TreeInstance *instance);
 };
 
 }  // namespace milkcat

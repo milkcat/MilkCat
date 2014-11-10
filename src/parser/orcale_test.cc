@@ -25,14 +25,11 @@
 //
 
 #include <assert.h>
-#include "parser/dependency_instance.h"
+#include "parser/tree_instance.h"
 #include "parser/orcale.h"
 
-using milkcat::DependencyInstance;
-using milkcat::Orcale;
-
 void orcale_test() {
-  DependencyInstance *instance = new DependencyInstance();
+  TreeInstance *instance = new TreeInstance();
   instance->set_value_at(0, "NMOD", 2);
   instance->set_value_at(1, "SBJ", 3);
   instance->set_value_at(2, "ROOT", 0);

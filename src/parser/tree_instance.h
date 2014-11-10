@@ -22,10 +22,11 @@
 // THE SOFTWARE.
 //
 // dependency_instance.h --- Created at 2013-08-12
+// tree_instance.h --- Created at 2014-11-10
 //
 
-#ifndef SRC_PARSER_DEPENDENCY_INSTANCE_H_
-#define SRC_PARSER_DEPENDENCY_INSTANCE_H_
+#ifndef SRC_PARSER_TREE_INSTANCE_H_
+#define SRC_PARSER_TREE_INSTANCE_H_
 
 #include <assert.h>
 #include "common/instance_data.h"
@@ -33,10 +34,10 @@
 
 namespace milkcat {
 
-class DependencyInstance {
+class TreeInstance {
  public:
-  DependencyInstance();
-  ~DependencyInstance();
+  TreeInstance();
+  ~TreeInstance();
 
   static const int kDependencyTypeS = 0;
   static const int kHeadIdI = 0;
@@ -66,9 +67,9 @@ class DependencyInstance {
  private:
   InstanceData *instance_data_;
 
-  DISALLOW_COPY_AND_ASSIGN(DependencyInstance);
+  DISALLOW_COPY_AND_ASSIGN(TreeInstance);
 };
 
 }  // namespace milkcat
 
-#endif  // SRC_PARSER_DEPENDENCY_INSTANCE_H_
+#endif  // SRC_PARSER_TREE_INSTANCE_H_
