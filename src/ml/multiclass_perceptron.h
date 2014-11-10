@@ -50,6 +50,12 @@ class MulticlassPerceptron {
   // Online training the perceptron with one sample. Returns true if the weights
   // have not been updated (prediction is correct), else, returns false. 
   bool Train(const FeatureSet *feature_set, const char *label);
+  void Train(const FeatureSet *feature_set,
+             int correct_yid,
+             int incorrect_yid);
+
+  // Update and add `value` for `yid` of `feature_set`
+  void Update(const FeatureSet *feature_set, int yid, float value);
 
   // Used in `AveragedMulticlassPerceptron`
   virtual void UpdateCachedCost(int xid, int yid, float value);

@@ -72,28 +72,36 @@ int MulticlassPerceptron::Classify(const FeatureSet *feature_set) {
   int maximum_yid = maximum_y - ycost_;
   return maximum_yid;  
 }
+void MulticlassPerceptron::Update(const FeatureSet *feature_set,
+                                  int yid,
+                                  float value) {
+  for (int i = 0; i < feature_set->size(); ++i) {
+    int xid = model_->GetOrInsertXId(feature_set->at(i));
+    
+    model_->set_cost(xid, yid, model_->cost(xid, yid) + value);
+    UpdateCachedCost(xid, yid, value);
+  }  
+}
+
+void MulticlassPerceptron::Train(const FeatureSet *feature_set,
+                                 int correct_yid,
+                                 int incorrect_yid) {
+  // Update: w = w + F(x, y) - F(x, y_)
+  Update(feature_set, correct_yid, 1.0f);
+  Update(feature_set, incorrect_yid, -1.0f);
+}
 
 bool MulticlassPerceptron::Train(const FeatureSet *feature_set,
                                  const char *label) {
   int predict_yid = Classify(feature_set);
   int correct_yid = model_->yid(label);
   ASSERT(correct_yid >= 0, "Unexcpected label");
-
-  // Increase in count (for Averaged multiclass perceptron)
-  IncCount();
+  // printf("Train: %s\n", label);
+  // printf("Predict: %s\n", model_->yname(predict_yid));
 
   if (predict_yid != correct_yid) {
-    // Update: w = w + F(x, y) - F(x, y_)
-    for (int i = 0; i < feature_set->size(); ++i) {
-      // LOG(feature_set->at(i));
-      int xid = model_->GetOrInsertXId(feature_set->at(i));
-      
-      model_->set_cost(xid, correct_yid, model_->cost(xid, correct_yid) + 1.0);
-      model_->set_cost(xid, predict_yid, model_->cost(xid, predict_yid) - 1.0);
-
-      UpdateCachedCost(xid, correct_yid, 1.0f);
-      UpdateCachedCost(xid, predict_yid, -1.0f);
-    }
+    Train(feature_set, correct_yid, predict_yid);
+    // puts("Train: UPDATE");
     return false;
   } else {
     return true;

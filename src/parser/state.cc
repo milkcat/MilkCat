@@ -36,7 +36,11 @@ namespace milkcat {
 DependencyParser::State::State(): stack_top_(0),
                                   input_size_(0),
                                   input_top_(0),
-                                  end_reached_(false) {
+                                  end_reached_(false),
+                                  previous_(NULL),
+                                  correct_(true),
+                                  last_transition_(0),
+                                  have_root_(false) {
 }
 
 void DependencyParser::State::Initialize(Pool<Node> *node_pool,
@@ -61,6 +65,10 @@ void DependencyParser::State::Initialize(Pool<Node> *node_pool,
   stack_top_ = 1;
   end_reached_ = false;
   weight_ = 0.0;
+  previous_ = NULL;
+  correct_ = true;
+  last_transition_ = -1;
+  have_root_ = false;
 }
 
 void DependencyParser::State::Shift() {
@@ -142,9 +150,12 @@ bool DependencyParser::State::AllowLeftArc() const {
   return true;
 }
 
-bool DependencyParser::State::AllowRightArc() const {
+bool DependencyParser::State::AllowRightArc(bool is_root) const {
   if (StackFull()) return false;
   if (InputEnd()) return false;
+  if (is_root == true && have_root_ == true) return false;
+  if (is_root == true && StackOnlyOneElement() == false) return false;
+  if (is_root == false && StackOnlyOneElement() == true) return false;
   return true;
 }
 
@@ -195,6 +206,9 @@ void DependencyParser::State::CopyTo(State *target_state) const {
   target_state->input_top_ = input_top_;
   target_state->end_reached_ = end_reached_;
   target_state->weight_ = weight_;
+  target_state->correct_ = correct_;
+  target_state->previous_ = previous_;
+  target_state->last_transition_ = last_transition_;
 
   for (int i = 0; i < input_size_; ++i) {
     Node *node = node_pool_->Alloc();

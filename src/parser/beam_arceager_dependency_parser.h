@@ -50,6 +50,16 @@ class BeamArceagerDependencyParser: public DependencyParser {
       FeatureTemplate *feature);
   ~BeamArceagerDependencyParser();
 
+  // Training the BeamArceagerDependencyParser from `training_corpus` with
+  // the feature template from `template_filename` and stores the model into
+  // `model_prefix`
+  static void Train(
+      const char *training_corpus,
+      const char *template_filename,
+      const char *model_prefix,
+      int max_iteration,
+      Status *status);
+
   static BeamArceagerDependencyParser *New(Model::Impl *model,
                                            Status *status);
   // Overrides DependencyParser::Parse
@@ -60,7 +70,7 @@ class BeamArceagerDependencyParser: public DependencyParser {
 
  private:
   enum {
-    kBeamSize = 3
+    kBeamSize = 64
   };
   Pool<State> *state_pool_;
   float *agent_;
@@ -69,8 +79,8 @@ class BeamArceagerDependencyParser: public DependencyParser {
   int beam_size_;
   int agent_size_;
 
-  // Step to next transtions
-  void Step();
+  // Step to next transtions. Returns false indicates the end reached
+  bool Step();
 
   // Start to parse the sentence
   void StartParse(
@@ -79,6 +89,17 @@ class BeamArceagerDependencyParser: public DependencyParser {
 
   // Stores the parsing result into dependency_instance
   void StoreResult(DependencyInstance *dependency_instance);
+
+  // Dumps the beam data (Just for debugging)
+  void DumpBeam();
+
+  // Training `perceptron` with an correct (orcale) and incorrect state pair,
+  // returns the last correct state
+  static State *TrainState(
+      State *incorrect_state,
+      State *orcale_state,
+      BeamArceagerDependencyParser *parser,
+      MulticlassPerceptron *percpetron);
 };
 
 }  // namespace milkcat

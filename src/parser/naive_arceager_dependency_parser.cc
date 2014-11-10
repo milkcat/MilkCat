@@ -139,7 +139,7 @@ void NaiveArceagerDependencyParser::StoreResult(
 }
 
 void NaiveArceagerDependencyParser::Step(int yid) {
-  StatusStep(state_, yid);
+  StateStep(state_, yid);
 }
 
 

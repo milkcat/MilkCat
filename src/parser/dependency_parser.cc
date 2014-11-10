@@ -36,6 +36,7 @@
 #include "parser/dependency_instance.h"
 #include "parser/dependency_parser.h"
 #include "parser/node.h"
+#include "parser/orcale.h"
 #include "parser/state.h"
 #include "segmenter/term_instance.h"
 #include "tagger/part_of_speech_tag_instance.h"
@@ -73,12 +74,18 @@ DependencyParser::DependencyParser(MulticlassPerceptronModel *perceptron_model,
       err += yname;
       ERROR(err.c_str());
     }
+    
+    if (strcmp(yname, "rightarc_ROOT") == 0 ||
+        strcmp(yname, "rightarc_root") == 0) {
+      rightrarc_root_yid_ = yid;
+    }
   }
 }
 
-void DependencyParser::StatusStep(State *state, int yid) const {
+void DependencyParser::StateStep(State *state, int yid) const {
   int transition = yid >= 0? yid_transition_[yid]: kUnshift;
   const char *label = yid_label_[yid].c_str();
+  state->set_last_transition(yid);
 
   switch (transition) {
     case kLeftArc:
@@ -107,7 +114,7 @@ bool DependencyParser::Allow(const State *state, int yid) const {
     case kLeftArc:
       return state->AllowLeftArc();
     case kRightArc:
-      return state->AllowRightArc();
+      return state->AllowRightArc(rightrarc_root_yid_ == yid);
     case kShift:
       return state->AllowShift();
     case kReduce:
@@ -198,13 +205,6 @@ void DependencyParser::Test(
 
     parser->Parse(dependency_instance, term_instance, tag_instance);
     for (int i = 0; i < term_instance->size(); ++i) {      
-      // printf("%s %s %d %s %d %s\n", 
-      //        term_instance->term_text_at(i),
-      //        tag_instance->part_of_speech_tag_at(i),
-      //        dependency_instance_gold->head_node_at(i),
-      //        dependency_instance_gold->dependency_type_at(i),
-      //        dependency_instance->head_node_at(i),
-      //        dependency_instance->dependency_type_at(i)); 
 
       // Ignore punctions
       if (strcmp(tag_instance->part_of_speech_tag_at(i), "PU") == 0)
@@ -219,6 +219,7 @@ void DependencyParser::Test(
         }
       }
     }
+    // parser->PrintCorrectTranstion(dependency_instance_gold);
   }
 
   if (status->ok()) {
@@ -233,6 +234,16 @@ void DependencyParser::Test(
   delete fd;
 }
 
+void DependencyParser::PrintCorrectTranstion(DependencyInstance *instance) {
+  Orcale *orcale = new Orcale();
+  orcale->Parse(instance);
+  const char *label = NULL;
+  while ((label = orcale->Next()) != NULL) {
+    printf("%s  ", label);
+  }
+  printf("\n");
 
+  delete orcale;
+}
 
 }  // namespace milkcat

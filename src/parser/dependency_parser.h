@@ -82,7 +82,7 @@ class DependencyParser {
   FeatureTemplate *feature_;
   FeatureSet *feature_set_;
   Pool<Node> *node_pool_;
-  int reduce_yid_;
+  int rightrarc_root_yid_;
 
   // Stores the real transition type and label for the predict id (yid) from
   // perceptron
@@ -99,10 +99,13 @@ class DependencyParser {
   bool Allow(const State *state, int yid) const;
 
   // Makes a transition `yid` to `state` 
-  void StatusStep(State *state, int yid) const;
+  void StateStep(State *state, int yid) const;
 
   // Store the result in `state` into dependency instrance
   void StoreStateIntoInstance(State *state, DependencyInstance *instance) const;
+
+  // Prints the correct sequence of transitions (for debugging)
+  void PrintCorrectTranstion(DependencyInstance *instance);
 };
 
 }  // namespace milkcat

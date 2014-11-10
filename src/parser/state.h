@@ -62,7 +62,7 @@ class DependencyParser::State {
   bool AllowShift() const;
   bool AllowReduce() const;
   bool AllowLeftArc() const;
-  bool AllowRightArc() const;
+  bool AllowRightArc(bool is_root) const;
 
   // Get node from stack or input
   const Node *Stack(int idx) const;
@@ -85,11 +85,25 @@ class DependencyParser::State {
   int input_size() const { return input_size_; }
   int stack_top() const { return stack_top_; }
 
+  // The functions below are only used in `BeamArceagerDependencyParser`
+
   // Copy current state to `target_state`
   void CopyTo(State *target_state) const;
 
   double weight() const { return weight_; }
-  void weight_add(double val) { weight_ += val; }
+  void set_weight(double weight) { weight_ = weight; }
+
+  // The previous state that before a transition
+  State *previous() const { return previous_; }
+  void set_previous(State *previous) { previous_ = previous; }
+
+  bool correct() const { return correct_; }
+  void set_correct(bool correct) { correct_ = correct; }
+
+  int last_transition() const { return last_transition_; }
+  void set_last_transition(int last_transition) { 
+    last_transition_ = last_transition;
+  }
 
  private:
   Pool<Node> *node_pool_;
@@ -106,6 +120,10 @@ class DependencyParser::State {
   bool end_reached_;
   double weight_;
 
+  State *previous_;
+  bool correct_;
+  int last_transition_;
+  bool have_root_;
   DISALLOW_COPY_AND_ASSIGN(State);
 };
 

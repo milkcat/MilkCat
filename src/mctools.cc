@@ -385,7 +385,7 @@ int TrainNaiveArcEagerDependendyParser(int argc, char **argv) {
   int max_iteration = atol(argv[5]);
 
   Status status;
-  NaiveArceagerDependencyParser::Train(
+  BeamArceagerDependencyParser::Train(
       corpus_file,
       template_file,
       model_prefix,
