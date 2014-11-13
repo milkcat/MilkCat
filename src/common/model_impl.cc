@@ -41,7 +41,7 @@ namespace milkcat {
 const char *kUnigramIndexFile = "unigram.idx";
 const char *kUnigramDataFile = "unigram.bin";
 const char *kBigramDataFile = "bigram.bin";
-const char *kHmmPosModelFile = "ctb_pos.hmm";
+const char *kHmmPosModelFile = "pku_pos.hmm";
 const char *kCrfPosModelFile = "ctb_pos.crf";
 const char *kCrfSegModelFile = "ctb_seg.crf";
 const char *kOovPropertyFile = "oov_property.idx";

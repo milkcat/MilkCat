@@ -140,7 +140,6 @@ void NaiveArceagerDependencyParser::Step(int yid) {
   StateMove(state_, yid);
 }
 
-
 // Do some preparing work
 void NaiveArceagerDependencyParser::Start(
     const TermInstance *term_instance,

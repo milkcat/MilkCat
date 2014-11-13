@@ -49,9 +49,9 @@ class ReimuTrie {
   // On failed, returns NULL
   static ReimuTrie *Open(const char *filename);
 
-  // Gets the corresponded value for `key`, returns true and stores it into
-  // value. Returns false when `key` does not exist.
-  bool Get(const char *key, int32 *value);
+  // Gets the corresponded value for `key`, if `key` does not exist, returns
+  // `default_value`
+  int32 Get(const char *key, int32 default_value);
 
   // Put `key` and `value` pair into trie.
   void Put(const char *key, int32 value);

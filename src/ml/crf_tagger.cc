@@ -151,7 +151,7 @@ void CRFTagger::FindBestResult(int begin, int end, int end_tag) {
   const Node *last_bucket = buckets_[end - 1];
 
   if (end_tag != -1) {
-    // Have the end tag ... so find the previous tag pf the end tag
+    // Have the end tag ... so find the best result from left tag of `end_tag`
     best_tag_id = buckets_[end][end_tag].left_tag_id;
   } else {
     for (int tag_id = 0; tag_id < model_->GetTagNumber(); ++tag_id) {

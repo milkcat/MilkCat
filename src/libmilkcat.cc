@@ -131,14 +131,14 @@ PartOfSpeechTagger *PartOfSpeechTaggerFactory(Model::Impl *factory,
 
     case kHmmTagger:
       if (status->ok()) {
-        return HMMPartOfSpeechTagger::New(factory, false, status);
+        return HMMPartOfSpeechTagger::New(factory, status);
       } else {
         return NULL;
       }
 
     case kMixedTagger:
       if (status->ok()) {
-        return HMMPartOfSpeechTagger::New(factory, true, status);
+        return HMMPartOfSpeechTagger::New(factory, status);
       } else {
         return NULL;
       }

@@ -305,37 +305,6 @@ int MakeIndexFile(int argc, char **argv) {
   return 0;
 }
 
-int MakeHMMTaggerModel(int argc, char **argv) {
-  Status status;
-  if (argc != 7)
-    status = Status::Info("Usage: mctools hmm index-file tag-set-file "
-                          "trans-file emit-file binary-model-file");
-
-  const char *index_file = argv[2];
-  const char *yset_file = argv[3];
-  const char *trans_file = argv[4];
-  const char *emit_file = argv[5];
-  const char *model_file = argv[6];
-
-  HMMModel *hmm_model = NULL;
-  if (status.ok()) {
-    hmm_model = HMMModel::NewFromText(trans_file,
-                                      emit_file,
-                                      yset_file,
-                                      index_file,
-                                      &status);
-  }
-  if (status.ok()) hmm_model->Save(model_file, &status);
-
-  delete hmm_model;
-  if (status.ok()) {
-    return 0;
-  } else {
-    puts(status.what());
-    return -1;
-  }
-}
-
 int MakeMulticlassPerceptronFile(int argc, char **argv) {
   Status status;
 
@@ -446,6 +415,59 @@ int TestDependendyParser(int argc, char **argv) {
   return 0;
 }
 
+int TestPartOfSpeechTagger(int argc, char **argv) {
+  if (argc != 4) {
+    fprintf(stderr,
+            "Usage: milkcat-tools --postagger-test corpus_file model_file\n");
+    return 1;
+  }
+  const char *corpus_file = argv[2];
+  const char *model_file = argv[3];
+
+  Status status;
+
+  HMMPartOfSpeechTagger *tagger = NULL;
+  HMMModel *model = HMMModel::New(model_file, &status);
+  if (status.ok()) {
+    tagger = HMMPartOfSpeechTagger::New(model, &status);
+  }
+  double ta = 0.0;
+  if (status.ok()) {
+    ta = PartOfSpeechTagger::Test(corpus_file, tagger, &status);
+  }
+
+  if (!status.ok()) {
+    puts(status.what());
+  } else {
+    printf("TA = %5.2f\n", ta);
+  }
+
+  delete tagger;
+  delete model;
+
+  return 0;
+}
+
+int TrainHmmPartOfSpeechTagger(int argc, char **argv) {
+  if (argc != 5) {
+    fprintf(stderr,
+            "Usage: milkcat-tools --postagger-train hmm corpus_file"
+            " model_file\n");
+    return 1;
+  }
+  const char *corpus_file = argv[3];  
+  const char *model_file = argv[4];
+
+  Status status;
+  HMMPartOfSpeechTagger::Train(corpus_file, model_file, &status);
+  if (!status.ok()) {
+    puts(status.what());
+    return 1;
+  } else {
+    return 0;
+  }
+}
+
 }  // namespace milkcat
 
 int main(int argc, char **argv) {
@@ -462,12 +484,14 @@ int main(int argc, char **argv) {
     return milkcat::MakeGramModel(argc, argv);
   } else if (strcmp(tool, "multiperc") == 0) {
     return milkcat::MakeMulticlassPerceptronFile(argc, argv);
-  } else if (strcmp(tool, "hmm") == 0) {
-    return milkcat::MakeHMMTaggerModel(argc, argv);
   } else if (strcmp(tool, "--depparser-train") == 0) {
     return milkcat::TrainNaiveArcEagerDependendyParser(argc, argv);
   } else if (strcmp(tool, "--depparser-test") == 0) {
     return milkcat::TestDependendyParser(argc, argv);
+  } else if (strcmp(tool, "--postagger-test") == 0) {
+    return milkcat::TestPartOfSpeechTagger(argc, argv);
+  } else if (strcmp(tool, "--postagger-train") == 0) {
+    return milkcat::TrainHmmPartOfSpeechTagger(argc, argv);
   } else {
     fprintf(stderr, "Usage: mc_model [dict|gram|hmm|maxent|vocab|tfidf]\n");
     return 1;

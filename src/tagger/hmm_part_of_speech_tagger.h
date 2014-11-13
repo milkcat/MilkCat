@@ -24,73 +24,22 @@
 // hmm_part_of_speech_tagger.h --- Created at 2013-11-08
 //
 
-// Use the second order Hidden Markov Model (TnT Model) for tagging
-// see also:
-//     TnT -- A Statistical Part-of-Speech Tagger
-//     http://aclweb.org/anthology//A/A00/A00-1031.pdf
-// 
-// Use CRF model to get emit probabilities of OOV words
-
 #ifndef SRC_TAGGER_HMM_PART_OF_SPEECH_TAGGER_H_
 #define SRC_TAGGER_HMM_PART_OF_SPEECH_TAGGER_H_
 
-#include "libmilkcat.h"
-#include "common/trie_tree.h"
 #include "common/milkcat_config.h"
-#include "ml/beam.h"
+#include "common/model_impl.h"
 #include "ml/hmm_model.h"
-#include "tagger/crf_part_of_speech_tagger.h"
 #include "tagger/part_of_speech_tagger.h"
-#include "utils/status.h"
-#include "utils/utils.h"
 
 namespace milkcat {
 
 class PartOfSpeechTagInstance;
 class TermInstance;
-class Configuration;
+template<class T, class Comparator> class Beam;
 
-class CRFEmitGetter {
- public:
-  static CRFEmitGetter *New(Model::Impl *model_factory, Status *status);
-  ~CRFEmitGetter();
-
-  // Get the emit link list of term specified by position in term_instance
-  // using CRF model. The emit nodes alloced by this function should release by
-  // calling CRFEmitGetter::ReleaseAllEmits()
-  HMMModel::Emit *GetEmits(TermInstance *term_instance, int position);
-
-  // Release all emit nodes alloced by GetEmits
-  void ReleaseAllEmits() { pool_top_ = 0; }
-
- private:
-  std::vector<HMMModel::Emit *> emit_pool_;
-  int pool_top_;
-  PartOfSpeechFeatureExtractor *feature_extractor_;
-
-  CRFPartOfSpeechTagger *crf_part_of_speech_tagger_;
-  CRFTagger *crf_tagger_;
-
-  const HMMModel *hmm_model_;
-
-  double *probabilities_;
-  int *crf_to_hmm_tag_;
-  int crf_tag_num_;
-
-  CRFEmitGetter();
-
-  HMMModel::Emit *AllocEmit() {
-    if (pool_top_ < emit_pool_.size()) {
-      return emit_pool_[pool_top_++];
-    } else {
-      HMMModel::Emit *emit = new HMMModel::Emit(0, 0.0, NULL);
-      pool_top_++;
-      emit_pool_.push_back(emit);
-      return emit;
-    }
-  }
-};
-
+// HMMPartOfSpeechTagger uses Hidden Markov Model to predict the part-of-speech
+// tag of given TermInstance
 class HMMPartOfSpeechTagger: public PartOfSpeechTagger {
  public:
   struct Node;
@@ -103,9 +52,14 @@ class HMMPartOfSpeechTagger: public PartOfSpeechTagger {
   void Tag(PartOfSpeechTagInstance *part_of_speech_tag_instance,
            TermInstance *term_instance);
 
-  static HMMPartOfSpeechTagger *New(Model::Impl *model_factory,
-                                    bool use_crf,
-                                    Status *status);
+  static HMMPartOfSpeechTagger *New(Model::Impl *model_factory, Status *status);
+  static HMMPartOfSpeechTagger *New(const HMMModel *model, Status *status);
+
+  // Trains the tagger from `training_corpus` and save this model into
+  // `model_filename`
+  static void Train(const char *training_corpus,
+                    const char *model_filename,
+                    Status *status);
 
  private:
   class NodeComparator;
@@ -114,35 +68,24 @@ class HMMPartOfSpeechTagger: public PartOfSpeechTagger {
   Pool<Node> *node_pool_;
 
   const HMMModel *model_;
-  const TrieTree *index_;
-  CRFEmitGetter *crf_emit_getter_;
 
-  HMMModel::Emit *PU_emit_;
-  HMMModel::Emit *CD_emit_;
-  HMMModel::Emit *NN_emit_;
-
-  // Possible emits for OOV words
-  HMMModel::Emit *oov_emits_;
-
-  int BOS_tagid_;
-  int NN_tagid_;
+  HMMModel::EmissionArray *PU_emission_;
+  HMMModel::EmissionArray *CD_emission_;
+  HMMModel::EmissionArray *NN_emission_;
+  HMMModel::EmissionArray *BOS_emission_;
 
   TermInstance *term_instance_;
 
-  // Initialize the emit nodes in this class such as PU_emit_ or oov_emits_
-  static void InitEmit(HMMPartOfSpeechTagger *self, Status *status);
-
   HMMPartOfSpeechTagger();
 
-  // Build the beam
-  void BuildBeam(int position);
+  // Step the viterbi decoding with `emission`
+  void Step(int position, const HMMModel::EmissionArray *emission);
 
-  void AddBOSNodeToBeam();
+  // Stores result into `part_of_speech_tag_instance`
+  void StoreResult(PartOfSpeechTagInstance *part_of_speech_tag_instance);
 
-  void GetBestPOSTagFromBeam(
-      PartOfSpeechTagInstance *part_of_speech_tag_instance);
-
-  HMMModel::Emit *GetEmitAtPosition(int position);
+  // Gets the emission of word at `position` of `term_instance_`
+  const HMMModel::EmissionArray *EmissionAt(int position);
 
   DISALLOW_COPY_AND_ASSIGN(HMMPartOfSpeechTagger);
 };

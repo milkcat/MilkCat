@@ -49,7 +49,7 @@ class ReimuTrie::Impl {
 
   // These functions are same to functions in ReimuTrie::
   static Impl *Open(const char *filename);
-  bool Get(const char *key, int32 *value);
+  int32 Get(const char *key, int32 default_value);
   void Put(const char *key, int32 value);
   bool Save(const char *filename);
   int size() const;
@@ -189,8 +189,8 @@ class ReimuTrie::Impl::Node {
 
 ReimuTrie::ReimuTrie() { impl_ = new ReimuTrie::Impl(); }
 ReimuTrie::~ReimuTrie() { delete impl_; }
-bool ReimuTrie::Get(const char *key, int32 *value) {
-  return impl_->Get(key, value);
+ReimuTrie::int32 ReimuTrie::Get(const char *key, int32 default_value) {
+  return impl_->Get(key, default_value);
 }
 void ReimuTrie::Put(const char *key, int32 value) { impl_->Put(key, value); }
 ReimuTrie *ReimuTrie::Open(const char *filename) {
@@ -322,8 +322,8 @@ ReimuTrie::Impl *ReimuTrie::Impl::Open(const char *filename) {
   }
 }
 
-bool ReimuTrie::Impl::Get(const char *key, int32 *value) {
-  if (array_ == NULL) return false;
+ReimuTrie::int32 ReimuTrie::Impl::Get(const char *key, int32 default_value) {
+  if (array_ == NULL) return default_value;
 
   const uint8 *p = reinterpret_cast<const uint8 *>(key);
   int from = 0, to;
@@ -331,14 +331,13 @@ bool ReimuTrie::Impl::Get(const char *key, int32 *value) {
   while (*p != 0) {
     base = array_[from].base();
     to = XOR(base, *p);
-    if (array_[to].check() != from) return false;
+    if (array_[to].check() != from) return default_value;
     from = to;
     ++p;
   }
   to = XOR(array_[from].base(), 0);
-  if (array_[to].check() != from) return false;
-  *value = array_[to].value();
-  return true;
+  if (array_[to].check() != from) return default_value;
+  return array_[to].value();
 }
 
 void ReimuTrie::Impl::Put(const char *key, int32 value) {

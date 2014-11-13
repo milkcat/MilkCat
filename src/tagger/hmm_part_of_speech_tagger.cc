@@ -32,11 +32,13 @@
 #include <string>
 #include "libmilkcat.h"
 #include "common/model_impl.h"
+#include "common/reimu_trie.h"
 #include "ml/beam.h"
 #include "ml/hmm_model.h"
 #include "segmenter/term_instance.h"
 #include "tagger/part_of_speech_tag_instance.h"
 #include "utils/pool.h"
+#include "utils/readable_file.h"
 #include "utils/utils.h"
 
 namespace milkcat {
@@ -53,95 +55,6 @@ struct HMMPartOfSpeechTagger::Node {
   } 
 };
 
-CRFEmitGetter::CRFEmitGetter(): pool_top_(0),
-                                feature_extractor_(NULL),
-                                crf_part_of_speech_tagger_(NULL),
-                                crf_tagger_(NULL),
-                                probabilities_(NULL),
-                                crf_to_hmm_tag_(NULL),
-                                crf_tag_num_(0) {
-}
-
-CRFEmitGetter::~CRFEmitGetter() {
-  delete feature_extractor_;
-  feature_extractor_ = NULL;
-
-  delete crf_part_of_speech_tagger_;
-  crf_part_of_speech_tagger_ = NULL;
-
-  delete[] probabilities_;
-  probabilities_ = NULL;
-
-  delete[] crf_to_hmm_tag_;
-  crf_to_hmm_tag_ = NULL;
-
-
-  std::vector<HMMModel::Emit *>::iterator it;
-  for (it = emit_pool_.begin(); it != emit_pool_.end(); ++it) delete *it;
-}
-
-CRFEmitGetter *CRFEmitGetter::New(Model::Impl *model_factory, Status *status) {
-  CRFEmitGetter *self = new CRFEmitGetter();
-  self->feature_extractor_ = new PartOfSpeechFeatureExtractor();
-
-  const CRFModel *crf_model = model_factory->CRFPosModel(status);
-  self->hmm_model_ = NULL;
-
-  if (status->ok()) {
-    self->crf_part_of_speech_tagger_ = new CRFPartOfSpeechTagger(crf_model);
-    self->crf_tagger_ = self->crf_part_of_speech_tagger_->crf_tagger();
-    self->hmm_model_ = model_factory->HMMPosModel(status);
-  }
-
-  if (status->ok()) {
-    self->crf_tag_num_ = crf_model->GetTagNumber();
-    self->probabilities_ = new double[self->crf_tag_num_];
-    self->crf_to_hmm_tag_ = new int[self->crf_tag_num_];
-
-    for (int i = 0; i < self->crf_tag_num_; ++i) {
-      self->crf_to_hmm_tag_[i] = self->hmm_model_->tag_id(
-          crf_model->GetTagText(i));
-    }
-  }
-
-  if (status->ok()) {
-    return self;
-  } else {
-    delete self;
-    return NULL;
-  }
-}
-
-HMMModel::Emit *CRFEmitGetter::GetEmits(TermInstance *term_instance, 
-                                        int position) {
-  feature_extractor_->set_term_instance(term_instance);
-  crf_tagger_->ProbabilityAtPosition(feature_extractor_,
-                                     position,
-                                     probabilities_);
-  
-  double max_probability = *std::max_element(probabilities_,
-                                             probabilities_ + crf_tag_num_);
-  HMMModel::Emit *emit = NULL, *p;
-  for (int crf_tag = 0; crf_tag < crf_tag_num_; ++crf_tag) {
-    if (probabilities_[crf_tag] > 0.2 * max_probability) {
-      int hmm_tag = crf_to_hmm_tag_[crf_tag];
-      if (hmm_tag < 0) continue;
-
-      LOG("Add emit " << hmm_model_->tag_str(hmm_tag) << " cost(T|W)=" <<
-          -log(probabilities_[crf_tag]) << " cost(T)=%.5lf\n" <<
-          hmm_model_->tag_cost(hmm_tag));
-
-      p = AllocEmit();
-      p->tag = hmm_tag;
-      p->cost = -log(probabilities_[crf_tag]) - hmm_model_->tag_cost(hmm_tag);
-      p->next = emit;
-      emit = p;
-    }
-  }
-
-  return emit;
-}
-
 // Compare two node potiners by its cost value
 class HMMPartOfSpeechTagger::NodeComparator {
  public:
@@ -153,15 +66,15 @@ class HMMPartOfSpeechTagger::NodeComparator {
 
 HMMPartOfSpeechTagger::HMMPartOfSpeechTagger(): node_pool_(NULL),
                                                 model_(NULL),
-                                                index_(NULL),
-                                                crf_emit_getter_(NULL),
-                                                PU_emit_(NULL),
-                                                CD_emit_(NULL),
-                                                NN_emit_(NULL),
-                                                oov_emits_(NULL),
+                                                PU_emission_(NULL),
+                                                CD_emission_(NULL),
+                                                NN_emission_(NULL),
+                                                BOS_emission_(NULL),
                                                 term_instance_(NULL) {
+  node_pool_ = new Pool<Node>(); 
+
   for (int i = 0; i < kMaxBeams; ++i) {
-    beams_[i] = NULL;
+    beams_[i] = new Beam<Node, NodeComparator>(kBeamSize);
   }
 }
 
@@ -169,122 +82,84 @@ HMMPartOfSpeechTagger::~HMMPartOfSpeechTagger() {
   delete node_pool_;
   node_pool_ = NULL;
 
-  delete PU_emit_;
-  PU_emit_ = NULL;
+  delete PU_emission_;
+  PU_emission_ = NULL;
 
-  delete CD_emit_;
-  CD_emit_ = NULL;
+  delete CD_emission_;
+  CD_emission_ = NULL;
 
-  delete NN_emit_;
-  NN_emit_ = NULL;
+  delete NN_emission_;
+  NN_emission_ = NULL;
 
-  delete crf_emit_getter_;
-  crf_emit_getter_ = NULL;
+  delete BOS_emission_;
+  BOS_emission_ = NULL;
 
   for (int i = 0; i < kMaxBeams; ++i) {
     if (beams_[i] != NULL)
       delete beams_[i];
     beams_[i] = NULL;
   }
-
-  HMMModel::Emit *p = oov_emits_, *q;
-  while (p) {
-    q = p->next;
-    delete p;
-    p = q;
-  }
-  oov_emits_ = NULL;
 }
 
 namespace {
 
-// New an emit node for tag specified by tag_str. If tag_str not exist in model
-// return a NULL and status indicates an corruption error.
-HMMModel::Emit *NewEmitFromTag(const char *tag_str,
-                               const HMMModel *model,
-                               Status *status) {
-  int tagid = model->tag_id(tag_str);
-  if (tagid < 0) *status = Status::Corruption("Invalid HMM model.");
+// Creates an EmissionArray for tag specified by yname.
+HMMModel::EmissionArray *NewEmission(
+    const char *yname,
+    const HMMModel *model,
+    Status *status) {
+  char error_message[1024];
 
-  HMMModel::Emit *emit = NULL;
+  // Finds the yid for `yname`
+  int yid;
+  for (yid = 0; yid < model->ysize(); ++yid) {
+    if (strcmp(yname, model->yname(yid)) == 0) break;
+  }
+  if (yid == model->ysize()) {
+    sprintf(error_message, "Unable to file label '%s' from HMM model", yname);
+    *status = Status::Corruption(error_message);
+  } 
+
+  HMMModel::EmissionArray *emission = NULL;
   if (status->ok()) {
-    emit = new HMMModel::Emit(tagid, 0.0, NULL);
+    emission = new HMMModel::EmissionArray(1, 0);
+    emission->set_yid_at(0, yid);
+    emission->set_cost_at(0, 0.0f);
   }
 
-  return emit;
+  return emission;
 }
 
 }  // namespace
 
-
-void HMMPartOfSpeechTagger::InitEmit(HMMPartOfSpeechTagger *self,
-                                     Status *status) {
-
-  if (status->ok()) 
-    self->PU_emit_ = NewEmitFromTag("PU", self->model_, status);
-  if (status->ok()) 
-    self->CD_emit_ = NewEmitFromTag("CD", self->model_, status);
-  if (status->ok()) 
-    self->NN_emit_ = NewEmitFromTag("NN", self->model_, status);
-
-  // Create the default emits
-  HMMModel::Emit *emit = NULL, *p;
+HMMPartOfSpeechTagger *HMMPartOfSpeechTagger::New(Model::Impl *model_factory,
+                                                  Status *status) {
+  const HMMModel *model = model_factory->HMMPosModel(status);
   if (status->ok()) {
-    p = NewEmitFromTag("NN", self->model_, status);
-    p->next = emit;
-    emit = p;
-  }
-  if (status->ok()) {
-    p = NewEmitFromTag("VV", self->model_, status);
-    p->next = emit;
-    emit = p;
-  }
-  if (status->ok()) {
-    p = NewEmitFromTag("VA", self->model_, status);
-    p->next = emit;
-    emit = p;
-  }
-  if (status->ok()) {
-    p = NewEmitFromTag("AD", self->model_, status);
-    p->next = emit;
-    emit = p;   
-  }
-  if (status->ok()) {
-    p = NewEmitFromTag("NR", self->model_, status);
-    p->next = emit;
-    self->oov_emits_ = p;   
+    return New(model, status);
+  } else {
+    return NULL;
   }
 }
 
 HMMPartOfSpeechTagger *HMMPartOfSpeechTagger::New(
-    Model::Impl *model_factory,
-    bool use_crf,
+    const HMMModel *model,
     Status *status) {
   HMMPartOfSpeechTagger *self = new HMMPartOfSpeechTagger();
-  self->node_pool_ = new Pool<Node>(); 
-
-  for (int i = 0; i < kMaxBeams; ++i) {
-    self->beams_[i] = new Beam<Node, NodeComparator>(kBeamSize);
-  }
-
-  self->model_ = model_factory->HMMPosModel(status);
-
-  if (status->ok()) InitEmit(self, status);
-  if (status->ok() && use_crf) 
-    self->crf_emit_getter_ = CRFEmitGetter::New(model_factory, status);
-  if (status->ok()) {
-    self->BOS_tagid_ = self->model_->tag_id("BOS");
-    if (self->BOS_tagid_ < 0) 
-      *status = Status::Corruption("Invalid HMM model.");
-  }
+  self->model_ = model;
 
   if (status->ok()) {
-    self->NN_tagid_ = self->model_->tag_id("NN");
-    if (self->NN_tagid_ < 0) 
-      *status = Status::Corruption("Invalid HMM model.");
+    self->PU_emission_ = NewEmission("PU", self->model_, status);
+  } 
+  if (status->ok()) {
+    self->NN_emission_ = NewEmission("NN", self->model_, status);
   }
-
-  if (status->ok()) self->index_ = model_factory->Index(status);
+  if (status->ok()) {
+    self->CD_emission_ = NewEmission("CD", self->model_, status);
+  }
+  if (status->ok()) {
+    self->BOS_emission_ = NewEmission("-BOS-", self->model_, status);
+  }
 
   if (status->ok()) {
     return self;
@@ -294,68 +169,49 @@ HMMPartOfSpeechTagger *HMMPartOfSpeechTagger::New(
   }
 }
 
-HMMModel::Emit *HMMPartOfSpeechTagger::GetEmitAtPosition(int position) {
-  int term_id;
-  HMMModel::Emit *emit;
+const HMMModel::EmissionArray *HMMPartOfSpeechTagger::EmissionAt(int position) {
+  const HMMModel::EmissionArray *emission = NULL;
+  emission = model_->Emission(term_instance_->term_text_at(position));
 
-  term_id = term_instance_->term_id_at(position);
-  if (term_id == TermInstance::kTermIdNone) {
-    term_id = index_->Search(term_instance_->term_text_at(position));
-  }
-
-  emit = model_->emit(term_id);
-  if (emit == NULL) {
+  if (emission == NULL) {
     int term_type = term_instance_->term_type_at(position);
     switch (term_type) {
       case Parser::kPunction:
       case Parser::kSymbol:
       case Parser::kOther:
-        emit = PU_emit_;
+        emission = PU_emission_;
         break;
       case Parser::kNumber:
-        emit = CD_emit_;
+        emission = CD_emission_;
         break;
-      case Parser::kEnglishWord:
-        emit = NN_emit_;
+      default:
+        emission = NN_emission_;
         break;
     }
   }
 
-  if (emit == NULL && crf_emit_getter_) {
-      emit = crf_emit_getter_->GetEmits(term_instance_, position);
-  }
-
-  if (emit == NULL) emit = oov_emits_;
-
-  return emit;
+  return emission;
 }
 
-inline void HMMPartOfSpeechTagger::AddBOSNodeToBeam() {
-  Node *bos_node = node_pool_->Alloc();
-  bos_node->set_value(BOS_tagid_, 0, NULL);
-  beams_[0]->Clear();
-  beams_[0]->Add(bos_node);
+inline void HMMPartOfSpeechTagger::StoreResult(
+    PartOfSpeechTagInstance *tag_instance) {
+  int beam_idx = term_instance_->size() + 1;
 
-  Node *bos_node_2 = node_pool_->Alloc();
-  bos_node_2->set_value(BOS_tagid_, 0, bos_node);
-  bos_node_2->tag = BOS_tagid_;
-  beams_[1]->Clear();
-  beams_[1]->Add(bos_node_2);
-}
+  // `beams_[beam_idx]` should have only one BOS node
+  ASSERT(beams_[beam_idx]->size() == 1, "Last node in beam should be -BOS-");
+  const Node *node = beams_[beam_idx]->at(0);
 
-inline void HMMPartOfSpeechTagger::GetBestPOSTagFromBeam(
-    PartOfSpeechTagInstance *part_of_speech_tag_instance) {
   int position = term_instance_->size() - 1;
-  const Node *node = beams_[position + 2]->Best();
 
-  while (node->tag != BOS_tagid_) {
-    part_of_speech_tag_instance->set_value_at(position,
-                                              model_->tag_str(node->tag));
+  // Ignores the last BOS node
+  node = node->prevoius_node;
+  while (node->prevoius_node != NULL) {
+    tag_instance->set_value_at(position, model_->yname(node->tag));
     position--;
     node = node->prevoius_node;
   }
 
-  part_of_speech_tag_instance->set_size(term_instance_->size());
+  tag_instance->set_size(term_instance_->size());
 }
 
 void HMMPartOfSpeechTagger::Tag(
@@ -363,74 +219,191 @@ void HMMPartOfSpeechTagger::Tag(
     TermInstance *term_instance) {
   term_instance_ = term_instance;
 
-  AddBOSNodeToBeam();
+  Node *begin_node = node_pool_->Alloc();
+  begin_node->set_value(HMMModel::kBeginOfSenetnceId, 0, NULL);
+  beams_[0]->Clear();
+  beams_[0]->Add(begin_node);
 
   // Viterbi algorithm
-  for (int i = 0; i < term_instance->size(); ++i)
-    BuildBeam(i);
+  const HMMModel::EmissionArray *emission = NULL;
+  for (int idx = 0; idx < term_instance->size(); ++idx) {
+    emission = EmissionAt(idx);
+    // beam_[0] is the BOS node, so use `idx + 1` for the word at `idx`
+    Step(idx + 1, emission);
+  }
 
-  // Find the best result
-  GetBestPOSTagFromBeam(part_of_speech_tag_instance);
+  // The last BOS node
+  emission = BOS_emission_;
+  Step(term_instance->size() + 1, emission);
+
+  // Save the result into `part_of_speech_tag_instance`
+  StoreResult(part_of_speech_tag_instance);
 
   node_pool_->ReleaseAll();
 }
 
-void HMMPartOfSpeechTagger::BuildBeam(int position) {
-  // Beam has two BOS node at 0 and 1
-  int beam_position = position + 2;
-
-  HMMModel::Emit *emit = GetEmitAtPosition(position);
-
-  const Node *leftleft_node, *left_node;
-  int leftleft_tag, left_tag;
-
-  Beam<Node, NodeComparator> *previous_beam = beams_[beam_position - 1];
-  Beam<Node, NodeComparator> *beam = beams_[beam_position];
+void HMMPartOfSpeechTagger::Step(int position,
+                                 const HMMModel::EmissionArray *emission) {
+  Beam<Node, NodeComparator> *previous_beam = beams_[position - 1];
+  Beam<Node, NodeComparator> *beam = beams_[position];
 
   previous_beam->Shrink();
   beam->Clear();
 
-  double min_cost;
-  const Node *min_left_node;
-  while (emit) {
-    min_cost = 1e38;
-    min_left_node = NULL;
+  for (int emission_idx = 0; emission_idx < emission->size(); ++emission_idx) {
+    double min_cost = 1e38;
+    const Node *min_node = NULL;
+    int tag = emission->yid_at(emission_idx);
+    double emission_cost = emission->cost_at(emission_idx);
+
+    // To find the best path for current node
     for (int i = 0; i < previous_beam->size(); ++i) {
-      left_node = previous_beam->at(i);
-      leftleft_node = left_node->prevoius_node;
-
-      leftleft_tag = leftleft_node->tag;
-      left_tag = left_node->tag;
-
-      // If current word has emit information or current word is punction or 
-      // symbol
-
-      double trans_cost = model_->trans_cost(leftleft_tag, 
-                                             left_tag, 
-                                             emit->tag);
-      double emit_cost = emit->cost;
-      double cost = left_node->cost + trans_cost + emit_cost;
+      const Node *left_node = previous_beam->at(i);
+      int left_tag = left_node->tag;
+      double transition_cost = model_->cost(left_tag, tag);
+      double cost = left_node->cost + transition_cost + emission_cost;
       if (cost < min_cost) {
         min_cost = cost;
-        min_left_node = left_node;
+        min_node = left_node;
+      }
+      LOG("word = %s, left_tag = %s, tag = %s, emission_cost = %f, "
+          "transition_cost = %f, total_cost = %f\n",
+          position - 1 < term_instance_->size()?
+              term_instance_->term_text_at(position - 1): "-BOS-",
+          model_->yname(left_tag),
+          model_->yname(tag),
+          emission_cost,
+          transition_cost,
+          cost);
+    }
+    Node *node = node_pool_->Alloc();
+    node->set_value(tag, min_cost, min_node);
+    beam->Add(node); 
+  }
+}
+
+void HMMPartOfSpeechTagger::Train(
+    const char *training_corpus,
+    const char *model_filename,
+    Status *status) {
+  ReadableFile *fd = ReadableFile::New(training_corpus, status);
+  TermInstance *term_instance = new TermInstance();
+  PartOfSpeechTagInstance *tag_instance = new PartOfSpeechTagInstance();
+  ReimuTrie *yindex = new ReimuTrie();
+  std::vector<std::string> yname;
+
+  // First pass, gets all labels (tags)
+  yindex->Put("-BOS-", HMMModel::kBeginOfSenetnceId);
+  // `HMMModel::kBeginOfSenetnceId` == 0
+  yname.push_back("-BOS-");
+  while (status->ok() && !fd->Eof()) {
+    ReadInstance(fd, term_instance, tag_instance, status);
+    if (!status->ok()) break;
+
+    for (int idx = 0; idx < tag_instance->size(); ++idx) {
+      const char *tag = tag_instance->part_of_speech_tag_at(idx);
+      if (yindex->Get(tag, -1) == -1) {
+        // If `tag` not in `yindex`
+        yindex->Put(tag, yname.size());
+        yname.push_back(tag);
+      }
+    }
+  }
+  delete fd;
+  fd = NULL;
+
+  std::vector<int> y_bigram_count(yname.size() * yname.size());
+  std::vector<int> y_count(yname.size());
+  std::vector<int> emission;
+  ReimuTrie *xindex = new ReimuTrie();
+  std::vector<std::string> xname;
+
+  // Second pass
+  if (status->ok()) fd = ReadableFile::New(training_corpus, status);
+  while (status->ok() && !fd->Eof()) {
+    ReadInstance(fd, term_instance, tag_instance, status);
+    if (!status->ok()) break;
+    
+    // yid(0) is `-BOS-`
+    int left_yid = HMMModel::kBeginOfSenetnceId;
+    int yid;
+    for (int idx = 0; idx < tag_instance->size(); ++idx) {
+      const char *tag = tag_instance->part_of_speech_tag_at(idx);
+      const char *word = term_instance->term_text_at(idx);
+
+      int xid = xindex->Get(word, -1);
+      if (xid == -1) {
+        // If `word` not in `xindex`
+        xindex->Put(word, xname.size());
+        xid = xname.size();
+        xname.push_back(word);
+        emission.resize(yname.size() * xname.size());
       }
 
-      LOG(term_instance_->term_text_at(position) << " " <<
-          model_->tag_str(leftleft_tag) << " " <<
-          model_->tag_str(left_tag) << " " <<
-          model_->tag_str(emit->tag) << " " << "total_cost = " <<
-          cost << " cost = " << trans_cost + emit_cost << " trans_cost = " <<
-          trans_cost << " emit_cost = " << emit_cost);
+      yid = yindex->Get(tag, -1);
+      ASSERT(yid >= 0, "Invalid tag name");
+      ++emission[xid * yname.size() + yid];
+      ++y_count[yid];
+      ++y_bigram_count[left_yid * yname.size() + yid];
+      left_yid = yid;
+    }
+    // Increase bigram (last_word, `-BOS_`)
+    ++y_count[0];
+    ++y_bigram_count[yid * yname.size() + 0];
+  }
+  delete fd;
+  fd = NULL;
+
+  // OK, calculate and output the data
+  HMMModel *hmm_model = NULL;
+  if (status->ok()) {
+    hmm_model = new HMMModel(yname);
+
+    // Puts the emission data
+    for (int xid = 0; xid < xname.size(); ++xid) {
+      int total_count = 0;
+      int size = 0;
+      for (int yid = 0; yid < yname.size(); ++yid) {
+        int count = emission[xid * yname.size() + yid];
+        if (count != 0) ++size;
+        total_count += count;
+      }
+      HMMModel::EmissionArray emission_array(size, total_count);
+      int emission_idx = 0;
+      for (int yid = 0; yid < yname.size(); ++yid) {
+        int count = emission[xid * yname.size() + yid];
+        if (count != 0) {
+          emission_array.set_yid_at(emission_idx, yid);
+          emission_array.set_cost_at(
+              emission_idx,
+              -log(static_cast<float>(count) / total_count));
+        }
+        if (count != 0) ++emission_idx;
+      }
+      ASSERT(emission_idx == size, "Invalid size");
+      hmm_model->AddEmission(xname[xid].c_str(), emission_array);
     }
 
-    Node *node = node_pool_->Alloc();
-    node->set_value(emit->tag, min_cost, min_left_node);
-    beam->Add(node); 
-
-    emit = emit->next;
+    // Puts the transition data
+    for (int left_yid = 0; left_yid < yname.size(); ++left_yid) {
+      for (int yid = 0; yid < yname.size(); ++yid) {
+        int joint_count = 1 + y_bigram_count[left_yid * yname.size() + yid];
+        int left_count = yname.size() + y_count[left_yid];
+        double p_transition = static_cast<float>(joint_count) / left_count;
+        hmm_model->set_cost(left_yid, yid, -log(p_transition));
+      }
+    }
   }
 
-  if (crf_emit_getter_) crf_emit_getter_->ReleaseAllEmits();
+  // Save model
+  if (status->ok()) hmm_model->Save(model_filename, status);
+
+  delete term_instance;
+  delete tag_instance;
+  delete yindex;
+  delete xindex;
+  delete hmm_model;
+
 }
 
 }  // namespace milkcat

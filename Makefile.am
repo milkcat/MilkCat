@@ -3,6 +3,18 @@ AUTOMAKE_OPTIONS = gnu subdir-objects foreign
 AM_CXXFLAGS = -I$(top_srcdir)/src -DMODEL_PATH=\"$(pkgdatadir)/\" -fno-rtti \
               -fno-exceptions
 
+dist_pkgdata_DATA = data/bigram.bin \
+                    data/ctb_pos.crf \
+                    data/pku_pos.hmm \
+                    data/ctb_seg.crf \
+                    data/oov_property.idx \
+                    data/unigram.bin \
+                    data/person_name.maxent \
+                    data/unigram.idx \
+                    data/stopword.idx \
+                    data/tfidf.bin \
+                    data/depparse.templ
+
 include_HEADERS = src/include/milkcat.h
 
 lib_LTLIBRARIES = libmilkcat.la
@@ -69,6 +81,7 @@ libmilkcat_la_SOURCES = src/libmilkcat.cc \
                         src/tagger/hmm_part_of_speech_tagger.h \
                         src/tagger/part_of_speech_tag_instance.cc \
                         src/tagger/part_of_speech_tag_instance.h \
+                        src/tagger/part_of_speech_tagger.cc \
                         src/tagger/part_of_speech_tagger.h \
                         src/tokenizer/token_instance.h \
                         src/tokenizer/token_instance.cc \

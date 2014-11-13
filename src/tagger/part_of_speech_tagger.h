@@ -21,7 +21,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 //
-// part_of_speech_tagger.cc --- Created at 2013-11-24
+// part_of_speech_tagger.h --- Created at 2013-11-24
 //
 
 #ifndef SRC_TAGGER_PART_OF_SPEECH_TAGGER_H_
@@ -31,6 +31,8 @@ namespace milkcat {
 
 class PartOfSpeechTagInstance;
 class TermInstance;
+class Status;
+class ReadableFile;
 
 // The base class for part-of-speech tagger
 class PartOfSpeechTagger {
@@ -40,6 +42,18 @@ class PartOfSpeechTagger {
   // Tag the TermInstance and put the result to PartOfSpeechTagInstance
   virtual void Tag(PartOfSpeechTagInstance *part_of_speech_tag_instance,
                    TermInstance *term_instance) = 0;
+
+  // Reads a tagged instance from corpus and stores it into `term_instance` and
+  // `tag_instance`
+  static void ReadInstance(ReadableFile *fd,
+                           TermInstance *term_instance,
+                           PartOfSpeechTagInstance *tag_instance,
+                           Status *status);
+
+  // Tests the accuracy of tagger, returns the tag accuracy (TA) value
+  static double Test(const char *test_corpus,
+                     PartOfSpeechTagger *tagger,
+                     Status *status);
 };
 
 inline PartOfSpeechTagger::~PartOfSpeechTagger() {}

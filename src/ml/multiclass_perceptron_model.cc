@@ -90,8 +90,8 @@ MulticlassPerceptronModel::OpenText(const char *filename, Status *status) {
     fd->ReadLine(line, 1024, status);
     if (status->ok()) {
       sscanf(line, "%s %s %f", y, x, &cost);
-      exist = self->yindex_->Get(y, &yid);
-      ASSERT(exist, "yindex corrupted");
+      yid = self->yindex_->Get(y, -1);
+      ASSERT(yid >= 0, "yindex corrupted");
       xid = self->GetOrInsertXId(x);
       self->cost_[xid * self->ysize() + yid] = cost;
     }
@@ -244,33 +244,23 @@ MulticlassPerceptronModel::~MulticlassPerceptronModel() {
 }
 
 int MulticlassPerceptronModel::GetOrInsertXId(const char *xname) {
-  int val;
-  if (xindex_->Get(xname, &val)) {
-    return val;
-  } else {
+  int val = xindex_->Get(xname, -1);
+  if (val < 0) {
     xindex_->Put(xname, xsize_);
     ++xsize_;
     cost_.resize(ysize() * xsize_);
     return xsize_ - 1;
+  } else {
+    return val;
   }
 }
 
 int MulticlassPerceptronModel::yid(const char *yname) const { 
-  int val;
-  if (yindex_->Get(yname, &val)) {
-    return val;
-  } else {
-    return kIdNone;
-  }
+  return yindex_->Get(yname, kIdNone);
 }
 
 int MulticlassPerceptronModel::xid(const char *xname) const {
-  int val;
-  if (xindex_->Get(xname, &val)) {
-    return val;
-  } else {
-    return kIdNone;
-  }
+  return xindex_->Get(xname, kIdNone);
 }
 
 float MulticlassPerceptronModel::cost(int xid, int yid) const {

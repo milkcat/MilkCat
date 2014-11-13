@@ -27,99 +27,95 @@
 #ifndef SRC_PARSER_HMM_MODEL_H_
 #define SRC_PARSER_HMM_MODEL_H_
 
-#include <string.h>
-#include <map>
-#include "utils/status.h"
+#include <stdint.h>
+#include <string>
+#include <vector>
 
 namespace milkcat {
 
+class Status;
+class ReimuTrie;
+class ReadableFile;
+class WritableFile;
+
+// HMMModel is a data class for Hidden Markov Model 
 class HMMModel {
  public:
-  struct Emit;
+  class EmissionArray;
+
+  enum { kBeginOfSenetnceId = 0 };
+
+  HMMModel(const std::vector<std::string> &yname);
+  ~HMMModel();
 
   static HMMModel *New(const char *model_path, Status *status);
 
   // Save the model to file specified by model_path
   void Save(const char *model_path, Status *status);
 
-  // Create the HMMModel instance from some text model file
-  static HMMModel *NewFromText(const char *trans_model_path, 
-                               const char *emit_model_path,
-                               const char *yset_model_path,
-                               const char *index_path,
-                               Status *status);
-  ~HMMModel();
+  // Label number in this model
+  int ysize() const { return yname_.size(); }
 
-  int tag_num() const { return tag_num_; }
+  // Get label name by its id
+  const char *yname(int yid) const { return yname_[yid].c_str(); }
 
-  // Get Tag's string by its id
-  const char *tag_str(int tag_id) const {
-    return tag_str_[tag_id];
+  // Adds a (word, emission_array) pair into model. It copys the value of
+  // `*emission` and insert into the model.
+  void AddEmission(const char *word, const EmissionArray &emission);
+
+  // Gets EmissionArray by word. If the word does not exists, return NULL
+  const EmissionArray *Emission(const char *word) const;
+
+  // Gets/Sets the transition cost from left_tag to right_tag
+  float cost(int left_tag, int right_tag) const {
+    return transition_cost_[left_tag * yname_.size() + right_tag];
   }
-
-  // Get tag-id by string
-  int tag_id(const char *tag_str) const {
-    for (int i = 0; i < tag_num_; ++i) {
-      if (strcmp(tag_str_[i], tag_str) == 0)
-        return i;
-    }
-
-    return -1;
+  void set_cost(int left_tag, int right_tag, float cost) {
+    transition_cost_[left_tag * yname_.size() + right_tag] = cost;
   }
-
-  // Get the emit row (tag, cost) of a term, if no data return NULL
-  Emit *emit(int term_id) const {
-    if (term_id > max_term_id_ || term_id < 0)
-      return NULL;
-    else
-      return emits_[term_id];
-  }
-
-  // Get the transition cost from left_tag to right_tag
-  float trans_cost(int leftleft_tag, int left_tag, int right_tag) const {
-    return transition_matrix_[leftleft_tag * tag_num_ * tag_num_ +
-                              left_tag * tag_num_ +
-                              right_tag];
-  }
-
-  // Get the cost of the probability of single tag
-  float tag_cost(int tag_id) const { return tag_cost_[tag_id]; }
 
  private:
-  static const int kTagStrLenMax = 16;
-  Emit **emits_;
-  int max_term_id_;
-  int emit_num_;
-  int tag_num_;
-  char (* tag_str_)[kTagStrLenMax];
-  float *transition_matrix_;
-  float *tag_cost_;
-
-  HMMModel();
-
-  static void LoadTransFromText(HMMModel *self,
-                                const char *trans_model_path,
-                                const std::map<std::string, int> &y_tag,
-                                Status *status);
-
-  static void LoadEmitFromText(HMMModel *self,
-                               const char *emit_model_path,
-                               const char *index_path,
-                               const std::map<std::string, int> &y_tag,
-                               Status *status);
-
-  static void LoadYTagFromText(HMMModel *self,
-                               const char *emit_model_path,
-                               std::map<std::string, int> *y_set,
-                               Status *status);
+  ReimuTrie *index_;
+  std::vector<const EmissionArray *> emission_;
+  float *transition_cost_;
+  int xsize_;
+  std::vector<std::string> yname_;
 };
 
-struct HMMModel::Emit {
-  int tag;
-  float cost;
-  Emit *next;
+class HMMModel::EmissionArray {
+ public:
+  enum { kMagicNumber = 0x55 };
 
-  Emit(int tag, float cost, Emit *next): tag(tag), cost(cost), next(next) {}
+  EmissionArray(int size, int total_count);
+  ~EmissionArray();
+  EmissionArray(const EmissionArray &emission_array);
+  EmissionArray &operator=(const EmissionArray &emission_array);
+
+  // Reads an EmissionArray from `fd`
+  static const EmissionArray *Read(ReadableFile *fd, Status *status);
+
+  // Writes this EmissionArray to `fd`
+  void Write(WritableFile *fd, Status *status) const;
+
+  // Number of emissions
+  int size() const { return size_; }
+
+  // Gets/Sets the yid at the `idx` of this array
+  int yid_at(int idx) const { return yid_[idx]; }
+  void set_yid_at(int idx, int yid) { yid_[idx] = yid; }
+
+  // Gets/Sets the cost at the `idx` of this array
+  float cost_at(int idx) const { return cost_[idx]; }
+  void set_cost_at(int idx, float cost) { cost_[idx] = cost; }
+
+  // Total count of emissions 
+  int total_count() const { return total_count_; }
+ 
+ private:
+  int size_;
+  int total_count_;
+  int *yid_;
+  float *cost_;
 };
 
 }  // namespace milkcat

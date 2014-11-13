@@ -74,6 +74,7 @@ int PrintUsage() {
   printf("        unigram_seg - Use Unigram segmenter.\n");
   printf("        unigram_seg - Use Bigram segmenter.\n");
   printf("        crf         - Use CRF segmenter and Part-Of-Speech tagger.\n");
+  printf("        hmm         - Use CRF segmenter and HMM Part-Of-Speech tagger.\n");
   printf("        mixed       - Use Mixed CRF and HMM segmenter and Part-Of-Speech\n");
   printf("                      tagger (Default value).\n");
   printf("        mixed_seg   - Use Mixed CRF and HMM segmenter.\n");
@@ -137,6 +138,10 @@ void GetArgs(int argc, char **argv, Options *options) {
         } else if (strcmp(optarg, "crf") == 0) {
           options->parser_options.UseCrfSegmenter();
           options->parser_options.UseCrfPOSTagger();
+          options->display_tag = true;
+        } else if (strcmp(optarg, "hmm") == 0) {
+          options->parser_options.UseCrfSegmenter();
+          options->parser_options.UseHmmPOSTagger();
           options->display_tag = true;   
         } else if (strcmp(optarg, "mixed_seg") == 0) {
           options->parser_options.UseMixedSegmenter();
