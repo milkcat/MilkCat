@@ -53,108 +53,54 @@ const char *BOS[kMaxContextSize] = { "_B-1", "_B-2", "_B-3", "_B-4",
 const char *EOS[kMaxContextSize] = { "_B+1", "_B+2", "_B+3", "_B+4",
                                      "_B+5", "_B+6", "_B+7", "_B+8" };
 
-CRFTagger::CRFTagger(const CRFModel *model): model_(model),
-                                             feature_cache_left_(INT_MAX),
-                                             feature_cache_right_(INT_MIN) {
-  for (int i = 0; i < kMaxBucket; ++i) {
-    buckets_[i] = new Node[model_->GetTagNumber()];
-    feature_cache_flag_[i] = false;
+CRFTagger::CRFTagger(const CRFModel *model): model_(model) {
+  for (int i = 0; i < kSequenceMax; ++i) {
+    lattice_[i] = new Node[model_->ysize()];
   }
 }
 
 CRFTagger::~CRFTagger() {
-  for (int i = 0; i < kMaxBucket; ++i) {
-    delete[] buckets_[i];
+  for (int i = 0; i < kSequenceMax; ++i) {
+    delete[] lattice_[i];
   }
 }
 
-void CRFTagger::ClearFeatureCache() {
-  for (int i = feature_cache_left_; i <= feature_cache_right_; ++i) {
-    feature_cache_flag_[i] = false;
-  }
-  feature_cache_left_ = INT_MAX;
-  feature_cache_right_ = INT_MIN;
-}
-
-const char *CRFTagger::GetFeatureAt(int position, int index) {
-  if (feature_cache_flag_[position] == false) {
-    // Cache unmatch
-    feature_extractor_->ExtractFeatureAt(position,
-                                         feature_cache_[position],
-                                         model_->xsize());
-    feature_cache_flag_[position] = true;
-
-    if (feature_cache_left_ > position) {
-      feature_cache_left_ = position;
-    }
-
-    if (feature_cache_right_ < position) {
-      feature_cache_right_ = position;
-    }
-  }
-
-  return feature_cache_[position][index];
-}
-
-void CRFTagger::TagRange(SequenceFeatureExtractor *feature_extractor,
+void CRFTagger::TagRange(SequenceFeatureSet *sequence_feature_set,
                          int begin,
                          int end,
                          int begin_tag,
                          int end_tag) {
-  feature_extractor_ = feature_extractor;
-
-  ClearFeatureCache();
+  sequence_feature_set_ = sequence_feature_set;
 
   Viterbi(begin, end, begin_tag, end_tag);
-  FindBestResult(begin, end, end_tag);
-}
-
-void CRFTagger::ProbabilityAtPosition(
-    SequenceFeatureExtractor *feature_extractor, 
-    int position,
-    double *probability) {
-  feature_extractor_ = feature_extractor;
-  ClearFeatureCache();
-  ClearBucket(position);
-
-  CalculateBucketCost(position);
-
-  // the weight value is in buckets_[position]
-  double sum = 0;
-  for (int tag = 0; tag < model_->GetTagNumber(); ++tag) {
-    probability[tag] = exp(buckets_[position][tag].cost);
-    sum += probability[tag];
-  }
-  for (int tag = 0; tag < model_->GetTagNumber(); ++tag) {
-    probability[tag] /= sum;
-  }
+  StoreResult(begin, end, end_tag);
 }
 
 void CRFTagger::Viterbi(int begin, int end, int begin_tag, int end_tag) {
-  assert(begin >= 0 && begin < end && end <= feature_extractor_->size());
+  assert(begin >= 0 && begin < end && end <= sequence_feature_set_->size());
   ClearBucket(begin);
-  if (begin_tag != -1) CalculateBeginTagArcCost(begin_tag);
-  CalculateBucketCost(begin);
+  if (begin_tag != -1) CalcBeginTagBigramCost(begin_tag);
+  CalcUnigramCost(begin);
 
   for (int position = begin + 1; position < end; ++position) {
     // ClearBucket(position);
-    CalculateArcCost(position);
-    CalculateBucketCost(position);
+    CalcBigramCost(position);
+    CalcUnigramCost(position);
   }
 
-  if (end_tag != -1) CalculateArcCost(end);
+  if (end_tag != -1) CalcBigramCost(end);
 }
 
-void CRFTagger::FindBestResult(int begin, int end, int end_tag) {
+void CRFTagger::StoreResult(int begin, int end, int end_tag) {
   int best_tag_id = 0;
   double best_cost = -1e37;
-  const Node *last_bucket = buckets_[end - 1];
+  const Node *last_bucket = lattice_[end - 1];
 
   if (end_tag != -1) {
     // Have the end tag ... so find the best result from left tag of `end_tag`
-    best_tag_id = buckets_[end][end_tag].left_tag_id;
+    best_tag_id = lattice_[end][end_tag].left_tag_id;
   } else {
-    for (int tag_id = 0; tag_id < model_->GetTagNumber(); ++tag_id) {
+    for (int tag_id = 0; tag_id < model_->ysize(); ++tag_id) {
       if (best_cost < last_bucket[tag_id].cost) {
         best_tag_id = tag_id;
         best_cost = last_bucket[tag_id].cost;
@@ -164,64 +110,64 @@ void CRFTagger::FindBestResult(int begin, int end, int end_tag) {
 
   for (int position = end - 1; position >= begin; --position) {
     result_[position - begin] = best_tag_id;
-    best_tag_id = buckets_[position][best_tag_id].left_tag_id;
+    best_tag_id = lattice_[position][best_tag_id].left_tag_id;
   }
 }
 
 void CRFTagger::ClearBucket(int position) {
-  memset(buckets_[position], 0, sizeof(Node) * model_->GetTagNumber());
+  memset(lattice_[position], 0, sizeof(Node) * model_->ysize());
 }
 
-void CRFTagger::CalculateBucketCost(int position) {
+void CRFTagger::CalcUnigramCost(int position) {
   int feature_ids[kMaxFeature],
       feature_id;
-  int feature_num = GetUnigramFeatureIds(position, feature_ids);
+  int feature_num = UnigramFeatureAt(position, feature_ids);
   double cost;
 
-  for (int tag_id = 0; tag_id < model_->GetTagNumber(); ++tag_id) {
-    cost = buckets_[position][tag_id].cost;
+  for (int tag_id = 0; tag_id < model_->ysize(); ++tag_id) {
+    cost = lattice_[position][tag_id].cost;
     for (int i = 0; i < feature_num; ++i) {
       feature_id = feature_ids[i];
-      cost += model_->GetUnigramCost(feature_id, tag_id);
+      cost += model_->unigram_cost(feature_id, tag_id);
     }
-    buckets_[position][tag_id].cost = cost;
+    lattice_[position][tag_id].cost = cost;
     // printf("Bucket Cost: %d %s %lf\n", position,
     // model_->GetTagText(tag_id), cost);
   }
 }
 
-void CRFTagger::CalculateBeginTagArcCost(int begin_tag) {
+void CRFTagger::CalcBeginTagBigramCost(int begin_tag) {
   int feature_ids[kMaxFeature],
       feature_id;
-  int feature_num = GetBigramFeatureIds(0, feature_ids);
+  int feature_num = BigramFeatureAt(0, feature_ids);
   double cost;
 
-  for (int tag_id = 0; tag_id < model_->GetTagNumber(); ++tag_id) {
+  for (int tag_id = 0; tag_id < model_->ysize(); ++tag_id) {
     cost = 0;
     for (int i = 0; i < feature_num; ++i) {
       feature_id = feature_ids[i];
-      cost += model_->GetBigramCost(feature_id, begin_tag, tag_id);
+      cost += model_->bigram_cost(feature_id, begin_tag, tag_id);
     }
-    buckets_[0][tag_id].cost = cost;
+    lattice_[0][tag_id].cost = cost;
   }
 }
 
-void CRFTagger::CalculateArcCost(int position) {
+void CRFTagger::CalcBigramCost(int position) {
   int feature_ids[kMaxFeature],
       feature_id;
-  int feature_num = GetBigramFeatureIds(position, feature_ids);
+  int feature_num = BigramFeatureAt(position, feature_ids);
   double cost, best_cost;
   int best_tag_id;
 
-  for (int tag_id = 0; tag_id < model_->GetTagNumber(); ++tag_id) {
+  for (int tag_id = 0; tag_id < model_->ysize(); ++tag_id) {
     best_cost = -1e37;
     for (int left_tag_id = 0;
-         left_tag_id < model_->GetTagNumber();
+         left_tag_id < model_->ysize();
          ++left_tag_id) {
-      cost = buckets_[position - 1][left_tag_id].cost;
+      cost = lattice_[position - 1][left_tag_id].cost;
       for (int i = 0; i < feature_num; ++i) {
         feature_id = feature_ids[i];
-        cost += model_->GetBigramCost(feature_id, left_tag_id, tag_id);
+        cost += model_->bigram_cost(feature_id, left_tag_id, tag_id);
         // printf("Arc Cost: %s %s %lf\n", model_->GetTagText(left_tag_id),
         // model_->GetTagText(tag_id),
         // model_->GetBigramCost(feature_id, left_tag_id, tag_id));
@@ -231,25 +177,25 @@ void CRFTagger::CalculateArcCost(int position) {
         best_cost = cost;
       }
     }
-    buckets_[position][tag_id].cost = best_cost;
-    buckets_[position][tag_id].left_tag_id = best_tag_id;
+    lattice_[position][tag_id].cost = best_cost;
+    lattice_[position][tag_id].left_tag_id = best_tag_id;
     // printf("Arc Cost: %d %s %s %lf\n", position, model_->GetTagText(tag_id),
     // model_->GetTagText(best_tag_id), best_cost);
   }
 }
 
-int CRFTagger::GetUnigramFeatureIds(int position, int *feature_ids) {
+int CRFTagger::UnigramFeatureAt(int position, int *feature_ids) {
   const char *template_str;
   int count = 0,
       feature_id;
   std::string feature_str;
   bool result;
 
-  for (int i = 0; i < model_->UnigramTemplateNum(); ++i) {
-    template_str = model_->GetUnigramTemplate(i);
+  for (int i = 0; i < model_->unigram_template_num(); ++i) {
+    template_str = model_->unigram_template(i);
     result = ApplyRule(&feature_str, template_str, position);
     assert(result);
-    feature_id = model_->GetFeatureId(feature_str.c_str());
+    feature_id = model_->xid(feature_str.c_str());
     if (feature_id != -1) {
       // printf("%s %d\n", feature_str.c_str(), feature_id);
       feature_ids[count++] = feature_id;
@@ -259,18 +205,18 @@ int CRFTagger::GetUnigramFeatureIds(int position, int *feature_ids) {
   return count;
 }
 
-int CRFTagger::GetBigramFeatureIds(int position, int *feature_ids) {
+int CRFTagger::BigramFeatureAt(int position, int *feature_ids) {
   const char *template_str;
   int count = 0,
       feature_id;
   std::string feature_str;
   bool result;
 
-  for (int i = 0; i < model_->BigramTemplateNum(); ++i) {
-    template_str = model_->GetBigramTemplate(i);
+  for (int i = 0; i < model_->bigram_template_num(); ++i) {
+    template_str = model_->bigram_template(i);
     result = ApplyRule(&feature_str, template_str, position);
     assert(result);
-    feature_id = model_->GetFeatureId(feature_str.c_str());
+    feature_id = model_->xid(feature_str.c_str());
     if (feature_id != -1) {
       feature_ids[count++] = feature_id;
     }
@@ -333,11 +279,11 @@ NEXT2:
   if (idx < 0) {
     return BOS[-idx-1];
   }
-  if (idx >= static_cast<int>(feature_extractor_->size())) {
-    return EOS[idx - feature_extractor_->size()];
+  if (idx >= static_cast<int>(sequence_feature_set_->size())) {
+    return EOS[idx - sequence_feature_set_->size()];
   }
 
-  return GetFeatureAt(idx, col);
+  return sequence_feature_set_->at_index(idx)->at(col);
 }
 
 bool CRFTagger::ApplyRule(std::string *output_str,

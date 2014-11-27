@@ -47,17 +47,17 @@ class CRFModel {
   ~CRFModel();
 
   // Get internal id of feature_str, if not exists return -1
-  int GetFeatureId(const char *feature_str) const {
+  int xid(const char *feature_str) const {
     return double_array_->exactMatchSearch<int>(feature_str);
   }
 
   // Get Tag's string text by its id
-  const char *GetTagText(int tag_id) const {
+  const char *yname(int tag_id) const {
     return y_[tag_id];
   }
 
   // Get Tag's id by its text, return -1 if it not exists
-  int GetTagId(const char *tag_text) const  {
+  int yid(const char *tag_text) const  {
     std::vector<const char *>::const_iterator it;
     for (it = y_.begin(); it != y_.end(); ++it) {
       if (strcmp(tag_text, *it) == 0) return it - y_.begin();
@@ -67,40 +67,38 @@ class CRFModel {
   }
 
   // Get the unigram template
-  const char *GetUnigramTemplate(int index) const {
+  const char *unigram_template(int index) const {
     return unigram_templs_[index];
   }
 
   // Get the number of unigram template
-  int UnigramTemplateNum() const {
+  int unigram_template_num() const {
     return unigram_templs_.size();
   }
 
   // Get the bigram template
-  const char *GetBigramTemplate(int index) const {
+  const char *bigram_template(int index) const {
     return bigram_templs_[index];
   }
 
   // Get the number of unigram template
-  int BigramTemplateNum() const {
+  int bigram_template_num() const {
     return bigram_templs_.size();
   }
 
   // Get the number of tag
-  int GetTagNumber() const {
+  int ysize() const {
     return y_.size();
   }
 
   // Get the cost for feature with current tag
-  double GetUnigramCost(int feature_id, int tag_id) const {
-    return cost_data_[feature_id + tag_id];
+  double unigram_cost(int xid, int tag_id) const {
+    return cost_data_[xid + tag_id];
   }
 
   // Get the bigram cost for feature with left tag and right tag
-  double GetBigramCost(int feature_id,
-                       int left_tag_id,
-                       int right_tag_id) const {
-    return cost_data_[feature_id + left_tag_id * y_.size() + right_tag_id];
+  double bigram_cost(int xid, int left_tag, int right_tag) const {
+    return cost_data_[xid + left_tag * y_.size() + right_tag];
   }
 
   // Get feature column number

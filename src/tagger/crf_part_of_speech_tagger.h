@@ -38,21 +38,7 @@
 
 namespace milkcat {
 
-class PartOfSpeechFeatureExtractor: public SequenceFeatureExtractor {
- public:
-  void set_term_instance(const TermInstance *term_instance) {
-    term_instance_ = term_instance;
-  }
-  size_t size() const { return term_instance_->size(); }
-
-  void ExtractFeatureAt(size_t position,
-                        char (*feature_list)[kFeatureLengthMax],
-                        int list_size);
-
- private:
-  const TermInstance *term_instance_;
-};
-
+class SequenceFeatureSet;
 
 class CRFPartOfSpeechTagger: public PartOfSpeechTagger {
  public:
@@ -79,12 +65,9 @@ class CRFPartOfSpeechTagger: public PartOfSpeechTagger {
 
  private:
   CRFTagger *crf_tagger_;
+  SequenceFeatureSet *sequence_feature_set_;
 
   CRFPartOfSpeechTagger();
-
-  // Use FeatureExtractor to extract part-of-speech tagging features from
-  // TermInstance to the CRF tagger
-  PartOfSpeechFeatureExtractor *feature_extractor_;
 
   DISALLOW_COPY_AND_ASSIGN(CRFPartOfSpeechTagger);
 };

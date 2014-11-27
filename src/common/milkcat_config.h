@@ -33,7 +33,8 @@
 namespace milkcat {
 
 enum {
-  kTokenMax = 4096,
+  kSequenceMax = 4096,
+  kTokenMax = kSequenceMax,
   kFeatureLengthMax = 100,
   kTermLengthMax = kFeatureLengthMax,
   kPOSTagLengthMax = 10,

@@ -207,7 +207,8 @@ void DependencyParser::Test(
     for (int i = 0; i < term_instance->size(); ++i) {      
 
       // Ignore punctions
-      if (strcmp(tag_instance->part_of_speech_tag_at(i), "PU") == 0)
+      if (strcmp(tag_instance->part_of_speech_tag_at(i), "PU") == 0 ||
+          tag_instance->part_of_speech_tag_at(i)[0] == 'w')
         continue;
       total++;
       if (tree_instance_gold->head_node_at(i) == 

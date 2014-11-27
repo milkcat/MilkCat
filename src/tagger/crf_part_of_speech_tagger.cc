@@ -29,66 +29,24 @@
 
 #include <string.h>
 #include "common/milkcat_config.h"
-#include "ml/sequence_feature_extractor.h"
+#include "ml/sequence_feature_set.h"
 #include "utils/utils.h"
 
 namespace milkcat {
 
-void PartOfSpeechFeatureExtractor::ExtractFeatureAt(
-    size_t position,
-    char (*feature_list)[kFeatureLengthMax],
-    int list_size) {
-  assert(list_size == 3);
-  int term_type = term_instance_->term_type_at(position);
-  const char *term_text = term_instance_->term_text_at(position);
-  size_t term_length = strlen(term_text);
-
-  switch (term_type) {
-   case Parser::kChineseWord:
-    // term itself
-    strlcpy(feature_list[0], term_text, kFeatureLengthMax);
-
-    // first character of the term
-    strlcpy(feature_list[1], term_text, 4);
-
-    // last character of the term
-    strlcpy(feature_list[2], term_text + term_length - 3, kFeatureLengthMax);
-    break;
-
-   case Parser::kEnglishWord:
-   case Parser::kSymbol:
-    strlcpy(feature_list[0], "A", kFeatureLengthMax);
-    strlcpy(feature_list[1], "A", kFeatureLengthMax);
-    strlcpy(feature_list[2], "A", kFeatureLengthMax);
-    break;
-
-   case Parser::kNumber:
-    strlcpy(feature_list[0], "1", kFeatureLengthMax);
-    strlcpy(feature_list[1], "1", kFeatureLengthMax);
-    strlcpy(feature_list[2], "1", kFeatureLengthMax);
-    break;
-
-   default:
-    strlcpy(feature_list[0], ".", kFeatureLengthMax);
-    strlcpy(feature_list[1], ".", kFeatureLengthMax);
-    strlcpy(feature_list[2], ".", kFeatureLengthMax);
-    break;
-  }
-}
-
 
 CRFPartOfSpeechTagger::CRFPartOfSpeechTagger(const CRFModel *model) {
-  feature_extractor_ = new PartOfSpeechFeatureExtractor();
+  sequence_feature_set_ = new SequenceFeatureSet();
   crf_tagger_ = new CRFTagger(model);
 }
 
 CRFPartOfSpeechTagger::CRFPartOfSpeechTagger(): crf_tagger_(NULL),
-                                                feature_extractor_(NULL) {
+                                                sequence_feature_set_(NULL) {
 }
 
 CRFPartOfSpeechTagger::~CRFPartOfSpeechTagger() {
-  delete feature_extractor_;
-  feature_extractor_ = NULL;
+  delete sequence_feature_set_;
+  sequence_feature_set_ = NULL;
 
   delete crf_tagger_;
   crf_tagger_ = NULL;
@@ -99,12 +57,58 @@ void CRFPartOfSpeechTagger::TagRange(
     TermInstance *term_instance,
     int begin,
     int end) {
-  feature_extractor_->set_term_instance(term_instance);
-  crf_tagger_->TagRange(feature_extractor_, begin, end);
+  char buff[kFeatureLengthMax];
+
+  // Prepares the `sequence_feature_set_` for tagging
+  sequence_feature_set_->set_size(term_instance->size());
+  for (int idx = 0; idx < term_instance->size(); ++idx) {
+    int type = term_instance->term_type_at(idx);
+    const char *word = term_instance->term_text_at(idx);
+    int length = strlen(word);  
+
+    FeatureSet *feature_set = sequence_feature_set_->at_index(idx);
+    feature_set->Clear();
+
+    switch (type) {
+      case Parser::kChineseWord:
+        // term itself
+        feature_set->Add(word);
+        strlcpy(buff, word, 4);
+        feature_set->Add(buff);
+        feature_set->Add(word + length - 3);
+        sprintf(buff, "%d", length / 3);
+        feature_set->Add(buff);
+        break;
+
+      case Parser::kEnglishWord:
+      case Parser::kSymbol:
+        feature_set->Add("A");
+        feature_set->Add("A");
+        feature_set->Add("A");
+        feature_set->Add("1");
+        break;
+
+      case Parser::kNumber:
+        feature_set->Add("1");
+        feature_set->Add("1");
+        feature_set->Add("1");
+        feature_set->Add("1");
+        break;
+
+      default:
+        feature_set->Add(".");
+        feature_set->Add(".");
+        feature_set->Add(".");
+        feature_set->Add("1");
+        break;
+    }  
+  }
+
+  crf_tagger_->TagRange(sequence_feature_set_, begin, end);
   for (size_t i = 0; i < end - begin; ++i) {
     part_of_speech_tag_instance->set_value_at(
         i,
-        crf_tagger_->GetTagText(crf_tagger_->GetTagAt(i)));
+        crf_tagger_->GetTagText(crf_tagger_->y(i)));
   }
   part_of_speech_tag_instance->set_size(end - begin);
 }

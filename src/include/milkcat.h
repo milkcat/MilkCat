@@ -29,7 +29,8 @@
 
 #include <stdint.h>
 #include <stdlib.h>
-#include <string>
+
+#ifdef __cplusplus
 
 namespace milkcat {
 
@@ -174,5 +175,7 @@ class Parser::Iterator {
 const char *LastError();
 
 }  // namespace milkcat
+
+#endif  // __cplusplus
 
 #endif  // MILKCAT_H_

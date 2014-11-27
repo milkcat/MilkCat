@@ -40,11 +40,14 @@
 #include "common/darts.h"
 #include "common/static_hashtable.h"
 #include "common/trie_tree.h"
+#include "ml/crf_model.h"
+#include "ml/crf_tagger.h"
 #include "ml/multiclass_perceptron_model.h"
 #include "include/milkcat.h"
 #include "parser/beam_arceager_dependency_parser.h"
 #include "parser/dependency_parser.h"
 #include "parser/naive_arceager_dependency_parser.h"
+#include "tagger/crf_part_of_speech_tagger.h"
 #include "tagger/hmm_part_of_speech_tagger.h"
 #include "utils/utils.h"
 #include "utils/readable_file.h"
@@ -394,6 +397,7 @@ int TestDependendyParser(int argc, char **argv) {
   double LAS, UAS;
   if (status.ok()) {
     parser = new BeamArceagerDependencyParser(model, feature);
+    // parser = new NaiveArceagerDependencyParser(model, feature);
     DependencyParser::Test(
         corpus_file,
         parser,
@@ -426,10 +430,10 @@ int TestPartOfSpeechTagger(int argc, char **argv) {
 
   Status status;
 
-  HMMPartOfSpeechTagger *tagger = NULL;
-  HMMModel *model = HMMModel::New(model_file, &status);
+  CRFPartOfSpeechTagger *tagger = NULL;
+  CRFModel *model = CRFModel::New(model_file, &status);
   if (status.ok()) {
-    tagger = HMMPartOfSpeechTagger::New(model, &status);
+    tagger = new CRFPartOfSpeechTagger(model);
   }
   double ta = 0.0;
   if (status.ok()) {

@@ -35,7 +35,7 @@
 
 namespace milkcat {
 
-class SegmentFeatureExtractor;
+class SequenceFeatureSet;
 class TermInstance;
 
 class CRFSegmenter: public Segmenter {
@@ -55,8 +55,7 @@ class CRFSegmenter: public Segmenter {
 
  private:
   CRFTagger *crf_tagger_;
-
-  SegmentFeatureExtractor *feature_extractor_;
+  SequenceFeatureSet *sequence_feature_set_;
 
   int S, B, B1, B2, M, E;
 

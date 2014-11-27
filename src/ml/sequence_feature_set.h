@@ -1,6 +1,4 @@
 //
-// feature_extractor.h --- Created at 2013-10-09
-//
 // The MIT License (MIT)
 //
 // Copyright 2013-2014 The MilkCat Project Developers
@@ -23,26 +21,43 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 //
+// sequence_feature_set.h --- Created at 2014-11-27
+//
 
-#ifndef SRC_COMMON_SEQUENCE_FEATURE_EXTRACTOR_H_
-#define SRC_COMMON_SEQUENCE_FEATURE_EXTRACTOR_H_
+#ifndef SRC_ML_SEQUENCE_FEATURE_SET_H_
+#define SRC_ML_SEQUENCE_FEATURE_SET_H_
 
-#include <stdlib.h>
+#include <assert.h>
 #include "common/milkcat_config.h"
+#include "ml/feature_set.h"
 
 namespace milkcat {
 
-class SequenceFeatureExtractor {
+// A sequence of FeatureSet
+class SequenceFeatureSet {
  public:
-  virtual void ExtractFeatureAt(size_t position,
-                                char (*feature_list)[kFeatureLengthMax],
-                                int list_size) = 0;
-  virtual size_t size() const = 0;
-  virtual ~SequenceFeatureExtractor();
-};
+  SequenceFeatureSet(): size_(0) {
+  }
 
-inline SequenceFeatureExtractor::~SequenceFeatureExtractor() {}
+  // Returns the FeatureSet at `index`
+  FeatureSet *at_index(int index) {
+    assert(index < size_);
+    return &sequence_[index];
+  }
+
+  // Sets/Gets the size of current SequenceFeatureSet
+  void set_size(int size) {
+    assert(size_ < kTokenMax);
+    size_ = size;
+  }
+  int size() const { return size_; }
+
+
+ private:
+  FeatureSet sequence_[kTokenMax];
+  int size_;
+};
 
 }  // namespace milkcat
 
-#endif  // SRC_COMMON_SEQUENCE_FEATURE_EXTRACTOR_H_
+#endif  // SRC_ML_SEQUENCE_FEATURE_SET_H_

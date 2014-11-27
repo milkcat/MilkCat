@@ -27,6 +27,8 @@
 #ifndef SRC_COMMON_FEATURE_EXTRACTOR_H_
 #define SRC_COMMON_FEATURE_EXTRACTOR_H_
 
+#include <assert.h>
+
 namespace milkcat {
 
 // FeatureSet likes a feature vector that each dimemsion is neither 0 or 1.
@@ -47,7 +49,8 @@ class FeatureSet {
   void Clear() { top_ = 0; }
 
   // Gets the feature string at `index`
-  char *at(int index) const { 
+  char *at(int index) const {
+    assert(index < top_);
     return const_cast<char *>(feature_string_[index]); 
   }
 

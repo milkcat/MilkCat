@@ -37,106 +37,82 @@
 #include <string>
 #include "common/milkcat_config.h"
 #include "ml/crf_model.h"
-#include "ml/sequence_feature_extractor.h"
+#include "ml/sequence_feature_set.h"
 
 namespace milkcat {
+
+class SequenceFeatureSet;
 
 class CRFTagger {
  public:
   explicit CRFTagger(const CRFModel *model);
   ~CRFTagger();
-  static const int kMaxBucket = kTokenMax;
   static const int kMaxFeature = 24;
 
   // Tag a range of instance with the begin tag before the result and the end
   // tag after the result
-  void TagRange(SequenceFeatureExtractor *feature_extractor,
+  void TagRange(SequenceFeatureSet *sequence_feature_set,
                 int begin,
                 int end,
                 int begin_tag,
                 int end_tag);
 
   // Tag a range of instance
-  void TagRange(SequenceFeatureExtractor *feature_extractor, int begin, int end) {
-    TagRange(feature_extractor, begin, end, -1, -1);
+  void TagRange(SequenceFeatureSet *sequence_feature_set, int begin, int end) {
+    TagRange(sequence_feature_set, begin, end, -1, -1);
   }
 
   // Tag a sentence the result could retrive by GetTagAt
-  void Tag(SequenceFeatureExtractor *feature_extractor) {
-    TagRange(feature_extractor, 0, feature_extractor->size(), -1, -1);
+  void Tag(SequenceFeatureSet *sequence_feature_set) {
+    TagRange(sequence_feature_set, 0, sequence_feature_set->size(), -1, -1);
   }
 
-  // Get the tag probability at one position in instance, only use the unigram
-  // feature write the result into probability (probability of tag at
-  // probability[tag]).
-  void ProbabilityAtPosition(SequenceFeatureExtractor *feature_extractor, 
-                             int position,
-                             double *probability);
-
-  // Get the result tag at position, position starts from 0
-  int GetTagAt(int position) {
-    return result_[position];
+  // Get the result tag at `idx`, position starts from 0
+  int y(int idx) {
+    return result_[idx];
   }
 
   // Get the number of tags in model
-  int GetTagSize() const {
-    return model_->GetTagNumber();
+  int ysize() const {
+    return model_->ysize();
   }
 
   // Get Tag's id by its text, return -1 if it not exists
-  int GetTagId(const char *tag_text) const {
-    return model_->GetTagId(tag_text);
+  int yid(const char *yname) const {
+    return model_->yid(yname);
   }
 
   // Get Tag's string text by its id
   const char *GetTagText(int tag_id) {
-    return model_->GetTagText(tag_id);
+    return model_->yname(tag_id);
   }
 
  private:
   struct Node;
 
   const CRFModel *model_;
-  Node *buckets_[kMaxBucket];
-  int result_[kMaxBucket];
-  SequenceFeatureExtractor *feature_extractor_;
+  Node *lattice_[kSequenceMax];
+  int result_[kSequenceMax];
+  SequenceFeatureSet *sequence_feature_set_;
 
-  char feature_cache_[kMaxBucket][kMaxFeature][kFeatureLengthMax];
-  int feature_cache_left_;
-  int feature_cache_right_;
-  bool feature_cache_flag_[kMaxBucket];
-
-  // Get the feature from cache or feature extractor
-  const char *GetFeatureAt(int position, int index);
-
-  // Clear the Feature cache
-  void ClearFeatureCache();
-
-  // Get the id list of bigram features in position, returns the size of the
-  // list
-  int GetBigramFeatureIds(int position, int *feature_ids);
-
-  // Get the id list of unigram features in position, returns the size of the
-  // list
-  int GetUnigramFeatureIds(int position, int *feature_ids);
+  // Get the xid of unigram/bigram features at `idx`, returns the number of
+  // features
+  int BigramFeatureAt(int idx, int *feature_ids);
+  int UnigramFeatureAt(int idx, int *feature_ids);
 
   // CLear the decode bucket
   void ClearBucket(int position);
 
-  // Calculate the unigram cost for each tag in bucket
-  void CalculateBucketCost(int position);
-
-  // Calcualte the bigram cost from tag to tag in bucket
-  void CalculateArcCost(int position);
-
-  // Calculate the cost of the arc from begin tag to all tags in position 0
-  void CalculateBeginTagArcCost(int begin_tag);
+  // Calculate the unigram/bigram costs
+  void CalcUnigramCost(int idx);
+  void CalcBigramCost(int idx);
+  void CalcBeginTagBigramCost(int begin_tag);
 
   // Viterbi algorithm
   void Viterbi(int begin, int end, int begin_tag, int end_tag);
 
-  // Get the best tag sequence from Viterbi result
-  void FindBestResult(int begin, int end, int end_tag);
+  // Get the best tag sequence from lattice and stores it into `lattice_`
+  void StoreResult(int begin, int end, int end_tag);
 
   const char *GetIndex(const char **pp, int position);
   bool ApplyRule(std::string *output_str,

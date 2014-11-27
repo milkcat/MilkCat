@@ -31,7 +31,7 @@
 #include <string>
 #include "libmilkcat.h"
 #include "common/model_impl.h"
-#include "ml/sequence_feature_extractor.h"
+#include "ml/sequence_feature_set.h"
 #include "segmenter/crf_segmenter.h"
 #include "segmenter/term_instance.h"
 #include "tokenizer/token_instance.h"
@@ -39,47 +39,21 @@
 
 namespace milkcat {
 
-class SegmentFeatureExtractor: public SequenceFeatureExtractor {
- public:
-  void set_token_instance(const TokenInstance *token_instance) {
-    token_instance_ = token_instance;
-  }
-
-  size_t size() const { return token_instance_->size(); }
-
-  void ExtractFeatureAt(size_t position,
-                        char (*feature_list)[kFeatureLengthMax],
-                        int list_size) {
-    assert(list_size == 1);
-    int token_type = token_instance_->token_type_at(position);
-    if (token_type == TokenInstance::kChineseChar) {
-      strlcpy(feature_list[0],
-              token_instance_->token_text_at(position),
-              kFeatureLengthMax);
-    } else {
-      strlcpy(feature_list[0], "，", kFeatureLengthMax);
-    }
-  }
-
- private:
-  const TokenInstance *token_instance_;
-};
-
 CRFSegmenter *CRFSegmenter::New(Model::Impl *model_factory, Status *status) {
   CRFSegmenter *self = new CRFSegmenter();
   const CRFModel *model = model_factory->CRFSegModel(status);
   
   if (status->ok()) {
     self->crf_tagger_ = new CRFTagger(model);
-    self->feature_extractor_ = new SegmentFeatureExtractor();
+    self->sequence_feature_set_ = new SequenceFeatureSet();
 
     // Get the tag's value in CRF++ model
-    self->S = self->crf_tagger_->GetTagId("S");
-    self->B = self->crf_tagger_->GetTagId("B");
-    self->B1 = self->crf_tagger_->GetTagId("B1");
-    self->B2 = self->crf_tagger_->GetTagId("B2");
-    self->M = self->crf_tagger_->GetTagId("M");
-    self->E = self->crf_tagger_->GetTagId("E");
+    self->S = self->crf_tagger_->yid("S");
+    self->B = self->crf_tagger_->yid("B");
+    self->B1 = self->crf_tagger_->yid("B1");
+    self->B2 = self->crf_tagger_->yid("B2");
+    self->M = self->crf_tagger_->yid("M");
+    self->E = self->crf_tagger_->yid("E");
 
     if (self->S < 0 || self->B < 0 || self->B1 < 0 || self->B2 < 0 ||
         self->M < 0 || self->E < 0) {
@@ -97,15 +71,15 @@ CRFSegmenter *CRFSegmenter::New(Model::Impl *model_factory, Status *status) {
 }
 
 CRFSegmenter::~CRFSegmenter() {
-  delete feature_extractor_;
-  feature_extractor_ = NULL;
+  delete sequence_feature_set_;
+  sequence_feature_set_ = NULL;
 
   delete crf_tagger_;
   crf_tagger_ = NULL;
 }
 
 CRFSegmenter::CRFSegmenter(): crf_tagger_(NULL),
-                              feature_extractor_(NULL) {}
+                              sequence_feature_set_(NULL) {}
 
 void CRFSegmenter::SegmentRange(TermInstance *term_instance,
                                 TokenInstance *token_instance,
@@ -113,8 +87,20 @@ void CRFSegmenter::SegmentRange(TermInstance *term_instance,
                                 int end) {
   std::string buffer;
 
-  feature_extractor_->set_token_instance(token_instance);
-  crf_tagger_->TagRange(feature_extractor_, begin, end, S, S);
+  // Puts the `token_instance` into `sequence_feature_set_`
+  sequence_feature_set_->set_size(token_instance->size());
+  for (int idx = 0; idx < token_instance->size(); ++idx) {
+    FeatureSet *feature_set = sequence_feature_set_->at_index(idx);
+    feature_set->Clear();
+    int token_type = token_instance->token_type_at(idx);
+    if (token_type == TokenInstance::kChineseChar) {
+      feature_set->Add(token_instance->token_text_at(idx));
+    } else {
+      feature_set->Add("，");
+    }
+  }
+
+  crf_tagger_->TagRange(sequence_feature_set_, begin, end, S, S);
 
   int tag_id;
   int term_count = 0;
@@ -125,7 +111,7 @@ void CRFSegmenter::SegmentRange(TermInstance *term_instance,
     token_count++;
     buffer.append(token_instance->token_text_at(begin + i));
 
-    tag_id = crf_tagger_->GetTagAt(i);
+    tag_id = crf_tagger_->y(i);
     if (tag_id == S || tag_id == E) {
       if (tag_id == S) {
         term_type = TokenTypeToTermType(
