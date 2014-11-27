@@ -7,9 +7,9 @@ AC_CONFIG_AUX_DIR([scripts])
 
 AC_PROG_CC
 AC_PROG_CXX
+AC_PROG_RANLIB
 AM_INIT_AUTOMAKE([-Wall -Werror foreign]) 
 AC_CONFIG_MACRO_DIR([m4])
-LT_INIT
 
 AC_LANG_PUSH(C++)
 AC_CHECK_HEADERS([tr1/unordered_map unordered_map])

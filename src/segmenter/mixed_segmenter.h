@@ -28,10 +28,7 @@
 #define SRC_SEGMENTER_MIXED_SEGMENTER_H_
 
 #include "include/milkcat.h"
-#include "common/static_hashtable.h"
-#include "ml/crf_model.h"
 #include "segmenter/segmenter.h"
-#include "utils/utils.h"
 
 namespace milkcat {
 
@@ -39,6 +36,7 @@ class OutOfVocabularyWordRecognition;
 class BigramSegmenter;
 class TermInstance;
 class TokenInstance;
+class Status;
 
 // Mixed Bigram segmenter and CRF Segmenter of OOV recognition
 class MixedSegmenter: public Segmenter {
