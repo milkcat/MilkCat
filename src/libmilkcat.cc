@@ -306,11 +306,11 @@ Parser::Impl::~Impl() {
   model_impl_ = NULL;
 }
 
-Parser::Impl *Parser::Impl::New(const Options &options) {
+Parser::Impl *Parser::Impl::New(const Options &options, Model *model) {
   global_status = Status::OK();
   Impl *self = new Parser::Impl();
   int type = options.TypeValue();
-  Model::Impl *model_impl = options.model()? options.model()->impl(): NULL;
+  Model::Impl *model_impl = model? model->impl(): NULL;
 
   if (model_impl == NULL) {
     self->model_impl_ = new Model::Impl(MODEL_PATH);
@@ -360,9 +360,17 @@ Parser::~Parser() {
   impl_ = NULL;
 }
 
+Parser *Parser::New() {
+  return New(Options(), NULL);
+}
+
 Parser *Parser::New(const Options &options) {
+  return New(options, NULL);
+}
+
+Parser *Parser::New(const Options &options, Model *model) {
   Parser *self = new Parser();
-  self->impl_ = Impl::New(options);
+  self->impl_ = Impl::New(options, model);
 
   if (self->impl_) {
     return self;
@@ -376,16 +384,10 @@ void Parser::Parse(const char *text, Parser::Iterator *iterator) {
   return impl_->Parse(text, iterator);
 }
 
-Parser::Options::Options(): model_(NULL),
-                            segmenter_type_(kMixedSegmenter),
-                            tagger_type_(kMixedTagger),
+Parser::Options::Options(): segmenter_type_(kMixedSegmenter),
+                            tagger_type_(kCrfTagger),
                             parser_type_(kNoParser) {
 }
-
-void Parser::Options::SetModel(Model *model) {
-  model_ = model;
-}
-Model *Parser::Options::model() const { return model_; }
 
 void Parser::Options::UseMixedSegmenter() {
   segmenter_type_ = kMixedSegmenter;

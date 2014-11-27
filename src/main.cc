@@ -233,8 +233,8 @@ int ParserMain(int argc, char **argv) {
       exit(1);
     }
   }
-  options.parser_options.SetModel(model);
-  Parser *parser = Parser::New(options.parser_options);
+  
+  Parser *parser = Parser::New(options.parser_options, model);
   Parser::Iterator *it = new Parser::Iterator();
 
   if (parser == NULL) {

@@ -77,7 +77,7 @@ PartOfSpeechTagger *PartOfSpeechTaggerFactory(Model::Impl *factory,
 
 class Parser::Impl {
  public:
-  static Impl *New(const Options &options);
+  static Impl *New(const Options &options, Model *model);
   ~Impl();
 
   void Parse(const char *text, Iterator *iterator);

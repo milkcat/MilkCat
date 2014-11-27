@@ -86,8 +86,9 @@ class Parser {
   ~Parser();
 
   // Create the parser. 
-  static Parser *New(const Options &options);
   static Parser *New();
+  static Parser *New(const Options &options);
+  static Parser *New(const Options &options, Model *model);
 
   // Parses the text and stores the result into the iterator
   void Parse(const char *text, Iterator *iterator);
@@ -104,11 +105,6 @@ class Parser {
 class Parser::Options {
  public:
   Options();
-
-  // Sets the model used in parser. If not set, just use the model created by
-  // parser itself.
-  void SetModel(Model *model);
-  Model *model() const;
 
   // The type of segmenter, part-of-speech tagger and dependency parser
   // Default is MixedSegmenter, MixedPOSTagger and NoDependencyParser
@@ -129,12 +125,10 @@ class Parser::Options {
   int TypeValue() const;
 
  private:
-  Model *model_;
   int segmenter_type_;
   int tagger_type_;
   int parser_type_;
 };
-
 
 class Parser::Iterator {
  public:
