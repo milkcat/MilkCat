@@ -45,6 +45,8 @@ class SequenceFeatureSet;
 
 class CRFTagger {
  public:
+  class TransitionTable;
+
   explicit CRFTagger(const CRFModel *model);
   ~CRFTagger();
   static const int kMaxFeature = 24;
@@ -87,6 +89,9 @@ class CRFTagger {
     return model_->yname(tag_id);
   }
 
+  // Gets `transition_table_`
+  TransitionTable *transition_table() { return transition_table_; }
+
  private:
   struct Node;
 
@@ -94,6 +99,7 @@ class CRFTagger {
   Node *lattice_[kSequenceMax];
   int result_[kSequenceMax];
   SequenceFeatureSet *sequence_feature_set_;
+  TransitionTable *transition_table_;
 
   // Get the xid of unigram/bigram features at `idx`, returns the number of
   // features
@@ -118,6 +124,31 @@ class CRFTagger {
   bool ApplyRule(std::string *output_str,
                  const char *template_str,
                  size_t position);
+};
+
+// TransitionTable stores the allowed transitions
+class CRFTagger::TransitionTable {
+ public:
+  TransitionTable(const CRFModel *model);
+  ~TransitionTable();
+
+  // Allows / Disallows transition from `left` to `right`
+  void Allow(int left, int right);
+  void Disallow(int left, int right);
+
+  // AllowAll / DisallowAll transitions
+  void AllowAll();
+  void DisallowAll();
+
+  // Return whether transition from `left` to `right` is OK
+  bool transition(int left, int right) const {
+    return transition_[ysize_ * left + right];
+  }
+
+ private:
+  bool *transition_;
+  int ysize_;
+  const CRFModel *model_;
 };
 
 }  // namespace milkcat

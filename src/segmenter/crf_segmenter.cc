@@ -63,6 +63,26 @@ CRFSegmenter *CRFSegmenter::New(Model::Impl *model_factory, Status *status) {
   }
 
   if (status->ok()) {
+    CRFTagger::TransitionTable *
+    transition_table = self->crf_tagger_->transition_table();
+
+    // Speed up decoding by only calculating the specified transitions
+    transition_table->DisallowAll();
+    transition_table->Allow(self->S, self->S);
+    transition_table->Allow(self->S, self->B);
+    transition_table->Allow(self->B, self->B1);
+    transition_table->Allow(self->B, self->E);
+    transition_table->Allow(self->B1, self->B2);
+    transition_table->Allow(self->B1, self->E);
+    transition_table->Allow(self->B2, self->M);
+    transition_table->Allow(self->B2, self->E);
+    transition_table->Allow(self->M, self->M);
+    transition_table->Allow(self->M, self->E);
+    transition_table->Allow(self->E, self->S);
+    transition_table->Allow(self->E, self->B);
+  }
+
+  if (status->ok()) {
     return self;
   } else {
     delete self;

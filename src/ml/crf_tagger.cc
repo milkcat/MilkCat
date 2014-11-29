@@ -57,12 +57,18 @@ CRFTagger::CRFTagger(const CRFModel *model): model_(model) {
   for (int i = 0; i < kSequenceMax; ++i) {
     lattice_[i] = new Node[model_->ysize()];
   }
+
+  transition_table_ = new TransitionTable(model);
+  transition_table_->AllowAll();
 }
 
 CRFTagger::~CRFTagger() {
   for (int i = 0; i < kSequenceMax; ++i) {
     delete[] lattice_[i];
   }
+
+  delete transition_table_;
+  transition_table_ = NULL;
 }
 
 void CRFTagger::TagRange(SequenceFeatureSet *sequence_feature_set,
@@ -157,13 +163,17 @@ void CRFTagger::CalcBigramCost(int position) {
       feature_id;
   int feature_num = BigramFeatureAt(position, feature_ids);
   double cost, best_cost;
-  int best_tag_id;
+  int best_tag_id = 0;
 
   for (int tag_id = 0; tag_id < model_->ysize(); ++tag_id) {
     best_cost = -1e37;
     for (int left_tag_id = 0;
          left_tag_id < model_->ysize();
          ++left_tag_id) {
+      // Ignore the bigram when it is not allowed in `transition_table_`
+      if (transition_table_->transition(left_tag_id, tag_id) == false)
+        continue;
+
       cost = lattice_[position - 1][left_tag_id].cost;
       for (int i = 0; i < feature_num; ++i) {
         feature_id = feature_ids[i];
@@ -314,6 +324,41 @@ bool CRFTagger::ApplyRule(std::string *output_str,
     }
   }
   return true;
+}
+
+CRFTagger::TransitionTable::TransitionTable(const CRFModel *model):
+    model_(model) {
+  ysize_ = model->ysize();
+  transition_ = new bool[ysize_ * ysize_];
+  AllowAll();
+}
+CRFTagger::TransitionTable::~TransitionTable() {
+  delete transition_;
+  transition_ = NULL;
+}
+
+void CRFTagger::TransitionTable::Allow(int left, int right) {
+  assert(left < ysize_ && right < ysize_);
+  transition_[left * ysize_ + right] = true;
+}
+void CRFTagger::TransitionTable::Disallow(int left, int right) {
+  assert(left < ysize_ && right < ysize_);
+  transition_[left * ysize_ + right] = false;
+}
+
+void CRFTagger::TransitionTable::AllowAll() {
+  for (int left = 0; left < ysize_; ++left) {
+    for (int right = 0; right < ysize_; ++right) {
+      Allow(left, right);
+    }
+  }
+}
+void CRFTagger::TransitionTable::DisallowAll() {
+  for (int left = 0; left < ysize_; ++left) {
+    for (int right = 0; right < ysize_; ++right) {
+      Disallow(left, right);
+    }
+  }
 }
 
 }  // namespace milkcat
