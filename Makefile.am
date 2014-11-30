@@ -5,11 +5,11 @@ AM_CXXFLAGS = -I$(top_srcdir)/src -DMODEL_PATH=\"$(pkgdatadir)/\" -fno-rtti \
 
 dist_pkgdata_DATA = data/bigram.bin \
                     data/ctb_pos.crf \
-                    data/pku_pos.hmm \
+                    data/ctb_pos.hmm \
+                    data/ctb_pos.hmm.x.idx \
                     data/ctb_seg.crf \
                     data/oov_property.idx \
                     data/unigram.bin \
-                    data/person_name.maxent \
                     data/unigram.idx \
                     data/stopword.idx \
                     data/tfidf.bin \

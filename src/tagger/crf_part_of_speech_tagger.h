@@ -39,10 +39,13 @@
 namespace milkcat {
 
 class SequenceFeatureSet;
+class HMMModel;
+class Status;
 
 class CRFPartOfSpeechTagger: public PartOfSpeechTagger {
  public:
-  explicit CRFPartOfSpeechTagger(const CRFModel *model);
+  static CRFPartOfSpeechTagger *New(
+      const CRFModel *model, const HMMModel *hmm_model, Status *status);
   ~CRFPartOfSpeechTagger();
 
   CRFTagger *crf_tagger() const { return crf_tagger_; }
@@ -64,8 +67,15 @@ class CRFPartOfSpeechTagger: public PartOfSpeechTagger {
                 int end);
 
  private:
+  enum {
+    kEmissionThreshold = 5
+  };
+
   CRFTagger *crf_tagger_;
   SequenceFeatureSet *sequence_feature_set_;
+  const HMMModel *hmm_model_;
+  int *hmm_crf_ymap_;
+  int PU_;
 
   CRFPartOfSpeechTagger();
 

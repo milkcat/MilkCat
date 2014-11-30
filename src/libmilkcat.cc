@@ -116,15 +116,17 @@ Segmenter *SegmenterFactory(Model::Impl *factory,
 PartOfSpeechTagger *PartOfSpeechTaggerFactory(Model::Impl *factory,
                                               int analyzer_type,
                                               Status *status) {
-  const CRFModel *crf_pos_model;
+  const CRFModel *crf_pos_model = NULL;
+  const HMMModel *hmm_pos_model = NULL;
   int tagger_type = analyzer_type & kPartOfSpeechTaggerMask;
 
   switch (tagger_type) {
     case kCrfTagger:
       if (status->ok()) crf_pos_model = factory->CRFPosModel(status);
+      if (status->ok()) hmm_pos_model = factory->HMMPosModel(status);
 
       if (status->ok()) {
-        return new CRFPartOfSpeechTagger(crf_pos_model);
+        return CRFPartOfSpeechTagger::New(crf_pos_model, hmm_pos_model, status);
       } else {
         return NULL;
       }

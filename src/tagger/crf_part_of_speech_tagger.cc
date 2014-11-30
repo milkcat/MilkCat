@@ -29,19 +29,61 @@
 
 #include <string.h>
 #include "common/milkcat_config.h"
+#include "ml/hmm_model.h"
 #include "ml/sequence_feature_set.h"
 #include "utils/utils.h"
 
 namespace milkcat {
 
 
-CRFPartOfSpeechTagger::CRFPartOfSpeechTagger(const CRFModel *model) {
-  sequence_feature_set_ = new SequenceFeatureSet();
-  crf_tagger_ = new CRFTagger(model);
+CRFPartOfSpeechTagger *CRFPartOfSpeechTagger::New(
+    const CRFModel *model,
+    const HMMModel *hmm_model,
+    Status *status) {
+  char error_message[1024];
+  CRFPartOfSpeechTagger *self = new CRFPartOfSpeechTagger();
+  
+  self->sequence_feature_set_ = new SequenceFeatureSet();
+  self->crf_tagger_ = new CRFTagger(model);
+  self->hmm_model_ = hmm_model;
+
+  self->PU_ = model->yid("PU");
+  if (self->PU_ < 0) {
+    *status = Status::Corruption("Unable to find tag 'PU' in CRF model");
+  }
+
+  // If `hmm_model == NULL` don't use the hmm model
+  if (hmm_model == NULL) return self;
+
+  self->hmm_crf_ymap_ = new int[hmm_model->ysize()];
+  for (int hmm_tag = 0;
+       hmm_tag < hmm_model->ysize() && status->ok();
+       ++hmm_tag) {
+    const char *hmm_yname = hmm_model->yname(hmm_tag); 
+    // Ignore `-BOS-` tag
+    if (strcmp(hmm_yname, "-BOS-") == 0) continue;
+
+    int crf_yid = model->yid(hmm_yname);
+    if (crf_yid < 0) {
+      sprintf(error_message, "Unable to find tag '%s' in CRF model", hmm_yname);
+      *status = Status::Corruption(error_message);
+    } else {
+      self->hmm_crf_ymap_[hmm_tag] = crf_yid;
+    }
+  }
+
+  if (status->ok()) {
+    return self;
+  } else {
+    delete self;
+    return NULL;
+  }
 }
 
 CRFPartOfSpeechTagger::CRFPartOfSpeechTagger(): crf_tagger_(NULL),
-                                                sequence_feature_set_(NULL) {
+                                                sequence_feature_set_(NULL),
+                                                hmm_model_(NULL),
+                                                hmm_crf_ymap_(NULL) {
 }
 
 CRFPartOfSpeechTagger::~CRFPartOfSpeechTagger() {
@@ -50,10 +92,13 @@ CRFPartOfSpeechTagger::~CRFPartOfSpeechTagger() {
 
   delete crf_tagger_;
   crf_tagger_ = NULL;
+
+  delete hmm_crf_ymap_;
+  hmm_crf_ymap_ = NULL;
 }
 
 void CRFPartOfSpeechTagger::TagRange(
-    PartOfSpeechTagInstance *part_of_speech_tag_instance,
+    PartOfSpeechTagInstance *tag_instance,
     TermInstance *term_instance,
     int begin,
     int end) {
@@ -101,16 +146,42 @@ void CRFPartOfSpeechTagger::TagRange(
         feature_set->Add(".");
         feature_set->Add("1");
         break;
-    }  
+    }
+  }
+
+  // Use the HMM emissions
+  if (hmm_model_ != NULL) {
+    CRFTagger::EmissionTable *emission_table = crf_tagger_->emission_table();
+    for (int idx = 0; idx < term_instance->size(); ++idx) {
+      const char *word = term_instance->term_text_at(idx);
+      const HMMModel::EmissionArray *emission = hmm_model_->Emission(word);
+      emission_table->Clear(idx);
+      int term_type = term_instance->term_type_at(idx);
+
+      // If hmm model has emission for current word, put the emission_array
+      // to emission_table of crf_tagger_  
+      if (emission != NULL && emission->total_count() >= kEmissionThreshold) {
+        for (int emission_idx = 0;
+             emission_idx < emission->size();
+             ++emission_idx) {
+          int crf_tag = hmm_crf_ymap_[emission->yid_at(emission_idx)];
+          emission_table->Add(idx, crf_tag);
+        }
+      } else if (term_type == Parser::kPunction) {
+        emission_table->Add(idx, PU_);
+      } else if (term_type == Parser::kOther) {
+        emission_table->Add(idx, PU_);
+      } else {
+        emission_table->AllowAll(idx);
+      }
+    }
   }
 
   crf_tagger_->TagRange(sequence_feature_set_, begin, end);
-  for (size_t i = 0; i < end - begin; ++i) {
-    part_of_speech_tag_instance->set_value_at(
-        i,
-        crf_tagger_->GetTagText(crf_tagger_->y(i)));
+  for (int i = 0; i < end - begin; ++i) {
+    tag_instance->set_value_at(i, crf_tagger_->yname(crf_tagger_->y(i)));
   }
-  part_of_speech_tag_instance->set_size(end - begin);
+  tag_instance->set_size(end - begin);
 }
 
 }  // namespace milkcat

@@ -46,6 +46,7 @@ class SequenceFeatureSet;
 class CRFTagger {
  public:
   class TransitionTable;
+  class EmissionTable;
 
   explicit CRFTagger(const CRFModel *model);
   ~CRFTagger();
@@ -85,12 +86,13 @@ class CRFTagger {
   }
 
   // Get Tag's string text by its id
-  const char *GetTagText(int tag_id) {
+  const char *yname(int tag_id) {
     return model_->yname(tag_id);
   }
 
-  // Gets `transition_table_`
+  // Gets `transition_table_` or `emission_table_`
   TransitionTable *transition_table() { return transition_table_; }
+  EmissionTable *emission_table() { return emission_table_; }
 
  private:
   struct Node;
@@ -100,6 +102,7 @@ class CRFTagger {
   int result_[kSequenceMax];
   SequenceFeatureSet *sequence_feature_set_;
   TransitionTable *transition_table_;
+  EmissionTable *emission_table_;
 
   // Get the xid of unigram/bigram features at `idx`, returns the number of
   // features
@@ -112,7 +115,7 @@ class CRFTagger {
   // Calculate the unigram/bigram costs
   void CalcUnigramCost(int idx);
   void CalcBigramCost(int idx);
-  void CalcBeginTagBigramCost(int begin_tag);
+  void CalcBeginTagBigramCost(int begin, int begin_tag);
 
   // Viterbi algorithm
   void Viterbi(int begin, int end, int begin_tag, int end_tag);
@@ -149,6 +152,33 @@ class CRFTagger::TransitionTable {
   bool *transition_;
   int ysize_;
   const CRFModel *model_;
+};
+
+// TransitionTable stores the allowed emissions
+class CRFTagger::EmissionTable {
+ public:
+  EmissionTable(const CRFModel *model);
+  ~EmissionTable();
+
+  // Adds an emission to the `idx` of table
+  void Add(int idx, int y);
+
+  // Remove all emissions at `idx`
+  void Clear(int idx);
+
+  // Allows all emission at `idx`
+  void AllowAll(int idx);
+
+  // Number os emissions at `idx`
+  int emission_num(int idx) const { return top_[idx]; }
+
+  // Gets the emission at
+  int at(int idx, int num) const { return emission_[idx][num]; }
+
+ private:
+  int *emission_[kSequenceMax];
+  int top_[kSequenceMax];
+  int ysize_;
 };
 
 }  // namespace milkcat

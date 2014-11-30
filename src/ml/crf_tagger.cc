@@ -60,6 +60,9 @@ CRFTagger::CRFTagger(const CRFModel *model): model_(model) {
 
   transition_table_ = new TransitionTable(model);
   transition_table_->AllowAll();
+
+  emission_table_ = new EmissionTable(model);
+  for (int idx = 0; idx < kSequenceMax; ++idx) emission_table_->AllowAll(idx);
 }
 
 CRFTagger::~CRFTagger() {
@@ -85,7 +88,7 @@ void CRFTagger::TagRange(SequenceFeatureSet *sequence_feature_set,
 void CRFTagger::Viterbi(int begin, int end, int begin_tag, int end_tag) {
   assert(begin >= 0 && begin < end && end <= sequence_feature_set_->size());
   ClearBucket(begin);
-  if (begin_tag != -1) CalcBeginTagBigramCost(begin_tag);
+  if (begin_tag != -1) CalcBeginTagBigramCost(begin, begin_tag);
   CalcUnigramCost(begin);
 
   for (int position = begin + 1; position < end; ++position) {
@@ -98,25 +101,27 @@ void CRFTagger::Viterbi(int begin, int end, int begin_tag, int end_tag) {
 }
 
 void CRFTagger::StoreResult(int begin, int end, int end_tag) {
-  int best_tag_id = 0;
+  int best_yid = 0;
   double best_cost = -1e37;
   const Node *last_bucket = lattice_[end - 1];
 
   if (end_tag != -1) {
     // Have the end tag ... so find the best result from left tag of `end_tag`
-    best_tag_id = lattice_[end][end_tag].left_tag_id;
+    best_yid = lattice_[end][end_tag].left_tag_id;
   } else {
-    for (int tag_id = 0; tag_id < model_->ysize(); ++tag_id) {
-      if (best_cost < last_bucket[tag_id].cost) {
-        best_tag_id = tag_id;
-        best_cost = last_bucket[tag_id].cost;
+    int emission_num = emission_table_->emission_num(end - 1);
+    for (int emission_idx = 0; emission_idx < emission_num; ++emission_idx) {
+      int yid = emission_table_->at(end - 1, emission_idx);
+      if (best_cost < last_bucket[yid].cost) {
+        best_yid = yid;
+        best_cost = last_bucket[yid].cost;
       }
     }
   }
 
   for (int position = end - 1; position >= begin; --position) {
-    result_[position - begin] = best_tag_id;
-    best_tag_id = lattice_[position][best_tag_id].left_tag_id;
+    result_[position - begin] = best_yid;
+    best_yid = lattice_[position][best_yid].left_tag_id;
   }
 }
 
@@ -124,72 +129,80 @@ void CRFTagger::ClearBucket(int position) {
   memset(lattice_[position], 0, sizeof(Node) * model_->ysize());
 }
 
-void CRFTagger::CalcUnigramCost(int position) {
+void CRFTagger::CalcUnigramCost(int idx) {
   int feature_ids[kMaxFeature],
       feature_id;
-  int feature_num = UnigramFeatureAt(position, feature_ids);
+  int feature_num = UnigramFeatureAt(idx, feature_ids);
   double cost;
 
-  for (int tag_id = 0; tag_id < model_->ysize(); ++tag_id) {
-    cost = lattice_[position][tag_id].cost;
+  int emission_num = emission_table_->emission_num(idx);
+  for (int emission_idx = 0; emission_idx < emission_num; ++emission_idx) {
+    int yid = emission_table_->at(idx, emission_idx);
+    cost = lattice_[idx][yid].cost;
     for (int i = 0; i < feature_num; ++i) {
       feature_id = feature_ids[i];
-      cost += model_->unigram_cost(feature_id, tag_id);
+      cost += model_->unigram_cost(feature_id, yid);
     }
-    lattice_[position][tag_id].cost = cost;
-    // printf("Bucket Cost: %d %s %lf\n", position,
-    // model_->GetTagText(tag_id), cost);
+    lattice_[idx][yid].cost = cost;
+    // printf("Bucket Cost: %d %s %lf\n", idx,
+    // model_->GetTagText(yid), cost);
   }
 }
 
-void CRFTagger::CalcBeginTagBigramCost(int begin_tag) {
+void CRFTagger::CalcBeginTagBigramCost(int begin, int begin_tag) {
   int feature_ids[kMaxFeature],
       feature_id;
-  int feature_num = BigramFeatureAt(0, feature_ids);
+  int feature_num = BigramFeatureAt(begin, feature_ids);
   double cost;
 
-  for (int tag_id = 0; tag_id < model_->ysize(); ++tag_id) {
+  int emission_num = emission_table_->emission_num(begin);
+  for (int emission_idx = 0; emission_idx < emission_num; ++emission_idx) {
+    int yid = emission_table_->at(begin, emission_idx);
     cost = 0;
     for (int i = 0; i < feature_num; ++i) {
       feature_id = feature_ids[i];
-      cost += model_->bigram_cost(feature_id, begin_tag, tag_id);
+      cost += model_->bigram_cost(feature_id, begin_tag, yid);
     }
-    lattice_[0][tag_id].cost = cost;
+    lattice_[begin][yid].cost = cost;
   }
 }
 
-void CRFTagger::CalcBigramCost(int position) {
+void CRFTagger::CalcBigramCost(int idx) {
   int feature_ids[kMaxFeature],
       feature_id;
-  int feature_num = BigramFeatureAt(position, feature_ids);
+  int feature_num = BigramFeatureAt(idx, feature_ids);
   double cost, best_cost;
   int best_tag_id = 0;
 
-  for (int tag_id = 0; tag_id < model_->ysize(); ++tag_id) {
+  int emission_num = emission_table_->emission_num(idx);
+  int left_emission_num = emission_table_->emission_num(idx - 1);
+  for (int emission_idx = 0; emission_idx < emission_num; ++emission_idx) {
+    int yid = emission_table_->at(idx, emission_idx);
     best_cost = -1e37;
-    for (int left_tag_id = 0;
-         left_tag_id < model_->ysize();
-         ++left_tag_id) {
+    for (int left_emission_idx = 0;
+         left_emission_idx < left_emission_num;
+         ++left_emission_idx) {
+      int left_yid = emission_table_->at(idx - 1, left_emission_idx);
       // Ignore the bigram when it is not allowed in `transition_table_`
-      if (transition_table_->transition(left_tag_id, tag_id) == false)
+      if (transition_table_->transition(left_yid, yid) == false)
         continue;
 
-      cost = lattice_[position - 1][left_tag_id].cost;
+      cost = lattice_[idx - 1][left_yid].cost;
       for (int i = 0; i < feature_num; ++i) {
         feature_id = feature_ids[i];
-        cost += model_->bigram_cost(feature_id, left_tag_id, tag_id);
-        // printf("Arc Cost: %s %s %lf\n", model_->GetTagText(left_tag_id),
-        // model_->GetTagText(tag_id),
-        // model_->GetBigramCost(feature_id, left_tag_id, tag_id));
+        cost += model_->bigram_cost(feature_id, left_yid, yid);
+        // printf("Arc Cost: %s %s %lf\n", model_->GetTagText(left_yid),
+        // model_->GetTagText(yid),
+        // model_->GetBigramCost(feature_id, left_yid, yid));
       }
       if (cost > best_cost) {
-        best_tag_id = left_tag_id;
+        best_tag_id = left_yid;
         best_cost = cost;
       }
     }
-    lattice_[position][tag_id].cost = best_cost;
-    lattice_[position][tag_id].left_tag_id = best_tag_id;
-    // printf("Arc Cost: %d %s %s %lf\n", position, model_->GetTagText(tag_id),
+    lattice_[idx][yid].cost = best_cost;
+    lattice_[idx][yid].left_tag_id = best_tag_id;
+    // printf("Arc Cost: %d %s %s %lf\n", idx, model_->GetTagText(yid),
     // model_->GetTagText(best_tag_id), best_cost);
   }
 }
@@ -359,6 +372,39 @@ void CRFTagger::TransitionTable::DisallowAll() {
       Disallow(left, right);
     }
   }
+}
+
+CRFTagger::EmissionTable::EmissionTable(const CRFModel *model) {
+  ysize_ = model->ysize();
+  for (int idx = 0; idx < kSequenceMax; ++idx) {
+    emission_[idx] = new int[ysize_];
+    top_[idx] = 0;
+  }
+}
+
+CRFTagger::EmissionTable::~EmissionTable() {
+  for (int idx = 0; idx < kSequenceMax; ++idx) {
+    delete emission_[idx];
+    emission_[idx] = NULL;
+  }
+}
+
+void CRFTagger::EmissionTable::Add(int idx, int y) {
+  assert(idx < kSequenceMax && top_[idx] < ysize_);
+  int top = top_[idx];
+  emission_[idx][top] = y;
+  top_[idx]++;
+}
+
+void CRFTagger::EmissionTable::Clear(int idx) {
+  top_[idx] = 0;
+}
+
+void CRFTagger::EmissionTable::AllowAll(int idx) {
+  for (int i = 0; i < ysize_; ++i) {
+    emission_[idx][i] = i;
+  }
+  top_[idx] = ysize_;
 }
 
 }  // namespace milkcat

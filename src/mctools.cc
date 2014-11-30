@@ -433,7 +433,7 @@ int TestPartOfSpeechTagger(int argc, char **argv) {
   CRFPartOfSpeechTagger *tagger = NULL;
   CRFModel *model = CRFModel::New(model_file, &status);
   if (status.ok()) {
-    tagger = new CRFPartOfSpeechTagger(model);
+    tagger = CRFPartOfSpeechTagger::New(model, NULL, &status);
   }
   double ta = 0.0;
   if (status.ok()) {
