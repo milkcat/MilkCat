@@ -87,7 +87,7 @@ class DependencyParser {
   // Stores the real transition type and label for the predict id (yid) from
   // perceptron
   enum {
-    kLeftArc, kRightArc, kShift, kReduce, kUnshift
+    kLeftArc, kRightArc, kShift, kUnshift
   };
   std::vector<int> yid_transition_;
   std::vector<std::string> yid_label_;

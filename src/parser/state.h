@@ -80,13 +80,12 @@ class DependencyParser::State {
   bool StackFull() const { return stack_top_ == kMaxStackSize - 1; }
 
   // The n-th node in the input buffer
-  const Node *node_at(int n) { return input_[n]; }
+  const Node *node_at(int n) { return sentence_[n]; }
 
   int input_size() const { return input_size_; }
   int stack_top() const { return stack_top_; }
 
   // The functions below are only used in `BeamArceagerDependencyParser`
-
   // Copy current state to `target_state`
   void CopyTo(State *target_state) const;
 
@@ -112,7 +111,7 @@ class DependencyParser::State {
   int stack_[kMaxStackSize];
   int input_stack_[kMaxInputSize];
   
-  Node *input_[kMaxInputSize];
+  Node *sentence_[kMaxInputSize];
   int stack_top_;
   int input_size_;
   int input_top_;

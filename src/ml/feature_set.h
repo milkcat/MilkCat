@@ -50,7 +50,6 @@ class FeatureSet {
 
   // Gets the feature string at `index`
   char *at(int index) const {
-    assert(index < top_);
     return const_cast<char *>(feature_string_[index]); 
   }
 

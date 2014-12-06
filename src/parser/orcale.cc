@@ -33,8 +33,7 @@
 
 namespace milkcat {
 
-Orcale::Orcale(): instance_(NULL),
-                  input_ptr_(0) {
+Orcale::Orcale(): instance_(NULL) {
   string_builer_ = new StringBuilder();
 }
 
@@ -45,10 +44,14 @@ Orcale::~Orcale() {
 
 void Orcale::Parse(const TreeInstance *instance) {
   instance_ = instance;
-  input_ptr_ = 0;
 
   stack_.clear();
   stack_.push_back(0);
+
+  input_.clear();
+  for (int nodeid = instance->size(); nodeid >= 1; --nodeid) {
+    input_.push_back(nodeid);
+  }
 }
 
 inline int Orcale::Head(int nodeid) {
@@ -63,44 +66,40 @@ inline const char *Orcale::Label(int nodeid) {
   return instance_->dependency_type_at(nodeid - 1);
 }
 
-bool Orcale::IsReduce() {
+bool Orcale::IsRightArc() {
   // `stack_.back()` already have the head node
-  if (Head(stack_.back()) < stack_.back()) {
-    int child = 0;
-    for (int nodeid = input_ptr_ + 1; nodeid <= instance_->size(); ++nodeid) {
-      if (Head(nodeid) == stack_.back()) ++child;
-    }
-    // if `stack_.back()` already have no child
-    if (child == 0) return true;
+  if (stack_.size() == 0) return false;
+  if (Head(input_.back()) != stack_.back()) return false;
+  for (std::vector<int>::iterator
+       it = input_.begin(); it != input_.end(); ++it) {
+    if (Head(*it) == input_.back()) return false;
   }
 
-  return false;
+  return true;
 }
 
 const char *Orcale::Next() {
   // OK, no more node in input
-  if (input_ptr_  == instance_->size()) {
+  if (input_.size() == 0) {
     if (stack_.size() == 1) return NULL;
     stack_.pop_back();
     return "reduce";
   } 
 
   string_builer_->SetOutput(transition_label_, kLabelSizeMax);
-  if (Head(stack_.back()) == input_ptr_ + 1) {
+  if (stack_.size() > 0 && Head(stack_.back()) == input_.back()) {
     *string_builer_ << "leftarc_" << Label(stack_.back());
     stack_.pop_back();
     return transition_label_;
-  } else if (stack_.back() == Head(input_ptr_ + 1)) {
-    *string_builer_ << "rightarc_" << Label(input_ptr_ + 1);
-    stack_.push_back(input_ptr_ + 1);
-    input_ptr_++;
-    return transition_label_;
-  } else if (IsReduce()) {
+  } else if (IsRightArc()) {
+    *string_builer_ << "rightarc_" << Label(input_.back());
+    input_.pop_back();
+    input_.push_back(stack_.back());
     stack_.pop_back();
-    return "reduce";
+    return transition_label_;
   } else {
-    stack_.push_back(input_ptr_ + 1);
-    input_ptr_++;
+    stack_.push_back(input_.back());
+    input_.pop_back();
     return "shift";
   }
 }

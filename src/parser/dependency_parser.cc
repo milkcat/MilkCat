@@ -67,8 +67,6 @@ DependencyParser::DependencyParser(MulticlassPerceptronModel *perceptron_model,
       yid_label_[yid] = yname + 9;
     } else if (strcmp(yname, "shift") == 0) {
       yid_transition_[yid] = kShift;
-    } else if (strcmp(yname, "reduce") == 0) {
-      yid_transition_[yid] = kReduce;
     } else {
       std::string err = "Unexpected label: ";
       err += yname;
@@ -86,7 +84,6 @@ void DependencyParser::StateMove(State *state, int yid) const {
   int transition = yid >= 0? yid_transition_[yid]: kUnshift;
   const char *label = yid_label_[yid].c_str();
   state->set_last_transition(yid);
-
   switch (transition) {
     case kLeftArc:
       state->LeftArc(label);
@@ -96,9 +93,6 @@ void DependencyParser::StateMove(State *state, int yid) const {
       break;
     case kShift:
       state->Shift();
-      break;
-    case kReduce:
-      state->Reduce();
       break;
     case kUnshift:
       state->Unshift();
@@ -117,8 +111,6 @@ bool DependencyParser::Allow(const State *state, int yid) const {
       return state->AllowRightArc(rightrarc_root_yid_ == yid);
     case kShift:
       return state->AllowShift();
-    case kReduce:
-      return state->AllowReduce();
     default:
       ERROR("Unexpected transition");
       return true;

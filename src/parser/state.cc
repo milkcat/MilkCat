@@ -52,7 +52,7 @@ void DependencyParser::State::Initialize(Pool<Node> *node_pool,
   for (int i = 0; i < sentance_length + 1; ++i) {
     Node *node = node_pool->Alloc();
     node->Initialize(i);
-    input_[i] = node;
+    sentence_[i] = node;
     input_stack_[sentance_length - i] = i;
   }
 
@@ -89,18 +89,12 @@ void DependencyParser::State::Unshift() {
   stack_top_--;
 }
 
-void DependencyParser::State::Reduce() {
-  ASSERT(!StackEmpty(), "Stack empty");
-
-  stack_top_--;
-}
-
 void DependencyParser::State::LeftArc(const char *label) {
   ASSERT(!StackEmpty(), "Stack empty");
   ASSERT(!InputEnd(), "Out of bound");
 
-  Node *stack0 = input_[stack_[stack_top_ - 1]];
-  Node *input0 = input_[input_stack_[input_top_ - 1]];
+  Node *stack0 = sentence_[stack_[stack_top_ - 1]];
+  Node *input0 = sentence_[input_stack_[input_top_ - 1]];
 
   stack0->set_head_id(input0->id());
   stack0->set_dependency_label(label);
@@ -113,16 +107,17 @@ void DependencyParser::State::RightArc(const char *label) {
   ASSERT(!InputEnd(), "Out of bound");
   ASSERT(!StackFull(), "Stack overflow");
 
-  Node *stack0 = input_[stack_[stack_top_ - 1]];
-  Node *input0 = input_[input_stack_[input_top_ - 1]];
+  Node *stack0 = sentence_[stack_[stack_top_ - 1]];
+  Node *input0 = sentence_[input_stack_[input_top_ - 1]];
 
   input0->set_head_id(stack0->id());
   input0->set_dependency_label(label);
   input_top_--;
 
   stack0->AddChild(input0->id());
-  stack_[stack_top_] = input0->id();
-  stack_top_++;
+  stack_top_--;
+  input_stack_[input_top_] = stack0->id();
+  input_top_++;
 
   if (InputEnd()) end_reached_ = true;
 }
@@ -135,34 +130,30 @@ bool DependencyParser::State::AllowShift() const {
   return true;
 }
 
-bool DependencyParser::State::AllowReduce() const {
-  if (StackEmpty()) return false;
-  if (input_[stack_[stack_top_ - 1]]->id() == 0) return false;
-  if (input_[stack_[stack_top_ - 1]]->head_id() == Node::kNone) return false;
-  return true;
-}
-
 bool DependencyParser::State::AllowLeftArc() const {
   if (StackEmpty()) return false;
   if (InputEnd()) return false;
-  if (input_[stack_[stack_top_ - 1]]->id() == 0) return false;
-  if (input_[stack_[stack_top_ - 1]]->head_id() != Node::kNone) return false;
+  if (sentence_[stack_[stack_top_ - 1]]->id() == 0) return false;
+  if (sentence_[stack_[stack_top_ - 1]]->head_id() != Node::kNone) return false;
   return true;
 }
 
 bool DependencyParser::State::AllowRightArc(bool is_root) const {
-  if (StackFull()) return false;
+  if (StackEmpty()) return false;
   if (InputEnd()) return false;
   if (is_root == true && have_root_ == true) return false;
   if (is_root == true && StackOnlyOneElement() == false) return false;
   if (is_root == false && StackOnlyOneElement() == true) return false;
+  if (sentence_[input_stack_[input_top_ - 1]]->head_id() != Node::kNone) {
+    return false;
+  }
   return true;
 }
 
 const DependencyParser::Node *DependencyParser::State::Stack(int idx) const {
   int stack_top = stack_top_ - idx;
   if (stack_top > 0)
-    return input_[stack_[stack_top - 1]];
+    return sentence_[stack_[stack_top - 1]];
   else
     return NULL;
 }
@@ -170,7 +161,7 @@ const DependencyParser::Node *DependencyParser::State::Stack(int idx) const {
 const DependencyParser::Node *DependencyParser::State::Input(int idx) const {
   int input_top = input_top_ - idx;
   if (input_top > 0) 
-    return input_[input_stack_[input_top - 1]];
+    return sentence_[input_stack_[input_top - 1]];
   else
     return NULL;
 }
@@ -180,7 +171,7 @@ DependencyParser::State::Parent(const Node *node) const {
   if (node == NULL) return NULL;
   int head_id = node->head_id();
   if (head_id == Node::kNone) return NULL;
-  return input_[head_id];
+  return sentence_[head_id];
 }
 
 const DependencyParser::Node *
@@ -188,7 +179,7 @@ DependencyParser::State::LeftChild(const Node *node) const {
   if (node == NULL) return NULL;
   int left_child_id = node->left_child_id();
   if (left_child_id == Node::kNone) return NULL;
-  return input_[left_child_id];
+  return sentence_[left_child_id];
 }
 
 const DependencyParser::Node *
@@ -196,7 +187,7 @@ DependencyParser::State::RightChild(const Node *node) const {
   if (node == NULL) return NULL;
   int right_child_id = node->right_child_id();
   if (right_child_id == Node::kNone) return NULL;
-  return input_[right_child_id];
+  return sentence_[right_child_id];
 }
 
 void DependencyParser::State::CopyTo(State *target_state) const {
@@ -212,8 +203,8 @@ void DependencyParser::State::CopyTo(State *target_state) const {
 
   for (int i = 0; i < input_size_; ++i) {
     Node *node = node_pool_->Alloc();
-    input_[i]->CopyTo(node);
-    target_state->input_[i] = node;
+    sentence_[i]->CopyTo(node);
+    target_state->sentence_[i] = node;
   }
 
   for (int i = 0; i < stack_top_; ++i) {

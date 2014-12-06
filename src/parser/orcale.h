@@ -50,17 +50,16 @@ class Orcale {
 
  private:
   std::vector<int> stack_;
+  std::vector<int> input_;
   const TreeInstance *instance_;
   char transition_label_[kLabelSizeMax];
   StringBuilder *string_builer_;
-  int input_ptr_;
 
   // Returns the head node id and dependency label of `nodeid`
   int Head(int nodeid);
   const char *Label(int nodeid);
-  
-  // If current state needs a reduce transition
-  bool IsReduce();
+
+  bool IsRightArc();
 };
 
 }  // namespace milkcat

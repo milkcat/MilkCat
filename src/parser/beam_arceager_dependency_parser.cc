@@ -163,7 +163,7 @@ bool BeamArceagerDependencyParser::Step() {
     }
   }
   agent_size_ = beam_->size() * transition_num;
-
+  
   // Partial sorts the agent to get the N-best transitions (N = kBeamSize)
   CompareIdxByCostInArray cmp(agent_, agent_size_);
   std::vector<int> idx_heap;
@@ -184,6 +184,7 @@ bool BeamArceagerDependencyParser::Step() {
     }
   }
 
+
   // Create new states into `next_beam_` from `idx_heap`
   next_beam_->Clear();
   for (std::vector<int>::iterator
@@ -196,6 +197,7 @@ bool BeamArceagerDependencyParser::Step() {
     state->set_weight(agent_[*it]);
     next_beam_->Add(state);
   }
+
 
   // If no transition could perform, just remains `beam_` to the last state and
   // return false
