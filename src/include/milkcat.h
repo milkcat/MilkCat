@@ -172,4 +172,54 @@ const char *LastError();
 
 #endif  // __cplusplus
 
+#ifdef __cplusplus
+extern "C" {
+#endif  // __cplusplus
+
+typedef struct mc_model_t mc_model_t;
+typedef struct mc_parser_t mc_parser_t;
+
+typedef struct mc_parseriter_internal_t mc_parseriter_internal_t;
+typedef struct mc_parseriter_t {
+  const char *word;
+  const char *part_of_speech_tag;
+  mc_parseriter_internal_t *it;
+} mc_parseriter_t;
+
+#define MC_BIGRAM_SEGMENTER 0
+#define MC_CRF_SEGMENTER 1
+#define MC_MIXED_SEGMENTER 2
+
+#define MC_FASTCRF_POSTAGGER 0
+#define MC_CRF_POSTAGGER 1
+#define MC_HMM_POSTAGGER 2
+#define MC_NO_POSTAGGER 3
+
+
+typedef struct mc_parseropt_t {
+  int segmenter;
+  int postagger;
+} mc_parseropt_t;
+
+mc_model_t *mc_model_new(const char *model_path);
+void mc_model_delete(mc_model_t *model);
+
+void mc_parseropt_init(mc_parseropt_t *parseropt);
+mc_parser_t *mc_parser_new(mc_parseropt_t *parseropt, mc_model_t *model);
+void mc_parser_delete(mc_parser_t *model);
+void mc_parser_parse(mc_parser_t *parser,
+                     mc_parseriter_t *parseriter,
+                     const char *text);
+
+mc_parseriter_t *mc_parseriter_new();
+void mc_parseriter_delete(mc_parseriter_t *parseriter);
+int mc_parseriter_end(mc_parseriter_t *parseriter);
+void mc_parseriter_next(mc_parseriter_t *parseriter);
+
+const char *mc_last_error();
+
+#ifdef __cplusplus
+}  // extern "C"
+#endif  // __cplusplus
+
 #endif  // MILKCAT_H_

@@ -19,6 +19,7 @@ include_HEADERS = src/include/milkcat.h
 
 lib_LIBRARIES = libmilkcat.a
 libmilkcat_a_SOURCES = src/libmilkcat.cc \
+                       src/libmilkcat_capi.cc \
                        src/libmilkcat.h \
                        src/common/cedar.h \
                        src/common/darts.h \
@@ -48,7 +49,6 @@ libmilkcat_a_SOURCES = src/libmilkcat.cc \
                        src/ml/multiclass_perceptron.h \
                        src/ml/multiclass_perceptron_model.cc \
                        src/ml/multiclass_perceptron_model.h \
-                       src/ml/sequence_feature_extractor.h \
                        src/parser/beam_arceager_dependency_parser.h \
                        src/parser/beam_arceager_dependency_parser.cc \
                        src/parser/dependency_parser.cc \
@@ -110,3 +110,11 @@ milkcat_LDADD = libmilkcat.a
 
 mctools_SOURCES = src/mctools.cc
 mctools_LDADD = libmilkcat.a
+
+TESTS = milkcat_capi_test
+check_PROGRAMS = milkcat_capi_test
+
+milkcat_capi_test_SOURCES = test/milkcat_capi_test.c
+milkcat_capi_test_CFLAGS = -DMODEL_DIR=\"$(top_srcdir)/data/\" \
+                           -I../src/ -lstdc++
+milkcat_capi_test_LDADD = libmilkcat.a

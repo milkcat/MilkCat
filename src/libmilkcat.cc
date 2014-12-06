@@ -126,7 +126,7 @@ PartOfSpeechTagger *PartOfSpeechTaggerFactory(Model::Impl *factory,
       if (status->ok()) hmm_pos_model = factory->HMMPosModel(status);
 
       if (status->ok()) {
-        return CRFPartOfSpeechTagger::New(crf_pos_model, hmm_pos_model, status);
+        return CRFPartOfSpeechTagger::New(crf_pos_model, NULL, status);
       } else {
         return NULL;
       }

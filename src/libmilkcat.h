@@ -125,9 +125,11 @@ class Parser::Iterator::Impl {
 
   // These function return the data of current position
   const char *word() const {
+    if (end_) return "";
     return term_instance_->term_text_at(current_position_);
   }
   const char *part_of_speech_tag() const {
+    if (end_) return "";
     if (parser_->part_of_speech_tagger() != NULL)
       return part_of_speech_tag_instance_->part_of_speech_tag_at(
           current_position_);
@@ -135,15 +137,18 @@ class Parser::Iterator::Impl {
       return "NONE";
   }
   int type() const {
+    if (end_) return 0;
     return term_instance_->term_type_at(current_position_);
   }
   int head_node() const {
+    if (end_) return 0;
     if (parser_->dependency_parser() != NULL)
       return tree_instance_->head_node_at(current_position_);
     else
       return 0;
   }
   const char *dependency_type() const {
+    if (end_) return "";
     if (parser_->dependency_parser() != NULL)
       return tree_instance_->dependency_type_at(current_position_);
     else
