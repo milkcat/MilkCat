@@ -31,6 +31,7 @@
 #include <algorithm>
 #include <set>
 #include "common/model_impl.h"
+#include "common/reimu_trie.h"
 #include "ml/averaged_multiclass_perceptron.h"
 #include "ml/feature_set.h"
 #include "ml/multiclass_perceptron.h"

@@ -38,6 +38,7 @@ class PartOfSpeechTagInstance;
 class TrieTree;
 class FeatureSet;
 class Status;
+class ReimuTrie;
 
 class DependencyParser::FeatureTemplate {
  public:
@@ -60,6 +61,7 @@ class DependencyParser::FeatureTemplate {
     kSTLCt,
     kSTRCt,
     kN0LCt,
+    kN0RCt,
     kSingleFeatureNumber
   };
 
@@ -68,6 +70,12 @@ class DependencyParser::FeatureTemplate {
 
   FeatureTemplate(const std::vector<std::string> &feature_template);
   ~FeatureTemplate();
+
+  // Sets word_count and enables word count threshold for features
+  void DiscardInfrequentWord(ReimuTrie *word_count, int min_count) {
+    word_count_ = word_count;
+    min_count_ = min_count;
+  }
 
   // Returns the tag or term string of a node
   const char *Tag(const Node *node);
@@ -87,6 +95,7 @@ class DependencyParser::FeatureTemplate {
   const char *STLCt();
   const char *STRCt();
   const char *N0LCt();
+  const char *N0RCt();
 
   // Extracts the features from current state and stores it into feature_set
   // Returns the number of features added
@@ -102,6 +111,9 @@ class DependencyParser::FeatureTemplate {
   const State *state_;
   TrieTree *feature_index_;
   const std::vector<std::string> feature_template_;
+
+  int min_count_;
+  ReimuTrie *word_count_;
 
   void InitializeFeatureIndex();
 };

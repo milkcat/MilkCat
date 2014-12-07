@@ -37,8 +37,6 @@ namespace milkcat {
 template<class T> class Pool;
 
 // State in the dependency parser, including buffer, stack, tree ...
-// Implemented the unshift transition in (Nivre, 14) Arc-Eager Parsing with the
-// Tree Constraint
 class DependencyParser::State {
  public:
   enum {
@@ -53,7 +51,6 @@ class DependencyParser::State {
 
   // Transitions
   void Shift();
-  void Unshift();
   void Reduce();
   void LeftArc(const char *label);
   void RightArc(const char *label);
@@ -74,16 +71,15 @@ class DependencyParser::State {
   const Node *RightChild(const Node *node) const;
 
   // Input and stack status
-  bool InputEnd() const { return input_top_ == 0; }
-  bool StackEmpty() const { return stack_top_ == 0; }
-  bool StackOnlyOneElement() const { return stack_top_ == 1; }
-  bool StackFull() const { return stack_top_ == kMaxStackSize - 1; }
+  bool InputEnd() const { return input_.empty(); }
+  bool StackEmpty() const { return stack_.empty(); }
+  bool StackOnlyOneElement() const { return stack_.size() == 1; }
 
   // The n-th node in the input buffer
   const Node *node_at(int n) { return sentence_[n]; }
 
-  int input_size() const { return input_size_; }
-  int stack_top() const { return stack_top_; }
+  int sentence_length() const { return sentence_length_; }
+  // int stack_top() const { return stack_top_; }
 
   // The functions below are only used in `BeamArceagerDependencyParser`
   // Copy current state to `target_state`
@@ -108,21 +104,17 @@ class DependencyParser::State {
   Pool<Node> *node_pool_;
   
   // Stores the index of node in input_
-  int stack_[kMaxStackSize];
-  int input_stack_[kMaxInputSize];
+  std::vector<int> stack_;
+  std::vector<int> input_;
   
   Node *sentence_[kMaxInputSize];
-  int stack_top_;
-  int input_size_;
-  int input_top_;
+  int sentence_length_;
 
-  bool end_reached_;
   double weight_;
-
   State *previous_;
   bool correct_;
-  int last_transition_;
   bool have_root_;
+  int last_transition_;
   DISALLOW_COPY_AND_ASSIGN(State);
 };
 

@@ -81,7 +81,7 @@ DependencyParser::DependencyParser(MulticlassPerceptronModel *perceptron_model,
 }
 
 void DependencyParser::StateMove(State *state, int yid) const {
-  int transition = yid >= 0? yid_transition_[yid]: kUnshift;
+  int transition = yid_transition_[yid];
   const char *label = yid_label_[yid].c_str();
   state->set_last_transition(yid);
   switch (transition) {
@@ -93,9 +93,6 @@ void DependencyParser::StateMove(State *state, int yid) const {
       break;
     case kShift:
       state->Shift();
-      break;
-    case kUnshift:
-      state->Unshift();
       break;
     default:
       ERROR("Unexpected transition");
@@ -120,12 +117,12 @@ bool DependencyParser::Allow(const State *state, int yid) const {
 void DependencyParser::StoreStateIntoInstance(
     State *state,
     TreeInstance *instance) const {
-  for (int i = 0; i < state->input_size() - 1; ++i) {
+  for (int i = 0; i < state->sentence_length() - 1; ++i) {
     // ignore the ROOT node
     const Node *node = state->node_at(i + 1);
     instance->set_value_at(i,  node->dependency_label(), node->head_id());
   }
-  instance->set_size(state->input_size() - 1);
+  instance->set_size(state->sentence_length() - 1);
 }
 
 DependencyParser::~DependencyParser() {

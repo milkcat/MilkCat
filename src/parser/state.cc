@@ -33,10 +33,7 @@
 
 namespace milkcat {
 
-DependencyParser::State::State(): stack_top_(0),
-                                  input_size_(0),
-                                  input_top_(0),
-                                  end_reached_(false),
+DependencyParser::State::State(): sentence_length_(0),
                                   previous_(NULL),
                                   correct_(true),
                                   last_transition_(0),
@@ -45,25 +42,27 @@ DependencyParser::State::State(): stack_top_(0),
 
 void DependencyParser::State::Initialize(Pool<Node> *node_pool,
                                          int sentance_length) {
-  input_size_ = std::min(sentance_length + 1,
-                         static_cast<int>(kMaxInputSize));
+  sentence_length_ = std::min(sentance_length + 1,
+                              static_cast<int>(kMaxInputSize));
 
   node_pool_ = node_pool;
   for (int i = 0; i < sentance_length + 1; ++i) {
     Node *node = node_pool->Alloc();
     node->Initialize(i);
     sentence_[i] = node;
-    input_stack_[sentance_length - i] = i;
+  }
+
+  input_.clear();
+  for (int nodeid = sentance_length; nodeid >= 1; --nodeid) {
+    input_.push_back(nodeid);
   }
 
   // Push the root node
-  stack_[0] = 0;
+  stack_.clear();
+  stack_.push_back(0);
 
   // Root node has already pushed to the stack, `input_stack[sentance_length]`
   // is the root node
-  input_top_ = sentance_length;
-  stack_top_ = 1;
-  end_reached_ = false;
   weight_ = 0.0;
   previous_ = NULL;
   correct_ = true;
@@ -73,68 +72,49 @@ void DependencyParser::State::Initialize(Pool<Node> *node_pool,
 
 void DependencyParser::State::Shift() {
   ASSERT(!InputEnd(), "Out of bound");
-  ASSERT(!StackFull(), "Stack overflow");
-
-  stack_[stack_top_] = input_stack_[input_top_ - 1];
-  input_top_--;
-  stack_top_++;
-
-  if (InputEnd()) end_reached_ = true;
-}
-
-void DependencyParser::State::Unshift() {
-  ASSERT(!StackOnlyOneElement(), "Stack empty");
-  input_stack_[input_top_] = stack_[stack_top_ - 1];
-  input_top_++;
-  stack_top_--;
+  stack_.push_back(input_.back());
+  input_.pop_back();
 }
 
 void DependencyParser::State::LeftArc(const char *label) {
   ASSERT(!StackEmpty(), "Stack empty");
   ASSERT(!InputEnd(), "Out of bound");
 
-  Node *stack0 = sentence_[stack_[stack_top_ - 1]];
-  Node *input0 = sentence_[input_stack_[input_top_ - 1]];
+  Node *stack0 = sentence_[stack_.back()];
+  Node *input0 = sentence_[input_.back()];
 
   stack0->set_head_id(input0->id());
   stack0->set_dependency_label(label);
-  stack_top_--;
+  stack_.pop_back();
 
   input0->AddChild(stack0->id());
 }
 
 void DependencyParser::State::RightArc(const char *label) {
   ASSERT(!InputEnd(), "Out of bound");
-  ASSERT(!StackFull(), "Stack overflow");
-
-  Node *stack0 = sentence_[stack_[stack_top_ - 1]];
-  Node *input0 = sentence_[input_stack_[input_top_ - 1]];
+  Node *stack0 = sentence_[stack_.back()];
+  Node *input0 = sentence_[input_.back()];
 
   input0->set_head_id(stack0->id());
   input0->set_dependency_label(label);
-  input_top_--;
+  input_.pop_back();
 
   stack0->AddChild(input0->id());
-  stack_top_--;
-  input_stack_[input_top_] = stack0->id();
-  input_top_++;
-
-  if (InputEnd()) end_reached_ = true;
+  stack_.pop_back();
+  input_.push_back(stack0->id());
 }
 
 bool DependencyParser::State::AllowShift() const {
-  if (StackFull()) return false;
+  if (input_.size() == 1 && StackEmpty() == false) return false;
   if (InputEnd()) return false;
-  if (input_top_ == 0) return false;
-  if (end_reached_) return false;
   return true;
 }
 
 bool DependencyParser::State::AllowLeftArc() const {
   if (StackEmpty()) return false;
   if (InputEnd()) return false;
-  if (sentence_[stack_[stack_top_ - 1]]->id() == 0) return false;
-  if (sentence_[stack_[stack_top_ - 1]]->head_id() != Node::kNone) return false;
+  if (sentence_[stack_.back()]->id() == 0) return false;
+  if (sentence_[stack_.back()]->head_id() != Node::kNone) return false;
   return true;
 }
 
@@ -144,24 +124,25 @@ bool DependencyParser::State::AllowRightArc(bool is_root) const {
   if (is_root == true && have_root_ == true) return false;
   if (is_root == true && StackOnlyOneElement() == false) return false;
   if (is_root == false && StackOnlyOneElement() == true) return false;
-  if (sentence_[input_stack_[input_top_ - 1]]->head_id() != Node::kNone) {
+  if (sentence_[input_.back()]->head_id() != Node::kNone) {
     return false;
   }
   return true;
 }
 
 const DependencyParser::Node *DependencyParser::State::Stack(int idx) const {
-  int stack_top = stack_top_ - idx;
-  if (stack_top > 0)
-    return sentence_[stack_[stack_top - 1]];
-  else
+  int stack_idx = stack_.size() - idx - 1;
+  if (stack_idx >= 0) {
+    return sentence_[stack_[stack_idx]];
+  } else {
     return NULL;
+  }
 }
 
 const DependencyParser::Node *DependencyParser::State::Input(int idx) const {
-  int input_top = input_top_ - idx;
-  if (input_top > 0) 
-    return sentence_[input_stack_[input_top - 1]];
+  int input_idx = input_.size() - idx - 1;
+  if (input_idx >= 0) 
+    return sentence_[input_[input_idx]];
   else
     return NULL;
 }
@@ -192,27 +173,20 @@ DependencyParser::State::RightChild(const Node *node) const {
 
 void DependencyParser::State::CopyTo(State *target_state) const {
   target_state->node_pool_ = node_pool_;
-  target_state->stack_top_ = stack_top_;
-  target_state->input_size_ = input_size_;
-  target_state->input_top_ = input_top_;
-  target_state->end_reached_ = end_reached_;
+  target_state->sentence_length_ = sentence_length_;
   target_state->weight_ = weight_;
   target_state->correct_ = correct_;
   target_state->previous_ = previous_;
   target_state->last_transition_ = last_transition_;
 
-  for (int i = 0; i < input_size_; ++i) {
+  for (int i = 0; i < sentence_length_; ++i) {
     Node *node = node_pool_->Alloc();
     sentence_[i]->CopyTo(node);
     target_state->sentence_[i] = node;
   }
 
-  for (int i = 0; i < stack_top_; ++i) {
-    target_state->stack_[i] = stack_[i];
-  }
-  for (int i = 0; i < input_top_; ++i) {
-    target_state->input_stack_[i] = input_stack_[i];
-  }
+  target_state->stack_ = stack_;
+  target_state->input_ = input_;
 }
 
 }  // namespace milkcat

@@ -72,7 +72,7 @@ class BeamArceagerDependencyParser: public DependencyParser {
   class StateCmp;
 
   enum {
-    kBeamSize = 1
+    kBeamSize = 8
   };
   Pool<State> *state_pool_;
   float *agent_;

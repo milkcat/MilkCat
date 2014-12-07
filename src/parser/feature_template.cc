@@ -30,6 +30,7 @@
 
 #include <stdio.h>
 #include <map>
+#include "common/reimu_trie.h"
 #include "common/trie_tree.h"
 #include "ml/feature_set.h"
 #include "parser/node.h"
@@ -50,7 +51,9 @@ DependencyParser::FeatureTemplate::FeatureTemplate(
         part_of_speech_tag_instance_(NULL),
         state_(NULL),
         feature_index_(NULL),
-        feature_template_(feature_template) {
+        feature_template_(feature_template),
+        word_count_(NULL),
+        min_count_(0) {
   InitializeFeatureIndex();
 }
 
@@ -138,21 +141,27 @@ inline const char *DependencyParser::FeatureTemplate::STPt() {
   return Tag(node);
 }
 
-const char *DependencyParser::FeatureTemplate::STLCt() {
+inline const char *DependencyParser::FeatureTemplate::STLCt() {
   const Node *node = state_->Stack(0);
   node = state_->LeftChild(node);
   return Tag(node);
 }
 
-const char *DependencyParser::FeatureTemplate::STRCt() {
+inline const char *DependencyParser::FeatureTemplate::STRCt() {
   const Node *node = state_->Stack(0);
   node = state_->RightChild(node);
   return Tag(node);
 }
 
-const char *DependencyParser::FeatureTemplate::N0LCt() {
+inline const char *DependencyParser::FeatureTemplate::N0LCt() {
   const Node *node = state_->Input(0);
   node = state_->LeftChild(node);
+  return Tag(node);
+}
+
+inline const char *DependencyParser::FeatureTemplate::N0RCt() {
+  const Node *node = state_->Input(0);
+  node = state_->RightChild(node);
   return Tag(node);
 }
 
@@ -169,6 +178,7 @@ void DependencyParser::FeatureTemplate::InitializeFeatureIndex() {
   feature_index["STLCt"] = kSTLCt;
   feature_index["STRCt"] = kSTRCt;
   feature_index["N0LCt"] = kN0LCt;
+  feature_index["N0RCt"] = kN0RCt;
 
   feature_index_ = DoubleArrayTrieTree::NewFromMap(feature_index);
 }
@@ -198,12 +208,15 @@ int DependencyParser::FeatureTemplate::Extract(
   strlcpy(single_feature_[kSTLCt], STLCt(), kFeatureStringMax);
   strlcpy(single_feature_[kSTRCt], STRCt(), kFeatureStringMax);
   strlcpy(single_feature_[kN0LCt], N0LCt(), kFeatureStringMax);
+  strlcpy(single_feature_[kN0RCt], N0RCt(), kFeatureStringMax);
 
   feature_set->Clear();
+  bool ignore = false;
   for (std::vector<std::string>::const_iterator 
        it = feature_template_.begin();
        it != feature_template_.end();
        ++it) {
+    ignore = false;
     builder.SetOutput(feature_set->at(feature_num), FeatureSet::kFeatureSizeMax);
     const char *templ = it->c_str();
     const char *p = templ, *q = NULL;
@@ -219,12 +232,13 @@ int DependencyParser::FeatureTemplate::Extract(
         }
         int len = q - p - 1;
         int fid = feature_index_->Search(p + 1, len);
+
         if (fid < 0) ERROR("Template file corrputed.");
         builder << single_feature_[fid];
         p = q + 1;
       }
     }
-    feature_num++;
+    if (ignore == false) feature_num++;
   }
   feature_set->set_size(feature_num);
 
