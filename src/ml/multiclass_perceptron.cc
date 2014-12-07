@@ -76,10 +76,11 @@ void MulticlassPerceptron::Update(const FeatureSet *feature_set,
                                   int yid,
                                   float value) {
   for (int i = 0; i < feature_set->size(); ++i) {
-    int xid = model_->GetOrInsertXId(feature_set->at(i));
+    int xid = model_->xid(feature_set->at(i));
+    float original = xid > 0? model_->cost(xid, yid): 0.0f;
     
-    model_->set_cost(xid, yid, model_->cost(xid, yid) + value);
-    UpdateCachedCost(xid, yid, value);
+    model_->set_cost(feature_set->at(i), yid, original + value);
+    UpdateCachedCost(feature_set->at(i), yid, value);
   }  
 }
 
@@ -109,7 +110,7 @@ bool MulticlassPerceptron::Train(const FeatureSet *feature_set,
 }
 
 // Do nothing in normal multiclass perceptron
-void MulticlassPerceptron::UpdateCachedCost(int, int, float) {}
+void MulticlassPerceptron::UpdateCachedCost(const char *, int, float) {}
 void MulticlassPerceptron::IncCount() {}
 void MulticlassPerceptron::FinishTrain() {}
 

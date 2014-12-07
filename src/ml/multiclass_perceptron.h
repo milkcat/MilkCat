@@ -58,7 +58,7 @@ class MulticlassPerceptron {
   void Update(const FeatureSet *feature_set, int yid, float value);
 
   // Used in `AveragedMulticlassPerceptron`
-  virtual void UpdateCachedCost(int xid, int yid, float value);
+  virtual void UpdateCachedCost(const char *xname, int yid, float value);
   virtual void IncCount();
   virtual void FinishTrain();
 

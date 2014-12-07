@@ -54,10 +54,7 @@ class MulticlassPerceptronModel {
 
   // Gets or sets the cost of a feature(xid) with its label(yid) in the model
   float cost(int xid, int yid) const;
-  void set_cost(int xid, int yid, float cost);
-
-  // Size of cost array
-  int cost_size() const { return cost_.size(); }
+  void set_cost(const char *xname, int yid, float cost);
 
   // If the feature_str does not exists in feature set, use this value instead
   enum {
@@ -66,7 +63,6 @@ class MulticlassPerceptronModel {
 
   // Get the number of labels(y) in the model
   int ysize() const { return yname_.size(); }
-  int xsize() const { return cost_.size() / ysize(); }
 
   // Gets label name by id or gets label id by name
   // If the name is not in the model, `GetOrInsertYId` inserts the label into
@@ -77,16 +73,11 @@ class MulticlassPerceptronModel {
   // Returns the id of feature string, if the feature string is not in the
   // model. `GetOrInsertXId` inserts the feature string in the model, `xid`
   // retutns `kIdNone`
-  int GetOrInsertXId(const char *xname);
   int xid(const char *xname) const;
 
  private:
-  ReimuTrie *xindex_;
-  int xsize_;
-
+  ReimuTrie *data_;
   ReimuTrie *yindex_;
-
-  std::vector<float> cost_;
   std::vector<std::string> yname_;
 };
 

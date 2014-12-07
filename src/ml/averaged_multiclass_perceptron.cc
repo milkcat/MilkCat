@@ -44,24 +44,26 @@ void AveragedMulticlassPerceptron::IncCount() {
 }
 
 void AveragedMulticlassPerceptron::UpdateCachedCost(
-    int xid, int yid, float value) {
-  // Keep cached_cost_ the same size as `model_->cost_size()`
-  if (model_->cost_size() > cached_cost_.size()) {
-    cached_cost_.resize(model_->cost_size());
+    const char *xname, int yid, float value) {
+  if (cached_cost_.find(xname) == cached_cost_.end()) {
+    cached_cost_[xname].resize(model_->ysize());
   }
-
-  int idx = xid * model_->ysize() + yid;
-  ASSERT(idx < cached_cost_.size(), "Invalid xid and yid");
-
-  cached_cost_[idx] += count_ * value;
+  cached_cost_[xname][yid] += count_ * value;
 }
 
 void AveragedMulticlassPerceptron::FinishTrain() {
-  for (int xid = 0; xid < model_->xsize(); ++xid) {
+  int i = 0;
+  for (unordered_map<std::string, std::vector<float> >::iterator
+       it = cached_cost_.begin(); it != cached_cost_.end(); ++it) {
+    printf("i = %d\n", ++i);
     for (int yid = 0; yid < model_->ysize(); ++yid) {
-      int idx = xid * model_->ysize() + yid;
+      if (it->second[yid] == 0.0) continue;
+      int xid = model_->xid(it->first.c_str());
+      assert(xid > 0);
       float cost = model_->cost(xid, yid);
-      model_->set_cost(xid, yid, cost - cached_cost_[idx] / count_);
+      model_->set_cost(it->first.c_str(),
+                       yid,
+                       cost - it->second[yid] / count_);
     }
   }
 }
