@@ -36,6 +36,7 @@ namespace milkcat {
 
 class Status;
 class ReimuTrie;
+template<class T> class PackedScore;
 
 // The model class used in MulticlassPerceptron
 class MulticlassPerceptronModel {
@@ -52,10 +53,6 @@ class MulticlassPerceptronModel {
   // Save the model data into binary file `filename`
   void Save(const char *filename, Status *status);
 
-  // Gets or sets the cost of a feature(xid) with its label(yid) in the model
-  float cost(int xid, int yid) const;
-  void set_cost(const char *xname, int yid, float cost);
-
   // If the feature_str does not exists in feature set, use this value instead
   enum {
     kIdNone = -1,
@@ -63,6 +60,7 @@ class MulticlassPerceptronModel {
 
   // Get the number of labels(y) in the model
   int ysize() const { return yname_.size(); }
+  int xsize() const { return score_.size(); }
 
   // Gets label name by id or gets label id by name
   // If the name is not in the model, `GetOrInsertYId` inserts the label into
@@ -73,11 +71,19 @@ class MulticlassPerceptronModel {
   // Returns the id of feature string, if the feature string is not in the
   // model. `GetOrInsertXId` inserts the feature string in the model, `xid`
   // retutns `kIdNone`
+  int GetOrInsertXId(const char *xname);
   int xid(const char *xname) const;
 
+  // Gets the scores of `xid`
+  PackedScore<float> *get_score(int xid);
+
  private:
-  ReimuTrie *data_;
+  ReimuTrie *xindex_;
+  int xsize_;
+
   ReimuTrie *yindex_;
+
+  std::vector<PackedScore<float> *> score_;
   std::vector<std::string> yname_;
 };
 

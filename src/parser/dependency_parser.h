@@ -77,6 +77,9 @@ class DependencyParser {
       double *UAS,
       Status *status);
 
+  // Number of transitions
+  int ysize();
+
  protected:
   MulticlassPerceptron *perceptron_;
   FeatureTemplate *feature_;
@@ -87,7 +90,7 @@ class DependencyParser {
   // Stores the real transition type and label for the predict id (yid) from
   // perceptron
   enum {
-    kLeftArc, kRightArc, kShift, kUnshift
+    kLeftArc, kRightArc, kShift
   };
   std::vector<int> yid_transition_;
   std::vector<std::string> yid_label_;

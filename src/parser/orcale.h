@@ -39,7 +39,6 @@ class StringBuilder;
 class Orcale {
  public:
   Orcale();
-  ~Orcale();
 
   // Parses the `instance`
   void Parse(const TreeInstance *instance);
@@ -53,7 +52,6 @@ class Orcale {
   std::vector<int> input_;
   const TreeInstance *instance_;
   char transition_label_[kLabelSizeMax];
-  StringBuilder *string_builer_;
 
   // Returns the head node id and dependency label of `nodeid`
   int Head(int nodeid);

@@ -27,6 +27,7 @@
 //
 
 #include "parser/feature_template.h"
+#include "parser/feature_template-inl.h"
 
 #include <stdio.h>
 #include <map>
@@ -88,83 +89,6 @@ DependencyParser::FeatureTemplate::~FeatureTemplate() {
   feature_index_ = NULL;
 }
 
-inline const char *DependencyParser::FeatureTemplate::Tag(const Node *node) {
-  if (node == NULL) return "NULL";
-  if (node->id() == 0) return kRootTag;
-  return part_of_speech_tag_instance_->part_of_speech_tag_at(node->id() - 1);
-}
-
-inline const char *DependencyParser::FeatureTemplate::Term(const Node *node) {
-  if (node == NULL) return "NULL";
-  if (node->id() == 0) return kRootTerm;
-  return term_instance_->term_text_at(node->id() - 1);  
-}
-
-inline const char *DependencyParser::FeatureTemplate::STw() {
-  const Node *node = state_->Stack(0);
-  return Term(node);
-}
-
-inline const char *DependencyParser::FeatureTemplate::STt() {
-  const Node *node = state_->Stack(0);
-  return Tag(node);
-}
-
-inline const char *DependencyParser::FeatureTemplate::N0w() {
-  const Node *node = state_->Input(0);
-  return Term(node);
-}
-
-inline const char *DependencyParser::FeatureTemplate::N0t() {
-  const Node *node = state_->Input(0);
-  return Tag(node);
-}
-
-inline const char *DependencyParser::FeatureTemplate::N1w() {
-  const Node *node = state_->Input(1);
-  return Term(node);
-}
-
-inline const char *DependencyParser::FeatureTemplate::N1t() {
-  const Node *node = state_->Input(1);
-  return Tag(node);
-}
-
-inline const char *DependencyParser::FeatureTemplate::N2t() {
-  const Node *node = state_->Input(2);
-  return Tag(node);
-}
-
-inline const char *DependencyParser::FeatureTemplate::STPt() {
-  const Node *node = state_->Stack(0);
-  node = state_->Parent(node);
-  return Tag(node);
-}
-
-inline const char *DependencyParser::FeatureTemplate::STLCt() {
-  const Node *node = state_->Stack(0);
-  node = state_->LeftChild(node);
-  return Tag(node);
-}
-
-inline const char *DependencyParser::FeatureTemplate::STRCt() {
-  const Node *node = state_->Stack(0);
-  node = state_->RightChild(node);
-  return Tag(node);
-}
-
-inline const char *DependencyParser::FeatureTemplate::N0LCt() {
-  const Node *node = state_->Input(0);
-  node = state_->LeftChild(node);
-  return Tag(node);
-}
-
-inline const char *DependencyParser::FeatureTemplate::N0RCt() {
-  const Node *node = state_->Input(0);
-  node = state_->RightChild(node);
-  return Tag(node);
-}
-
 void DependencyParser::FeatureTemplate::InitializeFeatureIndex() {
   std::map<std::string, int> feature_index;
   feature_index["STw"] = kSTw;
@@ -189,7 +113,6 @@ int DependencyParser::FeatureTemplate::Extract(
     const PartOfSpeechTagInstance *part_of_speech_tag_instance,
     FeatureSet *feature_set) {
   Node *node;
-  StringBuilder builder;
   int feature_num = 0;
 
   state_ = state;
@@ -217,7 +140,8 @@ int DependencyParser::FeatureTemplate::Extract(
        it != feature_template_.end();
        ++it) {
     ignore = false;
-    builder.SetOutput(feature_set->at(feature_num), FeatureSet::kFeatureSizeMax);
+    StringBuilder builder(feature_set->at(feature_num),
+                          FeatureSet::kFeatureSizeMax);
     const char *templ = it->c_str();
     const char *p = templ, *q = NULL;
     while (*p) {

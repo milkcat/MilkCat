@@ -52,13 +52,9 @@ class ReimuTrie {
   // Gets the corresponded value for `key`, if `key` does not exist, returns
   // `default_value`
   int32 Get(const char *key, int32 default_value);
-  
-  int32 Get(int from, uint8 offset, int32 default_value);
-  int Traverse(const char *key, int from);
 
   // Put `key` and `value` pair into trie.
   void Put(const char *key, int32 value);
-  void Put(const char *key, uint8 offset, int32 value);
 
   // Saves the data into file. On success, returns true. Otherwise, returns
   // false

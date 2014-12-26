@@ -25,6 +25,7 @@
 //
 
 #include "ml/averaged_multiclass_perceptron.h"
+#include "ml/packed_score.h"
 #include "utils/utils.h"
 
 namespace milkcat {
@@ -36,6 +37,11 @@ AveragedMulticlassPerceptron::AveragedMulticlassPerceptron(
 }
 
 AveragedMulticlassPerceptron::~AveragedMulticlassPerceptron() {
+  for (std::vector<PackedScore<float> *>::iterator
+       it = cached_score_.begin(); it != cached_score_.end(); ++it) {
+    delete *it;
+    *it = NULL;
+  }
 }
 
 // Increase count
@@ -44,26 +50,25 @@ void AveragedMulticlassPerceptron::IncCount() {
 }
 
 void AveragedMulticlassPerceptron::UpdateCachedCost(
-    const char *xname, int yid, float value) {
-  if (cached_cost_.find(xname) == cached_cost_.end()) {
-    cached_cost_[xname].resize(model_->ysize());
+    int xid, int yid, float value) {
+  while (xid >= cached_score_.size()) {
+    cached_score_.push_back(new PackedScore<float>(model_->ysize()));
   }
-  cached_cost_[xname][yid] += count_ * value;
+
+  PackedScore<float> *score = cached_score_[xid];
+  score->Add(yid, count_ * value);
 }
 
 void AveragedMulticlassPerceptron::FinishTrain() {
-  int i = 0;
-  for (unordered_map<std::string, std::vector<float> >::iterator
-       it = cached_cost_.begin(); it != cached_cost_.end(); ++it) {
-    printf("i = %d\n", ++i);
-    for (int yid = 0; yid < model_->ysize(); ++yid) {
-      if (it->second[yid] == 0.0) continue;
-      int xid = model_->xid(it->first.c_str());
-      assert(xid > 0);
-      float cost = model_->cost(xid, yid);
-      model_->set_cost(it->first.c_str(),
-                       yid,
-                       cost - it->second[yid] / count_);
+  PackedScore<float>::Iterator it;
+  for (int xid = 0; xid < model_->xsize(); ++xid) {
+    PackedScore<float> *cached_score = cached_score_[xid],
+                         *score = model_->get_score(xid);
+    cached_score->Begin(&it);
+    while (cached_score->HasNext(it)) {
+      std::pair<int, float> one_score = cached_score->Next(&it);
+      float add = one_score.second / count_;
+      score->Add(one_score.first, -add);
     }
   }
 }

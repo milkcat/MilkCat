@@ -29,14 +29,17 @@
 #include "parser/beam_arceager_dependency_parser.h"
 
 #include <algorithm>
+#include <map>
 #include <set>
 #include "common/model_impl.h"
 #include "common/reimu_trie.h"
+#include "common/static_array.h"
 #include "ml/averaged_multiclass_perceptron.h"
 #include "ml/feature_set.h"
 #include "ml/multiclass_perceptron.h"
 #include "ml/multiclass_perceptron_model.h"
 #include "parser/feature_template.h"
+#include "parser/feature_template-inl.h"
 #include "parser/node.h"
 #include "parser/orcale.h"
 #include "parser/state.h"
@@ -44,6 +47,8 @@
 #include "tagger/part_of_speech_tag_instance.h"
 #include "utils/pool.h"
 #include "utils/readable_file.h"
+#include "utils/status.h"
+#include "utils/string_builder.h"
 #include "utils/utils.h"
 
 namespace milkcat {
@@ -91,10 +96,9 @@ BeamArceagerDependencyParser::New(Model::Impl *model,
   if (status->ok()) feature_template = model->DependencyTemplate(status);
 
   BeamArceagerDependencyParser *self = NULL;
-
   if (status->ok()) {
     self = new BeamArceagerDependencyParser(perceptron_model,
-                                             feature_template);
+                                            feature_template);
   }
 
   if (status->ok()) {
@@ -154,23 +158,25 @@ BeamArceagerDependencyParser::StateCopyAndMove(State *state, int yid) {
 bool BeamArceagerDependencyParser::Step() {
   // Calculate the cost of transitions in each state of `beam_`, store them into
   // `agent_` 
-  int transition_num = perceptron_->ysize();
+  char postag_bigram[kPOSTagLengthMax * 2 + 5];
+  int ysize = perceptron_->ysize();
   for (int beam_idx = 0; beam_idx < beam_->size(); ++beam_idx) {
     ExtractFeatureFromState(beam_->at(beam_idx));
     int yid = perceptron_->Classify(feature_set_);
-    for (int yid = 0; yid < transition_num; ++yid) {
-      agent_[beam_idx * transition_num + yid] = perceptron_->ycost(yid) + 
-                                                beam_->at(beam_idx)->weight();
+    
+    for (int yid = 0; yid < ysize; ++yid) {
+      agent_[beam_idx * ysize + yid] = perceptron_->ycost(yid) + 
+                                       beam_->at(beam_idx)->weight();
     }
   }
-  agent_size_ = beam_->size() * transition_num;
+  agent_size_ = beam_->size() * ysize;
   
   // Partial sorts the agent to get the N-best transitions (N = kBeamSize)
   CompareIdxByCostInArray cmp(agent_, agent_size_);
   std::vector<int> idx_heap;
   for (int agent_idx = 0; agent_idx < agent_size_; ++agent_idx) {
-    int yid = agent_idx % transition_num;
-    int beam_idx = agent_idx / transition_num;
+    int yid = agent_idx % ysize;
+    int beam_idx = agent_idx / ysize;
     if (Allow(beam_->at(beam_idx), yid)) {
       // If state allows transition `yid`, stores them into `idx_heap`
       if (idx_heap.size() < kBeamSize) {
@@ -190,8 +196,8 @@ bool BeamArceagerDependencyParser::Step() {
   next_beam_->Clear();
   for (std::vector<int>::iterator
        it = idx_heap.begin(); it != idx_heap.end(); ++it) {
-    int yid = *it % transition_num;
-    int beam_idx = *it / transition_num;
+    int yid = *it % ysize;
+    int beam_idx = *it / ysize;
 
     // Copy the statue from beam
     State *state = StateCopyAndMove(beam_->at(beam_idx), yid);
@@ -279,6 +285,19 @@ void BeamArceagerDependencyParser::UpdateWeightForState(
   }
 }
 
+// Inserts `key` into `reimu_trie` and returns the id of `key`. If the key
+// already exists, it do nothing, if the key didn't exist, inserts (key, *count)
+// pair and increases count by 1.
+int InsertIntoIndex(ReimuTrie *reimu_trie, const char *key, int *count) {
+  int id = reimu_trie->Get(key, -1);
+  if (id < 0) {
+    reimu_trie->Put(key, *count);
+    id = *count;
+    ++*count;
+  }
+  return id;
+}
+
 void BeamArceagerDependencyParser::Train(
     const char *training_corpus,
     const char *template_filename,
@@ -332,6 +351,7 @@ void BeamArceagerDependencyParser::Train(
     parser = new BeamArceagerDependencyParser(model, feature);
     perceptron = new AveragedMulticlassPerceptron(model);
   }
+
 
   // Start training 
   State *correct_state = NULL;
@@ -422,6 +442,7 @@ void BeamArceagerDependencyParser::Train(
     perceptron->FinishTrain();
     model->Save(model_prefix, status);
   }
+
   if (!status->ok()) puts(status->what());
 
   delete term_instance;

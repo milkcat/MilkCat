@@ -32,6 +32,7 @@
 #include <algorithm>
 #include "ml/feature_set.h"
 #include "ml/multiclass_perceptron_model.h"
+#include "ml/packed_score.h"
 #include "utils/status.h"
 #include "utils/utils.h"
 
@@ -56,13 +57,19 @@ MulticlassPerceptron::~MulticlassPerceptron() {
 }
 
 int MulticlassPerceptron::Classify(const FeatureSet *feature_set) {
+  PackedScore<float>::Iterator it;
+
   // Clear the y_cost_ array
   for (int i = 0; i < ysize(); ++i) ycost_[i] = 0.0;
+
   for (int i = 0; i < feature_set->size(); ++i) {
     int xid = model_->xid(feature_set->at(i));
     if (xid >= 0) {
-      for (int yid = 0; yid < ysize(); ++yid) {
-        ycost_[yid] += model_->cost(xid, yid);
+      PackedScore<float> *score = model_->get_score(xid);
+      score->Begin(&it);
+      while (score->HasNext(it)) {
+        std::pair<int, float> one_score = score->Next(&it);
+        ycost_[one_score.first] += one_score.second;
       }
     }
   }
@@ -76,11 +83,10 @@ void MulticlassPerceptron::Update(const FeatureSet *feature_set,
                                   int yid,
                                   float value) {
   for (int i = 0; i < feature_set->size(); ++i) {
-    int xid = model_->xid(feature_set->at(i));
-    float original = xid > 0? model_->cost(xid, yid): 0.0f;
-    
-    model_->set_cost(feature_set->at(i), yid, original + value);
-    UpdateCachedCost(feature_set->at(i), yid, value);
+    int xid = model_->GetOrInsertXId(feature_set->at(i));
+    PackedScore<float> *score = model_->get_score(xid);
+    score->Add(yid, value);
+    UpdateCachedCost(xid, yid, value);
   }  
 }
 
@@ -110,7 +116,7 @@ bool MulticlassPerceptron::Train(const FeatureSet *feature_set,
 }
 
 // Do nothing in normal multiclass perceptron
-void MulticlassPerceptron::UpdateCachedCost(const char *, int, float) {}
+void MulticlassPerceptron::UpdateCachedCost(int, int, float) {}
 void MulticlassPerceptron::IncCount() {}
 void MulticlassPerceptron::FinishTrain() {}
 

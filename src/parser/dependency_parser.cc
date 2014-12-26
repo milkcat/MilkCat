@@ -80,6 +80,10 @@ DependencyParser::DependencyParser(MulticlassPerceptronModel *perceptron_model,
   }
 }
 
+int DependencyParser::ysize() {
+  return perceptron_->ysize();
+}
+
 void DependencyParser::StateMove(State *state, int yid) const {
   int transition = yid_transition_[yid];
   const char *label = yid_label_[yid].c_str();

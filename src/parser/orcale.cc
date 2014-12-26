@@ -34,12 +34,6 @@
 namespace milkcat {
 
 Orcale::Orcale(): instance_(NULL) {
-  string_builer_ = new StringBuilder();
-}
-
-Orcale::~Orcale() {
-  delete string_builer_;
-  string_builer_ = NULL;
 }
 
 void Orcale::Parse(const TreeInstance *instance) {
@@ -86,13 +80,13 @@ const char *Orcale::Next() {
     return "reduce";
   } 
 
-  string_builer_->SetOutput(transition_label_, kLabelSizeMax);
+  StringBuilder string_builer(transition_label_, kLabelSizeMax);
   if (stack_.size() > 0 && Head(stack_.back()) == input_.back()) {
-    *string_builer_ << "leftarc_" << Label(stack_.back());
+    string_builer << "leftarc_" << Label(stack_.back());
     stack_.pop_back();
     return transition_label_;
   } else if (IsRightArc()) {
-    *string_builer_ << "rightarc_" << Label(input_.back());
+    string_builer << "rightarc_" << Label(input_.back());
     input_.pop_back();
     input_.push_back(stack_.back());
     stack_.pop_back();

@@ -158,6 +158,9 @@ class Parser::Iterator {
   // Get the type of current word (chinese word or english word or ...)
   int type() const;
 
+  // Returns true if this word is the begin of sentence (BOS)
+  bool is_begin_of_sentence() const;
+
   // Get the instance of the implementation class
   Impl *impl() { return impl_; }
 

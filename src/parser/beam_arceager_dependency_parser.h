@@ -27,6 +27,7 @@
 #ifndef SRC_PARSER_BEAM_ARCEAGER_DEPENDENCY_PARSER_H_
 #define SRC_PARSER_BEAM_ARCEAGER_DEPENDENCY_PARSER_H_
 
+#include <stdint.h>
 #include <vector>
 #include <string>
 #include "common/model_impl.h"
@@ -40,8 +41,10 @@ class MulticlassPerceptronModel;
 class MulticlassPerceptron;
 class TermInstance;
 class PartOfSpeechTagInstance;
+class ReimuTrie;
 class FeatureSet;
 template<class T> class Pool;
+template<class T> class StaticArray;
 
 class BeamArceagerDependencyParser: public DependencyParser {
  public:
@@ -95,6 +98,12 @@ class BeamArceagerDependencyParser: public DependencyParser {
 
   // Dumps the beam data (Just for debugging)
   void DumpBeam();
+
+  // Generates the possible transitions of the stack0 and input0 postag pair
+  void GeneratePosTagBigramLabel(
+      const char *training_corpus,
+      BeamArceagerDependencyParser *parser,
+      Status *status);
 
   // Extracts features from `state` and put into `feature_set_`
   void ExtractFeatureFromState(const State* state);

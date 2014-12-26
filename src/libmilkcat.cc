@@ -245,8 +245,10 @@ void Parser::Iterator::Impl::Next() {
       }
       sentence_length_ = term_instance_->size();
       current_position_ = 0;
+      is_begin_of_sentence_ = true;
     }
   }
+  is_begin_of_sentence_ = false;
 }
 
 
@@ -282,7 +284,9 @@ int Parser::Iterator::head_node() const {
 const char *Parser::Iterator::dependency_type() const {
   return impl_->dependency_type();
 }
-
+bool Parser::Iterator::is_begin_of_sentence() const {
+  return impl_->is_begin_of_sentence();
+}
 
 // ----------------------------- Parser --------------------------------------
 

@@ -55,9 +55,6 @@ class ReimuTrie::Impl {
   int size() const;
   bool Check();
   void SetArray(void *array);
-  int32 Get(int from, uint8 offset, int32 default_value);
-  void Put(const char *key, uint8 offset, int32 value);
-  int Traverse(const char *key, int from);
   void *array() const { return reinterpret_cast<void *>(array_); }
  private:
   class Node;
@@ -162,6 +159,7 @@ class ReimuTrie::Impl::Node {
   // `base` related functions
   void set_base(int32 base) { base_ = base; };
   int32 base() const {
+    _assert(base_ >= kBaseNone);
     return base_;
   }
   void set_previous(int32 previous) { base_ = -previous; }
@@ -193,15 +191,6 @@ ReimuTrie::ReimuTrie() { impl_ = new ReimuTrie::Impl(); }
 ReimuTrie::~ReimuTrie() { delete impl_; }
 ReimuTrie::int32 ReimuTrie::Get(const char *key, int32 default_value) {
   return impl_->Get(key, default_value);
-}
-ReimuTrie::int32 ReimuTrie::Get(int from, uint8 offset, int32 default_value) {
-  return impl_->Get(from, offset, default_value);
-}
-void ReimuTrie::Put(const char *key, uint8 offset, int32 value) {
-  impl_->Put(key, offset, value);
-}
-int ReimuTrie::Traverse(const char *key, int from) {
-  return impl_->Traverse(key, from);
 }
 void ReimuTrie::Put(const char *key, int32 value) { impl_->Put(key, value); }
 ReimuTrie *ReimuTrie::Open(const char *filename) {
@@ -333,43 +322,25 @@ ReimuTrie::Impl *ReimuTrie::Impl::Open(const char *filename) {
   }
 }
 
-int ReimuTrie::Impl::Traverse(const char *key, int from) {
-  if (array_ == NULL) return kNoPath;
+ReimuTrie::int32 ReimuTrie::Impl::Get(const char *key, int32 default_value) {
+  if (array_ == NULL) return default_value;
 
   const uint8 *p = reinterpret_cast<const uint8 *>(key);
-  int to;
+  int from = 0, to;
   int base;
   while (*p != 0) {
     base = array_[from].base();
     to = XOR(base, *p);
-    if (array_[to].check() != from) return kNoPath;
+    if (array_[to].check() != from) return default_value;
     from = to;
     ++p;
   }
-
-  return from;
-}
-
-ReimuTrie::int32 ReimuTrie::Impl::Get(int from,
-                                      uint8 offset,
-                                      int32 default_value) {
-  int to = XOR(array_[from].base(), offset);
-  if (array_[to].check() != from) return default_value;
-  return array_[to].value();  
-}
-
-ReimuTrie::int32 ReimuTrie::Impl::Get(const char *key, int32 default_value) {
-  if (array_ == NULL) return default_value;
-
-  int from = Traverse(key, 0);
-  if (from < 0) return default_value;
-
-  int to = XOR(array_[from].base(), 0);
+  to = XOR(array_[from].base(), 0);
   if (array_[to].check() != from) return default_value;
   return array_[to].value();
 }
 
-void ReimuTrie::Impl::Put(const char *key, uint8 offset, int32 value) {
+void ReimuTrie::Impl::Put(const char *key, int32 value) {
   if (use_external_array_ == true) {
     // External array is read only
     return ;
@@ -385,13 +356,9 @@ void ReimuTrie::Impl::Put(const char *key, uint8 offset, int32 value) {
     from = Next(from, *p);
     ++p;
   }
-  to = Next(from, offset);
+  to = Next(from, 0);
 
-  array_[to].set_value(value);  
-}
-
-void ReimuTrie::Impl::Put(const char *key, int32 value) {
-  Put(key, 0, value);
+  array_[to].set_value(value);
 }
 
 int ReimuTrie::Impl::AddBlock() {
@@ -616,10 +583,6 @@ void ReimuTrie::Impl::MoveSubTree(int from,
     int child_base = array_[child_idx].base();
     for (int i = 0; i < 256; ++i) {
       int grandson_idx = XOR(child_base, i);
-
-      // When array_[child_base] is the value node grandson_idx is useless
-      if (grandson_idx >= size_ || grandson_idx < 0) continue;
-
       if (array_[grandson_idx].check() == child_idx) {
         array_[grandson_idx].set_check(new_child_idx);
       }
@@ -774,7 +737,5 @@ void ReimuTrie::Impl::DumpBlock(int block_idx) {
   }
   printf("-------\n"); 
 }
-
-
 
 }  // namespace milkcat

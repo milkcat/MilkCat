@@ -33,14 +33,8 @@ namespace milkcat {
 // directly instead of use its own buffer.
 class StringBuilder {
  public:
-  StringBuilder(): buffer_(NULL), capability_(0), size_(0) {
-  }
-
-  // Changes the buffer writes to
-  void SetOutput(char *buffer, int capability) {
-    buffer_ = buffer;
-    capability_ = capability;
-    size_ = 0;
+  StringBuilder(char *buffer, int capability): 
+      buffer_(buffer), capability_(capability), size_(0) {
   }
 
   // Append functions

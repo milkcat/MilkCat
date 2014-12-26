@@ -38,6 +38,8 @@
 #include <algorithm>
 #include <set>
 #include "common/darts.h"
+#include "common/reimu_trie.h"
+#include "common/static_array.h"
 #include "common/static_hashtable.h"
 #include "common/trie_tree.h"
 #include "ml/crf_model.h"
@@ -383,6 +385,7 @@ int TestDependendyParser(int argc, char **argv) {
   const char *corpus_file = argv[2];
   const char *template_file = argv[3];
   const char *model_prefix = argv[4];
+  char filename[2048];
 
   Status status;
   DependencyParser::FeatureTemplate *
@@ -393,7 +396,7 @@ int TestDependendyParser(int argc, char **argv) {
     model = MulticlassPerceptronModel::Open(model_prefix, &status);
   } 
 
-  DependencyParser *parser = NULL;
+  BeamArceagerDependencyParser *parser = NULL;
   double LAS, UAS;
   if (status.ok()) {
     parser = new BeamArceagerDependencyParser(model, feature);

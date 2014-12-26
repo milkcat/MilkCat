@@ -283,7 +283,7 @@ int main() {
   simple_get_put_test();
   save_and_open_test();
   restore_test();
-  set_array_test();
+  // set_array_test();
   offset_test();
 
 #ifdef BENCHMARK

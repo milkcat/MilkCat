@@ -27,15 +27,13 @@
 #ifndef SRC_ML_AVERAGED_MULTICLASS_PERCEPTRON_H_
 #define SRC_ML_AVERAGED_MULTICLASS_PERCEPTRON_H_
 
-#include <vector>
-#include <string>
 #include "ml/multiclass_perceptron.h"
 #include "ml/multiclass_perceptron_model.h"
-#include "utils/utils.h"
-
-
+#include <vector>
 
 namespace milkcat {
+
+template<class T> class PackedScore;
 
 class AveragedMulticlassPerceptron: public MulticlassPerceptron {
  public:
@@ -45,14 +43,14 @@ class AveragedMulticlassPerceptron: public MulticlassPerceptron {
   // Increase count
   void IncCount();
 
-  // Updates the cost of `xname`, yid, set cost[xid][yid] += `value`
-  void UpdateCachedCost(const char *xname, int yid, float value);
+  // Updates the cost of xid, yid, set cost[xid][yid] += `value`
+  void UpdateCachedCost(int xid, int yid, float value);
 
   // Averaged the cost
   void FinishTrain();
 
  private:
-  unordered_map<std::string, std::vector<float> > cached_cost_;
+  std::vector<PackedScore<float> *> cached_score_;
   int count_;
 };
 

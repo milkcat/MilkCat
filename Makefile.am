@@ -49,12 +49,14 @@ libmilkcat_a_SOURCES = src/libmilkcat.cc \
                        src/ml/multiclass_perceptron.h \
                        src/ml/multiclass_perceptron_model.cc \
                        src/ml/multiclass_perceptron_model.h \
+                       src/ml/packed_score.h \
                        src/parser/beam_arceager_dependency_parser.h \
                        src/parser/beam_arceager_dependency_parser.cc \
                        src/parser/dependency_parser.cc \
                        src/parser/dependency_parser.h \
                        src/parser/feature_template.cc \
                        src/parser/feature_template.h \
+                       src/parser/feature_template-inl.h \
                        src/parser/naive_arceager_dependency_parser.h \
                        src/parser/naive_arceager_dependency_parser.cc \
                        src/parser/node.h \
@@ -115,7 +117,7 @@ TESTS = milkcat_capi_test parser_orcale_test reimu_trie_test
 check_PROGRAMS = milkcat_capi_test parser_orcale_test reimu_trie_test
 
 milkcat_capi_test_SOURCES = test/milkcat_capi_test.c
-milkcat_capi_test_CFLAGS = -DMODEL_DIR=\"$(top_srcdir)/data/\" -lstdc++
+milkcat_capi_test_CFLAGS = -DMODEL_DIR=\"$(top_srcdir)/data/\" -lstdc++ -I../src
 milkcat_capi_test_LDADD = libmilkcat.a
 
 parser_orcale_test_SOURCES = test/parser_orcale_test.cc

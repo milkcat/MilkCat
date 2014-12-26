@@ -154,6 +154,9 @@ class Parser::Iterator::Impl {
     else
       return "NONE";
   }
+  bool is_begin_of_sentence() const {
+    return is_begin_of_sentence_;
+  }
 
   Parser::Impl *parser() const { return parser_; }
   void set_parser(Parser::Impl *parser) {
@@ -172,6 +175,7 @@ class Parser::Iterator::Impl {
   int sentence_length_;
   int current_position_;
   bool end_;
+  bool is_begin_of_sentence_;
 };
 
 }  // namespace milkcat

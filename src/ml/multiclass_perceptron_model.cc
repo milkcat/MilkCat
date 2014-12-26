@@ -36,27 +36,19 @@
 #include <set>
 #include "common/milkcat_config.h"
 #include "common/reimu_trie.h"
+#include "ml/packed_score.h"
 #include "utils/readable_file.h"
 #include "utils/writable_file.h"
 #include "utils/status.h"
 #include "utils/utils.h"
 
-namespace {
-
-inline float Int32ToFloat(int32_t val) {
-  return *reinterpret_cast<float *>(&val);
-}
-inline int32_t FloatToInt32(float val) {
-  return *reinterpret_cast<int32_t *>(&val);
-}
-
-}  // namespace
-
 namespace milkcat {
 
 MulticlassPerceptronModel::MulticlassPerceptronModel(
-    const std::vector<std::string> &y): yname_(y) {
-  data_ = new ReimuTrie();
+    const std::vector<std::string> &y):
+        xsize_(0),
+        yname_(y) {
+  xindex_ = new ReimuTrie();
   yindex_ = new ReimuTrie();
   int yid = 0;
   for (std::vector<std::string>::const_iterator
@@ -101,7 +93,8 @@ MulticlassPerceptronModel::OpenText(const char *filename, Status *status) {
       sscanf(line, "%s %s %f", y, x, &cost);
       yid = self->yindex_->Get(y, -1);
       ASSERT(yid >= 0, "yindex corrupted");
-      self->set_cost(x, yid, cost);
+      xid = self->GetOrInsertXId(x);
+      self->get_score(xid)->Put(yid, cost);
     }
   }  
   delete fd;
@@ -139,6 +132,7 @@ MulticlassPerceptronModel::Open(const char *filename_prefix, Status *status) {
   int32_t xindex_size;
   char (*yname_buf)[kLabelSizeMax] = NULL;
   std::vector<std::string> yname;
+  if (status->ok()) fd->ReadValue<int32_t>(&xsize, status);
   if (status->ok()) fd->ReadValue<int32_t>(&ysize, status);
   if (status->ok()) fd->ReadValue<int32_t>(&xindex_size, status);
   if (status->ok()) {
@@ -153,20 +147,31 @@ MulticlassPerceptronModel::Open(const char *filename_prefix, Status *status) {
     self = new MulticlassPerceptronModel(yname);
   }
   delete fd;
+  fd = NULL;
 
-  // The data file (ReimuTrie)
+  // The x-index file (ReimuTrie)
   if (status->ok()) {
     // Use new xindex instead
-    delete self->data_;
-    self->data_ = ReimuTrie::Open(xindex_file.c_str());
-    if (self->data_ == NULL) *status = Status::IOError(xindex_file.c_str());
+    delete self->xindex_;
+    self->xindex_ = ReimuTrie::Open(xindex_file.c_str());
+    if (self->xindex_ == NULL) *status = Status::IOError(xindex_file.c_str());
   }
 
   if (status->ok()) {
-    if (self->data_->size() != xindex_size) {
+    if (self->xindex_->size() != xindex_size) {
       *status = Status::Corruption(xindex_file.c_str());
     }
   }
+
+  // Cost data file
+  if (status->ok()) fd = ReadableFile::New(cost_file.c_str(), status);
+  if (status->ok()) {
+    for (int i = 0; status->ok() && i < xsize; ++i) {
+      PackedScore<float> *score = PackedScore<float>::Read(fd, status);
+      if (status->ok()) self->score_.push_back(score);
+    }
+  }
+  delete fd;
 
   if (status->ok()) {
     return self;
@@ -190,6 +195,7 @@ void MulticlassPerceptronModel::Save(const char *filename_prefix,
   std::string prefix = filename_prefix;
   std::string metafile = prefix + ".meta";
   std::string xindex_file = prefix + ".x.idx";
+  std::string cost_file = prefix + ".cost.data";
 
   // Metadata file
   WritableFile *fd = WritableFile::New(metafile.c_str(), status);
@@ -198,8 +204,9 @@ void MulticlassPerceptronModel::Save(const char *filename_prefix,
     fd->WriteValue<int32_t>(magic_number, status);
   }
 
+  if (status->ok()) fd->WriteValue<int32_t>(score_.size(), status);
   if (status->ok()) fd->WriteValue<int32_t>(ysize(), status);
-  if (status->ok()) fd->WriteValue<int32_t>(data_->size(), status);
+  if (status->ok()) fd->WriteValue<int32_t>(xindex_->size(), status);
   if (status->ok()) {
     // Converts std::vector<std::string> into char (*)[kLabelSizeMax] and writes
     // to `fd`
@@ -213,22 +220,48 @@ void MulticlassPerceptronModel::Save(const char *filename_prefix,
     delete buff;
   }
   delete fd;
-  fd = NULL;
   
   // Index file for x (ReimuTrie)
   if (status->ok()) {
-    if (data_->Save(xindex_file.c_str()) == false) {
+    if (xindex_->Save(xindex_file.c_str()) == false) {
       *status = Status::IOError(xindex_file.c_str());
     }
   }
+
+  // Cost data file
+  if (status->ok()) fd = WritableFile::New(cost_file.c_str(), status);
+  if (status->ok()) {
+    for (std::vector<PackedScore<float> *>::const_iterator
+         it = score_.begin(); status->ok() && it != score_.end(); ++it) {
+      (*it)->Write(fd, status);
+    }
+  }
+  delete fd;
 }
 
 MulticlassPerceptronModel::~MulticlassPerceptronModel() {
-  delete data_;
-  data_ = NULL;
+  delete xindex_;
+  xindex_ = NULL;
 
   delete yindex_;
   yindex_ = NULL;
+
+  for (std::vector<PackedScore<float> *>::iterator
+       it = score_.begin(); it != score_.end(); ++it) {
+    delete *it;
+    *it = NULL;
+  }
+}
+
+int MulticlassPerceptronModel::GetOrInsertXId(const char *xname) {
+  int val = xindex_->Get(xname, -1);
+  if (val < 0) {
+    xindex_->Put(xname, score_.size());
+    score_.push_back(new PackedScore<float>(ysize()));
+    return score_.size() - 1;
+  } else {
+    return val;
+  }
 }
 
 int MulticlassPerceptronModel::yid(const char *yname) const { 
@@ -236,22 +269,12 @@ int MulticlassPerceptronModel::yid(const char *yname) const {
 }
 
 int MulticlassPerceptronModel::xid(const char *xname) const {
-  int idx = data_->Traverse(xname, 0);
-  if (idx < 0) return kIdNone;
-  return idx;
+  return xindex_->Get(xname, kIdNone);
 }
 
-float MulticlassPerceptronModel::cost(int xid, int yid) const {
-  assert(yid < ysize());
-  int int_data = data_->Get(xid, static_cast<ReimuTrie::uint8>(yid), 0);
-  return Int32ToFloat(int_data);
-}
-
-void MulticlassPerceptronModel::set_cost(const char *xname,
-                                         int yid,
-                                         float cost) {
-  assert(yid < ysize());
-  data_->Put(xname, static_cast<ReimuTrie::uint8>(yid), FloatToInt32(cost));
+PackedScore<float> *MulticlassPerceptronModel::get_score(int xid) {
+  assert(xid < score_.size());
+  return score_[xid];
 }
 
 }  // namespace milkcat
