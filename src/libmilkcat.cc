@@ -42,6 +42,7 @@
 #include "tagger/crf_part_of_speech_tagger.h"
 #include "tagger/hmm_part_of_speech_tagger.h"
 #include "tagger/part_of_speech_tag_instance.h"
+#include "parser/beam_arceager_dependency_parser.h"
 #include "parser/dependency_parser.h"
 #include "parser/tree_instance.h"
 #include "tokenizer/tokenizer.h"
@@ -161,7 +162,7 @@ DependencyParser *DependencyParserFactory(Model::Impl *factory,
   switch (parser_type) {
     case kArcEagerParser:
       if (status->ok()) {
-        return NaiveArceagerDependencyParser::New(factory, status);
+        return BeamArceagerDependencyParser::New(factory, status);
       } else {
         return NULL;
       }
@@ -221,7 +222,6 @@ void Parser::Iterator::Impl::Scan(const char *text) {
 
 void Parser::Iterator::Impl::Next() {
   if (End()) return ;
-  
   current_position_++;
   if (current_position_ > sentence_length_ - 1) {
     // If reached the end of current sentence

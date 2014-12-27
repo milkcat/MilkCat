@@ -250,41 +250,12 @@ void set_array_test() {
   puts("set_array_test OK");
 }
 
-void offset_test() {
-  ReimuTrie *trie = new ReimuTrie();
-  trie->Put("LARC-NMOD", 0, 2);
-  trie->Put("LARC-NMOD", 22, 3);
-
-  trie->Put("LARC-P", 3);
-
-  trie->Put("LARC-PMOD", 4);
-  trie->Put("LARC-PMOD", 0, 5);
-
-  trie->Put("LARC-PRD", 5);
-  trie->Put("LARC-SBAR", 6);
-  trie->Put("LARC-SUB", 7);
-  trie->Put("LARC-VC", 8);
-  trie->Put("LARC-VMOD", 9);
-
-  int idx = trie->Traverse("LARC-NMOD", 0);
-  assert(idx > 0);
-  assert(trie->Get(idx, 0, 0) == 2);
-  assert(trie->Get(idx, 22, 0) == 3);
-  assert(trie->Get(idx, 23, 0) == 0);
-
-  idx = trie->Traverse("LARC-PMOD", 0);
-  assert(trie->Get(idx, 0, 0) == 5);
-
-  delete trie;
-}
-
 int main() {
   generate_test_data();
   simple_get_put_test();
   save_and_open_test();
   restore_test();
   // set_array_test();
-  offset_test();
 
 #ifdef BENCHMARK
   get_put_benchmark();

@@ -57,6 +57,7 @@ void mc_model_delete(mc_model_t *model) {
 void mc_parseropt_init(mc_parseropt_t *parseropt) {
   parseropt->segmenter = MC_MIXED_SEGMENTER;
   parseropt->postagger = MC_HMM_POSTAGGER;
+  parseropt->postagger = MC_NO_DEPPARSER;
 }
 
 mc_parser_t *mc_parser_new(mc_parseropt_t *parseropt, mc_model_t *model) {
@@ -90,6 +91,19 @@ mc_parser_t *mc_parser_new(mc_parseropt_t *parseropt, mc_model_t *model) {
     default:
       milkcat::global_status = milkcat::Status::RuntimeError(
           "Illegal postagger type");
+      return NULL;
+  }
+
+  switch (parseropt->depparser) {
+    case MC_NO_DEPPARSER:
+      option.NoDependencyParser();
+      break;
+    case MC_BEAM_DEPPARSER:
+      option.UseArcEagerDependencyParser();
+      break;
+    default:
+      milkcat::global_status = milkcat::Status::RuntimeError(
+          "Illegal depparser type");
       return NULL;
   }
 
@@ -131,6 +145,8 @@ void mc_parseriter_next(mc_parseriter_t *parseriter) {
   it->Next();
   parseriter->word = it->word();
   parseriter->part_of_speech_tag = it->part_of_speech_tag();
+  parseriter->head = it->head_node();
+  parseriter->label = it->dependency_type();
 }
 
 void mc_parser_parse(mc_parser_t *parser,
@@ -140,6 +156,8 @@ void mc_parser_parse(mc_parser_t *parser,
   parser->parser->Parse(text, it);
   parseriter->word = it->word();
   parseriter->part_of_speech_tag = it->part_of_speech_tag();
+  parseriter->head = it->head_node();
+  parseriter->label = it->dependency_type();
 }
 
 const char *mc_last_error() {

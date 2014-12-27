@@ -11,9 +11,10 @@ dist_pkgdata_DATA = data/bigram.bin \
                     data/oov_property.idx \
                     data/unigram.bin \
                     data/unigram.idx \
-                    data/stopword.idx \
-                    data/tfidf.bin \
-                    data/depparse.templ
+                    data/depparse.tmpl \
+                    data/ctb5_dep.meta \
+                    data/ctb5_dep.x.idx \
+                    data/ctb5_dep.cost.data
 
 include_HEADERS = src/include/milkcat.h
 
@@ -50,6 +51,7 @@ libmilkcat_a_SOURCES = src/libmilkcat.cc \
                        src/ml/multiclass_perceptron_model.cc \
                        src/ml/multiclass_perceptron_model.h \
                        src/ml/packed_score.h \
+                       src/ml/sequence_feature_set.h \
                        src/parser/beam_arceager_dependency_parser.h \
                        src/parser/beam_arceager_dependency_parser.cc \
                        src/parser/dependency_parser.cc \

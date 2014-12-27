@@ -90,6 +90,8 @@ class CRFTagger {
     return model_->yname(tag_id);
   }
 
+  const CRFModel *model() const { return model_; } 
+
   // Gets `transition_table_` or `emission_table_`
   TransitionTable *transition_table() { return transition_table_; }
   EmissionTable *emission_table() { return emission_table_; }

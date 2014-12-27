@@ -186,6 +186,8 @@ typedef struct mc_parseriter_internal_t mc_parseriter_internal_t;
 typedef struct mc_parseriter_t {
   const char *word;
   const char *part_of_speech_tag;
+  int head;
+  const char *label;
   mc_parseriter_internal_t *it;
 } mc_parseriter_t;
 
@@ -198,10 +200,13 @@ typedef struct mc_parseriter_t {
 #define MC_HMM_POSTAGGER 2
 #define MC_NO_POSTAGGER 3
 
+#define MC_NO_DEPPARSER 0
+#define MC_BEAM_DEPPARSER 1
 
 typedef struct mc_parseropt_t {
   int segmenter;
   int postagger;
+  int depparser;
 } mc_parseropt_t;
 
 mc_model_t *mc_model_new(const char *model_path);

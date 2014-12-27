@@ -595,6 +595,7 @@ int ReimuTrie::Impl::ResolveConflict(int *from, int base, uint8 label) {
   int node_idx = XOR(base, label);
   int conflicted_from = array_[node_idx].check();
   int conflicted_base;
+  _assert(conflicted_from != node_idx);
   if (conflicted_from == node_idx) {
     // When it is a value node
     conflicted_base = conflicted_from;
