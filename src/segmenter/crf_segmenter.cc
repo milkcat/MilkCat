@@ -108,15 +108,22 @@ void CRFSegmenter::SegmentRange(TermInstance *term_instance,
   std::string buffer;
 
   // Puts the `token_instance` into `sequence_feature_set_`
+  CRFTagger::Lattice *lattice = crf_tagger_->lattice();
   sequence_feature_set_->set_size(token_instance->size());
   for (int idx = 0; idx < token_instance->size(); ++idx) {
     FeatureSet *feature_set = sequence_feature_set_->at_index(idx);
+
+    // Only one feature for word segmenter
     feature_set->Clear();
+    feature_set->Add(token_instance->token_text_at(idx));
+
     int token_type = token_instance->token_type_at(idx);
     if (token_type == TokenInstance::kChineseChar) {
-      feature_set->Add(token_instance->token_text_at(idx));
+      lattice->AllowAll(idx);
     } else {
-      feature_set->Add("，");
+      // For other tokens just assign S tag
+      lattice->Clear(idx);
+      lattice->Add(idx, S);
     }
   }
 
