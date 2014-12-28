@@ -151,28 +151,28 @@ void CRFPartOfSpeechTagger::TagRange(
 
   // Use the HMM emissions
   if (hmm_model_ != NULL) {
-    CRFTagger::EmissionTable *emission_table = crf_tagger_->emission_table();
+    CRFTagger::Lattice *lattice = crf_tagger_->lattice();
     for (int idx = 0; idx < term_instance->size(); ++idx) {
       const char *word = term_instance->term_text_at(idx);
       const HMMModel::EmissionArray *emission = hmm_model_->Emission(word);
-      emission_table->Clear(idx);
+      lattice->Clear(idx);
       int term_type = term_instance->term_type_at(idx);
 
       // If hmm model has emission for current word, put the emission_array
-      // to emission_table of crf_tagger_  
+      // to lattice of crf_tagger_  
       if (emission != NULL && emission->total_count() >= kEmissionThreshold) {
         for (int emission_idx = 0;
              emission_idx < emission->size();
              ++emission_idx) {
           int crf_tag = hmm_crf_ymap_[emission->yid_at(emission_idx)];
-          emission_table->Add(idx, crf_tag);
+          lattice->Add(idx, crf_tag);
         }
       } else if (term_type == Parser::kPunction) {
-        emission_table->Add(idx, PU_);
+        lattice->Add(idx, PU_);
       } else if (term_type == Parser::kOther) {
-        emission_table->Add(idx, PU_);
+        lattice->Add(idx, PU_);
       } else {
-        emission_table->AllowAll(idx);
+        lattice->AllowAll(idx);
       }
     }
   }

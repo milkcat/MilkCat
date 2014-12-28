@@ -46,7 +46,7 @@ class SequenceFeatureSet;
 class CRFTagger {
  public:
   class TransitionTable;
-  class EmissionTable;
+  class Lattice;
 
   explicit CRFTagger(const CRFModel *model);
   ~CRFTagger();
@@ -70,41 +70,41 @@ class CRFTagger {
     TagRange(sequence_feature_set, 0, sequence_feature_set->size(), -1, -1);
   }
 
-  // Get the result tag at `idx`, position starts from 0
+  // Gets the result tag at `idx`, position starts from 0
   int y(int idx) {
     return result_[idx];
   }
 
-  // Get the number of tags in model
+  // Gets the number of tags in model
   int ysize() const {
     return model_->ysize();
   }
 
-  // Get Tag's id by its text, return -1 if it not exists
+  // Gets Tag's id by its text, return -1 if it not exists
   int yid(const char *yname) const {
     return model_->yid(yname);
   }
 
-  // Get Tag's string text by its id
+  // Gets Tag's string text by its id
   const char *yname(int tag_id) {
     return model_->yname(tag_id);
   }
 
   const CRFModel *model() const { return model_; } 
 
-  // Gets `transition_table_` or `emission_table_`
+  // Gets `transition_table_` or `lattice_`
   TransitionTable *transition_table() { return transition_table_; }
-  EmissionTable *emission_table() { return emission_table_; }
+  Lattice *lattice() { return lattice_; }
 
  private:
   struct Node;
 
   const CRFModel *model_;
-  Node *lattice_[kSequenceMax];
+  Node *decode_lattice_[kSequenceMax];
   int result_[kSequenceMax];
   SequenceFeatureSet *sequence_feature_set_;
   TransitionTable *transition_table_;
-  EmissionTable *emission_table_;
+  Lattice *lattice_;
 
   // Get the xid of unigram/bigram features at `idx`, returns the number of
   // features
@@ -156,29 +156,29 @@ class CRFTagger::TransitionTable {
   const CRFModel *model_;
 };
 
-// TransitionTable stores the allowed emissions
-class CRFTagger::EmissionTable {
+// Lattice stores the allowed state for each observation
+class CRFTagger::Lattice {
  public:
-  EmissionTable(const CRFModel *model);
-  ~EmissionTable();
+  Lattice(const CRFModel *model);
+  ~Lattice();
 
-  // Adds an emission to the `idx` of table
+  // Adds an state to the `idx` of table
   void Add(int idx, int y);
 
-  // Remove all emissions at `idx`
+  // Remove all states at `idx`
   void Clear(int idx);
 
-  // Allows all emission at `idx`
+  // Allows all states at `idx`
   void AllowAll(int idx);
 
-  // Number os emissions at `idx`
-  int emission_num(int idx) const { return top_[idx]; }
+  // Number os states at `idx`
+  int y_num(int idx) const { return top_[idx]; }
 
-  // Gets the emission at
-  int at(int idx, int num) const { return emission_[idx][num]; }
+  // Gets the states at
+  int at(int idx, int num) const { return lattice_[idx][num]; }
 
  private:
-  int *emission_[kSequenceMax];
+  int *lattice_[kSequenceMax];
   int top_[kSequenceMax];
   int ysize_;
 };

@@ -53,19 +53,19 @@ const char *EOS[kMaxContextSize] = {"_x-1", "_x+2", "_x+3", "_x+4", "_x+#"};
 
 CRFTagger::CRFTagger(const CRFModel *model): model_(model) {
   for (int i = 0; i < kSequenceMax; ++i) {
-    lattice_[i] = new Node[model_->ysize()];
+    decode_lattice_[i] = new Node[model_->ysize()];
   }
 
   transition_table_ = new TransitionTable(model);
   transition_table_->AllowAll();
 
-  emission_table_ = new EmissionTable(model);
-  for (int idx = 0; idx < kSequenceMax; ++idx) emission_table_->AllowAll(idx);
+  lattice_ = new Lattice(model);
+  for (int idx = 0; idx < kSequenceMax; ++idx) lattice_->AllowAll(idx);
 }
 
 CRFTagger::~CRFTagger() {
   for (int i = 0; i < kSequenceMax; ++i) {
-    delete[] lattice_[i];
+    delete[] decode_lattice_[i];
   }
 
   delete transition_table_;
@@ -101,15 +101,15 @@ void CRFTagger::Viterbi(int begin, int end, int begin_tag, int end_tag) {
 void CRFTagger::StoreResult(int begin, int end, int end_tag) {
   int best_yid = 0;
   double best_cost = -1e37;
-  const Node *last_bucket = lattice_[end - 1];
+  const Node *last_bucket = decode_lattice_[end - 1];
 
   if (end_tag != -1) {
     // Have the end tag ... so find the best result from left tag of `end_tag`
-    best_yid = lattice_[end][end_tag].left_tag_id;
+    best_yid = decode_lattice_[end][end_tag].left_tag_id;
   } else {
-    int emission_num = emission_table_->emission_num(end - 1);
-    for (int emission_idx = 0; emission_idx < emission_num; ++emission_idx) {
-      int yid = emission_table_->at(end - 1, emission_idx);
+    int y_num = lattice_->y_num(end - 1);
+    for (int y_idx = 0; y_idx < y_num; ++y_idx) {
+      int yid = lattice_->at(end - 1, y_idx);
       if (best_cost < last_bucket[yid].cost) {
         best_yid = yid;
         best_cost = last_bucket[yid].cost;
@@ -119,12 +119,12 @@ void CRFTagger::StoreResult(int begin, int end, int end_tag) {
 
   for (int position = end - 1; position >= begin; --position) {
     result_[position - begin] = best_yid;
-    best_yid = lattice_[position][best_yid].left_tag_id;
+    best_yid = decode_lattice_[position][best_yid].left_tag_id;
   }
 }
 
 void CRFTagger::ClearBucket(int position) {
-  memset(lattice_[position], 0, sizeof(Node) * model_->ysize());
+  memset(decode_lattice_[position], 0, sizeof(Node) * model_->ysize());
 }
 
 void CRFTagger::CalcUnigramCost(int idx) {
@@ -133,15 +133,15 @@ void CRFTagger::CalcUnigramCost(int idx) {
   int feature_num = UnigramFeatureAt(idx, feature_ids);
   double cost;
 
-  int emission_num = emission_table_->emission_num(idx);
-  for (int emission_idx = 0; emission_idx < emission_num; ++emission_idx) {
-    int yid = emission_table_->at(idx, emission_idx);
-    cost = lattice_[idx][yid].cost;
+  int y_num = lattice_->y_num(idx);
+  for (int y_idx = 0; y_idx < y_num; ++y_idx) {
+    int yid = lattice_->at(idx, y_idx);
+    cost = decode_lattice_[idx][yid].cost;
     for (int i = 0; i < feature_num; ++i) {
       feature_id = feature_ids[i];
       cost += model_->unigram_cost(feature_id, yid);
     }
-    lattice_[idx][yid].cost = cost;
+    decode_lattice_[idx][yid].cost = cost;
     // printf("Bucket Cost: %d %s %lf\n", idx,
     // model_->GetTagText(yid), cost);
   }
@@ -153,15 +153,15 @@ void CRFTagger::CalcBeginTagBigramCost(int begin, int begin_tag) {
   int feature_num = BigramFeatureAt(begin, feature_ids);
   double cost;
 
-  int emission_num = emission_table_->emission_num(begin);
-  for (int emission_idx = 0; emission_idx < emission_num; ++emission_idx) {
-    int yid = emission_table_->at(begin, emission_idx);
+  int y_num = lattice_->y_num(begin);
+  for (int y_idx = 0; y_idx < y_num; ++y_idx) {
+    int yid = lattice_->at(begin, y_idx);
     cost = 0;
     for (int i = 0; i < feature_num; ++i) {
       feature_id = feature_ids[i];
       cost += model_->bigram_cost(feature_id, begin_tag, yid);
     }
-    lattice_[begin][yid].cost = cost;
+    decode_lattice_[begin][yid].cost = cost;
   }
 }
 
@@ -172,20 +172,18 @@ void CRFTagger::CalcBigramCost(int idx) {
   double cost, best_cost;
   int best_tag_id = 0;
 
-  int emission_num = emission_table_->emission_num(idx);
-  int left_emission_num = emission_table_->emission_num(idx - 1);
-  for (int emission_idx = 0; emission_idx < emission_num; ++emission_idx) {
-    int yid = emission_table_->at(idx, emission_idx);
+  int y_num = lattice_->y_num(idx);
+  int left_y_num = lattice_->y_num(idx - 1);
+  for (int y_idx = 0; y_idx < y_num; ++y_idx) {
+    int yid = lattice_->at(idx, y_idx);
     best_cost = -1e37;
-    for (int left_emission_idx = 0;
-         left_emission_idx < left_emission_num;
-         ++left_emission_idx) {
-      int left_yid = emission_table_->at(idx - 1, left_emission_idx);
+    for (int left_y_idx = 0; left_y_idx < left_y_num; ++left_y_idx) {
+      int left_yid = lattice_->at(idx - 1, left_y_idx);
       // Ignore the bigram when it is not allowed in `transition_table_`
       if (transition_table_->transition(left_yid, yid) == false)
         continue;
 
-      cost = lattice_[idx - 1][left_yid].cost;
+      cost = decode_lattice_[idx - 1][left_yid].cost;
       for (int i = 0; i < feature_num; ++i) {
         feature_id = feature_ids[i];
         cost += model_->bigram_cost(feature_id, left_yid, yid);
@@ -198,8 +196,8 @@ void CRFTagger::CalcBigramCost(int idx) {
         best_cost = cost;
       }
     }
-    lattice_[idx][yid].cost = best_cost;
-    lattice_[idx][yid].left_tag_id = best_tag_id;
+    decode_lattice_[idx][yid].cost = best_cost;
+    decode_lattice_[idx][yid].left_tag_id = best_tag_id;
     // printf("Arc Cost: %d %s %s %lf\n", idx, model_->GetTagText(yid),
     // model_->GetTagText(best_tag_id), best_cost);
   }
@@ -372,35 +370,35 @@ void CRFTagger::TransitionTable::DisallowAll() {
   }
 }
 
-CRFTagger::EmissionTable::EmissionTable(const CRFModel *model) {
+CRFTagger::Lattice::Lattice(const CRFModel *model) {
   ysize_ = model->ysize();
   for (int idx = 0; idx < kSequenceMax; ++idx) {
-    emission_[idx] = new int[ysize_];
+    lattice_[idx] = new int[ysize_];
     top_[idx] = 0;
   }
 }
 
-CRFTagger::EmissionTable::~EmissionTable() {
+CRFTagger::Lattice::~Lattice() {
   for (int idx = 0; idx < kSequenceMax; ++idx) {
-    delete emission_[idx];
-    emission_[idx] = NULL;
+    delete lattice_[idx];
+    lattice_[idx] = NULL;
   }
 }
 
-void CRFTagger::EmissionTable::Add(int idx, int y) {
+void CRFTagger::Lattice::Add(int idx, int y) {
   assert(idx < kSequenceMax && top_[idx] < ysize_);
   int top = top_[idx];
-  emission_[idx][top] = y;
+  lattice_[idx][top] = y;
   top_[idx]++;
 }
 
-void CRFTagger::EmissionTable::Clear(int idx) {
+void CRFTagger::Lattice::Clear(int idx) {
   top_[idx] = 0;
 }
 
-void CRFTagger::EmissionTable::AllowAll(int idx) {
+void CRFTagger::Lattice::AllowAll(int idx) {
   for (int i = 0; i < ysize_; ++i) {
-    emission_[idx][i] = i;
+    lattice_[idx][i] = i;
   }
   top_[idx] = ysize_;
 }
