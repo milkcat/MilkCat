@@ -53,6 +53,14 @@ class ReimuTrie {
   // `default_value`
   int32 Get(const char *key, int32 default_value);
 
+  // Traverse ReimuTrie from `*from` and gets the value of `key`, then sets
+  // `from` to the latest position in the trie. If the path didn't exist,
+  // just returns false. If the path exists but the value didn't exist,
+  // returns true and set `value` to `default_value`. Else, returns true and
+  // sets `value`.
+  bool Traverse(
+      int *from, const char *key, int32 *value, int32 default_value) const;
+
   // Put `key` and `value` pair into trie.
   void Put(const char *key, int32 value);
 

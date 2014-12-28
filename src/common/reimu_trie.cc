@@ -56,6 +56,8 @@ class ReimuTrie::Impl {
   bool Check();
   void SetArray(void *array);
   void *array() const { return reinterpret_cast<void *>(array_); }
+  bool Traverse(
+      int *from, const char *key, int32 *value, int32 default_value) const;
  private:
   class Node;
   class Block;
@@ -207,6 +209,10 @@ bool ReimuTrie::Save(const char *filename) { return impl_->Save(filename); }
 int ReimuTrie::size() const { return impl_->size(); }
 void ReimuTrie::_Check() { impl_->Check(); }
 void ReimuTrie::SetArray(void *array) { impl_->SetArray(array); }
+bool ReimuTrie::Traverse(
+      int *from, const char *key, int32 *value, int32 default_value) const {
+  return impl_->Traverse(from, key, value, default_value);
+}
 void *ReimuTrie::array() const { return impl_->array(); }
 
 ReimuTrie::Impl::Block::Block(): previous_(0),
@@ -322,22 +328,34 @@ ReimuTrie::Impl *ReimuTrie::Impl::Open(const char *filename) {
   }
 }
 
-ReimuTrie::int32 ReimuTrie::Impl::Get(const char *key, int32 default_value) {
-  if (array_ == NULL) return default_value;
+bool ReimuTrie::Impl::Traverse(
+    int *from, const char *key, int32 *value, int32 default_value) const {
+  if (array_ == NULL) return false;
 
   const uint8 *p = reinterpret_cast<const uint8 *>(key);
-  int from = 0, to;
-  int base;
+  int to, base;
   while (*p != 0) {
-    base = array_[from].base();
+    base = array_[*from].base();
     to = XOR(base, *p);
-    if (array_[to].check() != from) return default_value;
-    from = to;
+    if (array_[to].check() != *from) return false;
+    *from = to;
     ++p;
   }
-  to = XOR(array_[from].base(), 0);
-  if (array_[to].check() != from) return default_value;
-  return array_[to].value();
+  to = XOR(array_[*from].base(), 0);
+  if (array_[to].check() != *from) {
+    *value = default_value;
+  } else {
+    *value = array_[to].value();
+  }
+  return true;  
+}
+
+ReimuTrie::int32 ReimuTrie::Impl::Get(const char *key, int32 default_value) {
+  int from = 0;
+  int32 value;
+  bool path_exists = Traverse(&from, key, &value, default_value);
+  if (path_exists == false) return default_value;
+  return value;
 }
 
 void ReimuTrie::Impl::Put(const char *key, int32 value) {

@@ -250,11 +250,29 @@ void set_array_test() {
   puts("set_array_test OK");
 }
 
+void traverse_test() {
+  ReimuTrie *trie = new ReimuTrie();
+  trie->Put("Bad Apple~!!", 233);
+  int from = 0;
+  ReimuTrie::int32 value;
+  assert(trie->Traverse(&from, "Bad ", &value, -1));
+  assert(value == -1);
+
+  int from2 = from;
+  assert(trie->Traverse(&from2, "Alice", &value, -1) == false);
+  assert(trie->Traverse(&from, "Apple~!!", &value, -1));
+  assert(value == 233);
+
+  delete trie;
+  puts("traverse_test OK");
+}
+
 int main() {
   generate_test_data();
   simple_get_put_test();
   save_and_open_test();
   restore_test();
+  traverse_test();
   // set_array_test();
 
 #ifdef BENCHMARK
