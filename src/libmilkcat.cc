@@ -124,7 +124,6 @@ PartOfSpeechTagger *PartOfSpeechTaggerFactory(Model::Impl *factory,
   switch (tagger_type) {
     case kCrfTagger:
       if (status->ok()) crf_pos_model = factory->CRFPosModel(status);
-      if (status->ok()) hmm_pos_model = factory->HMMPosModel(status);
 
       if (status->ok()) {
         return CRFPartOfSpeechTagger::New(crf_pos_model, NULL, status);
@@ -140,8 +139,10 @@ PartOfSpeechTagger *PartOfSpeechTaggerFactory(Model::Impl *factory,
       }
 
     case kMixedTagger:
+      if (status->ok()) crf_pos_model = factory->CRFPosModel(status);
+      if (status->ok()) hmm_pos_model = factory->HMMPosModel(status);
       if (status->ok()) {
-        return HMMPartOfSpeechTagger::New(factory, status);
+        return CRFPartOfSpeechTagger::New(crf_pos_model, hmm_pos_model, status);
       } else {
         return NULL;
       }
@@ -391,7 +392,7 @@ void Parser::Parse(const char *text, Parser::Iterator *iterator) {
 }
 
 Parser::Options::Options(): segmenter_type_(kMixedSegmenter),
-                            tagger_type_(kCrfTagger),
+                            tagger_type_(kMixedTagger),
                             parser_type_(kNoParser) {
 }
 

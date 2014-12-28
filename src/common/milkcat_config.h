@@ -42,6 +42,7 @@ enum {
   kUserTermIdStart = 0x40000000,
   kHmmModelMagicNumber = 0x3322,
   kMulticlassPerceptronModelMagicNumber = 0x1a1a,
+  kCrfModelMagicNumber = 0x1234,
   kLabelSizeMax = 64
 };
 

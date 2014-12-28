@@ -52,7 +52,6 @@ void PartOfSpeechTagger::ReadInstance(
     size = 0;
     tok = strtok_r(line, " ", &saveptr);
     while (status->ok()) {
-      tok = strtok_r(NULL, " ", &saveptr);
       if (tok == NULL) break;
       char *splitter = strrchr(tok, '_');
       if (splitter != NULL) {
@@ -64,6 +63,7 @@ void PartOfSpeechTagger::ReadInstance(
           size++;            
         }
       }
+      tok = strtok_r(NULL, " ", &saveptr);
     }
     if (status->ok()) {
       term_instance->set_size(size);
@@ -90,16 +90,16 @@ double PartOfSpeechTagger::Test(const char *test_corpus,
       tagger->Tag(tag_instance, term_instance);
       for (int i = 0; i < tag_instance->size(); ++i) {
         ++total;
+        printf("%s\t%s\t%s\n",
+               term_instance->term_text_at(i),
+               gold_tag_instance->part_of_speech_tag_at(i),
+               tag_instance->part_of_speech_tag_at(i));
         if (strcmp(tag_instance->part_of_speech_tag_at(i),
                    gold_tag_instance->part_of_speech_tag_at(i)) == 0) {
           ++correct;
-        } else {
-          printf("%s: %s -> %s\n",
-                 term_instance->term_text_at(i),
-                 gold_tag_instance->part_of_speech_tag_at(i),
-                 tag_instance->part_of_speech_tag_at(i));
         }
       }
+      puts("");
     }
   }
 

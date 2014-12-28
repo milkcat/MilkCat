@@ -47,11 +47,9 @@ struct CRFTagger::Node {
   int left_tag_id;
 };
 
-const size_t kMaxContextSize = 8;
-const char *BOS[kMaxContextSize] = { "_B-1", "_B-2", "_B-3", "_B-4",
-                                     "_B-5", "_B-6", "_B-7", "_B-8" };
-const char *EOS[kMaxContextSize] = { "_B+1", "_B+2", "_B+3", "_B+4",
-                                     "_B+5", "_B+6", "_B+7", "_B+8" };
+const size_t kMaxContextSize = 5;
+const char *BOS[kMaxContextSize] = {"_x+1", "_x-2", "_x-3", "_x-4", "_x-#"};
+const char *EOS[kMaxContextSize] = {"_x-1", "_x+2", "_x+3", "_x+4", "_x+#"};
 
 CRFTagger::CRFTagger(const CRFModel *model): model_(model) {
   for (int i = 0; i < kSequenceMax; ++i) {
@@ -294,7 +292,7 @@ NEXT2:
 
   if (row < -static_cast<int>(kMaxContextSize) ||
       row > static_cast<int>(kMaxContextSize) ||
-      col < 0 || col >= static_cast<int>(model_->xsize())) {
+      col < 0) {
     return 0;
   }
 

@@ -446,7 +446,7 @@ int TestPartOfSpeechTagger(int argc, char **argv) {
   if (!status.ok()) {
     puts(status.what());
   } else {
-    printf("TA = %5.2f\n", ta);
+    printf("TA = %5.4f\n", ta);
   }
 
   delete tagger;
@@ -467,6 +467,30 @@ int TrainHmmPartOfSpeechTagger(int argc, char **argv) {
 
   Status status;
   HMMPartOfSpeechTagger::Train(corpus_file, model_file, &status);
+  if (!status.ok()) {
+    puts(status.what());
+    return 1;
+  } else {
+    return 0;
+  }
+}
+
+int WapitiConvert(int argc, char **argv) {
+  if (argc != 5) {
+    fprintf(stderr,
+            "Usage: milkcat-tools --wapiti-conv wapiti_dump_file "
+            " template_file model_file\n");
+    return 1;
+  }
+
+  const char *wapiti_file = argv[2];  
+  const char *template_file = argv[3];
+  const char *model_prefix = argv[4];
+
+  Status status;
+  CRFModel *model = CRFModel::OpenText(wapiti_file, template_file, &status);
+  if (status.ok()) model->Save(model_prefix, &status);
+
   if (!status.ok()) {
     puts(status.what());
     return 1;
@@ -498,7 +522,9 @@ int main(int argc, char **argv) {
   } else if (strcmp(tool, "--postagger-test") == 0) {
     return milkcat::TestPartOfSpeechTagger(argc, argv);
   } else if (strcmp(tool, "--postagger-train") == 0) {
-    return milkcat::TrainHmmPartOfSpeechTagger(argc, argv);
+    return milkcat::TrainHmmPartOfSpeechTagger(argc, argv);  
+  } else if (strcmp(tool, "--wapiti-conv") == 0) {
+    return milkcat::WapitiConvert(argc, argv);
   } else {
     fprintf(stderr, "Usage: mc_model [dict|gram|hmm|maxent|vocab|tfidf]\n");
     return 1;

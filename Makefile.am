@@ -4,10 +4,16 @@ AM_CXXFLAGS = -I$(top_srcdir)/src -DMODEL_PATH=\"$(pkgdatadir)/\" -fno-rtti \
               -fno-exceptions -fPIC
 
 dist_pkgdata_DATA = data/bigram.bin \
-                    data/ctb_pos.crf \
+                    data/ctb_pos.crf.cost.bi \
+                    data/ctb_pos.crf.cost.uni \
+                    data/ctb_pos.crf.meta \
+                    data/ctb_pos.crf.x.idx \
                     data/ctb_pos.hmm \
                     data/ctb_pos.hmm.x.idx \
-                    data/ctb_seg.crf \
+                    data/ctb_seg.crf.cost.bi \
+                    data/ctb_seg.crf.cost.uni \
+                    data/ctb_seg.crf.meta \
+                    data/ctb_seg.crf.x.idx \
                     data/oov_property.idx \
                     data/unigram.bin \
                     data/unigram.idx \

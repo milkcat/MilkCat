@@ -33,88 +33,79 @@
 #ifndef SRC_PARSER_CRF_MODEL_H_
 #define SRC_PARSER_CRF_MODEL_H_
 
+#include <string>
 #include <vector>
-#include "common/darts.h"
+#include "common/static_array.h"
 #include "utils/utils.h"
 
 namespace milkcat {
+
+class ReimuTrie;
+template<class T> class StaticArray;
 
 class CRFModel {
  public:
   // Open a CRF++ model file
   static CRFModel *New(const char *model_path, Status *status);
+  static CRFModel *OpenText(const char *text_filename,
+                            const char *template_filename,
+                            Status *status);
+  void Save(const char *model_prefix, Status *status);
 
   ~CRFModel();
 
-  // Get internal id of feature_str, if not exists return -1
-  int xid(const char *feature_str) const {
-    return double_array_->exactMatchSearch<int>(feature_str);
-  }
+  // Get id of `xname`, returns -1 when `xname` didn't exist in index
+  int xid(const char *xname) const;
 
   // Get Tag's string text by its id
-  const char *yname(int tag_id) const {
-    return y_[tag_id];
+  const char *yname(int yid) const {
+    return y_[yid].c_str();
   }
 
-  // Get Tag's id by its text, return -1 if it not exists
-  int yid(const char *tag_text) const  {
-    std::vector<const char *>::const_iterator it;
-    for (it = y_.begin(); it != y_.end(); ++it) {
-      if (strcmp(tag_text, *it) == 0) return it - y_.begin();
+  // Gets id by yname, return -1 if it didn't exist
+  int yid(const char *yname) const  {
+    for (std::vector<std::string>::const_iterator
+         it = y_.cbegin(); it != y_.cend(); ++it) {
+      if (*it == yname) return it - y_.cbegin();
     }
 
     return -1;
   }
 
-  // Get the unigram template
+  // Templates
   const char *unigram_template(int index) const {
-    return unigram_templs_[index];
+    return unigram_tmpl_[index].c_str();
   }
-
-  // Get the number of unigram template
-  int unigram_template_num() const {
-    return unigram_templs_.size();
-  }
-
-  // Get the bigram template
   const char *bigram_template(int index) const {
-    return bigram_templs_[index];
+    return bigram_tmpl_[index].c_str();
   }
-
-  // Get the number of unigram template
-  int bigram_template_num() const {
-    return bigram_templs_.size();
-  }
+  int unigram_template_num() const { return unigram_tmpl_.size(); }
+  int bigram_template_num() const { return bigram_tmpl_.size(); }
 
   // Get the number of tag
-  int ysize() const {
-    return y_.size();
-  }
+  int ysize() const { return y_.size(); }
 
   // Get the cost for feature with current tag
-  double unigram_cost(int xid, int tag_id) const {
-    return cost_data_[xid + tag_id];
+  double unigram_cost(int xid, int yid) const {
+    return unigram_cost_->get(xid * ysize() + yid);
   }
 
   // Get the bigram cost for feature with left tag and right tag
-  double bigram_cost(int xid, int left_tag, int right_tag) const {
-    return cost_data_[xid + left_tag * y_.size() + right_tag];
+  double bigram_cost(int xid, int left_yid, int right_yid) const {
+    int idx = xid * ysize() * ysize() + left_yid * ysize() + right_yid;
+    return bigram_cost_->get(idx);
   }
 
-  // Get feature column number
-  int xsize() const { return xsize_; }
-
  private:
-  std::vector<const char *> y_;
-  std::vector<const char *> unigram_templs_;
-  std::vector<const char *> bigram_templs_;
-  Darts::DoubleArray *double_array_;
-  const float *cost_data_;
-  int cost_num_;
-  char *data_;
-  double cost_factor_;
-  int xsize_;
-
+  std::vector<std::string> y_;
+  std::vector<std::string> unigram_tmpl_;
+  std::vector<std::string> bigram_tmpl_;
+  ReimuTrie *xindex_;
+  StaticArray<float> *unigram_cost_;
+  StaticArray<float> *bigram_cost_;
+  int bigram_xsize_;
+  int unigram_xsize_;
+  
   CRFModel();
 };
 
