@@ -28,7 +28,6 @@ lib_LIBRARIES = libmilkcat.a
 libmilkcat_a_SOURCES = src/libmilkcat.cc \
                        src/libmilkcat_capi.cc \
                        src/libmilkcat.h \
-                       src/common/cedar.h \
                        src/common/darts.h \
                        src/common/instance_data.cc \
                        src/common/instance_data.h \
