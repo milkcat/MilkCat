@@ -34,10 +34,9 @@
 #include "common/model_impl.h"
 #include "common/reimu_trie.h"
 #include "common/static_array.h"
-#include "ml/averaged_multiclass_perceptron.h"
 #include "ml/feature_set.h"
-#include "ml/multiclass_perceptron.h"
-#include "ml/multiclass_perceptron_model.h"
+#include "ml/perceptron.h"
+#include "ml/perceptron_model.h"
 #include "parser/feature_template.h"
 #include "parser/feature_template-inl.h"
 #include "parser/node.h"
@@ -62,7 +61,7 @@ class BeamArceagerDependencyParser::StateCmp {
 };
 
 BeamArceagerDependencyParser::BeamArceagerDependencyParser(
-    MulticlassPerceptronModel *perceptron_model,
+    PerceptronModel *perceptron_model,
     FeatureTemplate *feature):
         DependencyParser(perceptron_model, feature) {
   state_pool_ = new Pool<State>();
@@ -89,8 +88,7 @@ BeamArceagerDependencyParser::~BeamArceagerDependencyParser() {
 BeamArceagerDependencyParser *
 BeamArceagerDependencyParser::New(Model::Impl *model,
                                   Status *status) {
-  MulticlassPerceptronModel *
-  perceptron_model = model->DependencyModel(status);
+  PerceptronModel *perceptron_model = model->DependencyModel(status);
 
   FeatureTemplate *feature_template = NULL;
   if (status->ok()) feature_template = model->DependencyTemplate(status);
@@ -269,7 +267,7 @@ void BeamArceagerDependencyParser::UpdateWeightForState(
     DependencyParser::State *incorrect_state,
     DependencyParser::State *correct_state,
     BeamArceagerDependencyParser *parser,
-    MulticlassPerceptron *percpetron) {
+    Perceptron *percpetron) {
   // Find the first incorrect state in the history of `incorrect_state`
   while (incorrect_state->correct() == false) {
     int correct_yid = correct_state->last_transition();
@@ -343,13 +341,13 @@ void BeamArceagerDependencyParser::Train(
 
   // Creates perceptron model, percpetron and the parser
   BeamArceagerDependencyParser *parser = NULL;
-  MulticlassPerceptronModel *model = NULL;
-  MulticlassPerceptron *perceptron = NULL;
+  PerceptronModel *model = NULL;
+  Perceptron *perceptron = NULL;
   if (status->ok()) {
     std::vector<std::string> yname(yname_set.begin(), yname_set.end());
-    model = new MulticlassPerceptronModel(yname);
+    model = new PerceptronModel(yname);
     parser = new BeamArceagerDependencyParser(model, feature);
-    perceptron = new AveragedMulticlassPerceptron(model);
+    perceptron = new Perceptron(model);
   }
 
 
@@ -381,7 +379,7 @@ void BeamArceagerDependencyParser::Train(
 
           // Move `correct_state` according to `orcale`
           correct_state = parser->StateCopyAndMove(correct_state, yid);
-          ASSERT(yid != MulticlassPerceptronModel::kIdNone, "Unexpected label");
+          ASSERT(yid != PerceptronModel::kIdNone, "Unexpected label");
 
           // Marks `correct = true` for the correct state in beam_
           parser->Step();
@@ -397,7 +395,7 @@ void BeamArceagerDependencyParser::Train(
             }
           }
 
-          perceptron->IncCount();
+          perceptron->IncreaseSampleCount();
           // If no state in the beam is correct
           if (correct == false) {
             

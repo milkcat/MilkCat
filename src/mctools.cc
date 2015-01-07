@@ -44,7 +44,7 @@
 #include "common/trie_tree.h"
 #include "ml/crf_model.h"
 #include "ml/crf_tagger.h"
-#include "ml/multiclass_perceptron_model.h"
+#include "ml/perceptron_model.h"
 #include "include/milkcat.h"
 #include "parser/beam_arceager_dependency_parser.h"
 #include "parser/dependency_parser.h"
@@ -318,8 +318,9 @@ int MakeMulticlassPerceptronFile(int argc, char **argv) {
                           "text-model-file binary-model-file");
 
   printf("Load text formatted model: %s \n", argv[argc - 2]);
-  MulticlassPerceptronModel *
-  perc = MulticlassPerceptronModel::OpenText(argv[argc - 2], &status);
+  
+  PerceptronModel *
+  perc = PerceptronModel::OpenText(argv[argc - 2], &status);
 
   if (status.ok()) {
     printf("Save binary formatted model: %s \n", argv[argc - 1]);
@@ -391,9 +392,9 @@ int TestDependendyParser(int argc, char **argv) {
   DependencyParser::FeatureTemplate *
   feature = DependencyParser::FeatureTemplate::Open(template_file, &status);
 
-  MulticlassPerceptronModel *model = NULL;
+  PerceptronModel *model = NULL;
   if (status.ok()) {
-    model = MulticlassPerceptronModel::Open(model_prefix, &status);
+    model = PerceptronModel::Open(model_prefix, &status);
   } 
 
   BeamArceagerDependencyParser *parser = NULL;

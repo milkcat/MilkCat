@@ -24,8 +24,8 @@
 // multiclass_perceptron_model.h --- Created at 2014-10-19
 //
 
-#ifndef SRC_ML_MULTICLASS_PERCEPTRON_MODEL_H_
-#define SRC_ML_MULTICLASS_PERCEPTRON_MODEL_H_
+#ifndef SRC_ML_PERCEPTRON_MODEL_H_
+#define SRC_ML_PERCEPTRON_MODEL_H_
 
 #include <assert.h>
 #include <string>
@@ -39,16 +39,15 @@ class ReimuTrie;
 template<class T> class PackedScore;
 
 // The model class used in MulticlassPerceptron
-class MulticlassPerceptronModel {
+class PerceptronModel {
  public:
   // Loads the multiclass perceptron model data from `filename`.
-  static MulticlassPerceptronModel *OpenText(const char *filename,
-                                             Status *status);
-  static MulticlassPerceptronModel *Open(const char *filename, Status *status);
+  static PerceptronModel *OpenText(const char *filename, Status *status);
+  static PerceptronModel *Open(const char *filename, Status *status);
 
-  // Creates a new `MulticlassPerceptronModel` with specified labels (y)
-  MulticlassPerceptronModel(const std::vector<std::string> &y);
-  ~MulticlassPerceptronModel();
+  // Creates a new `PerceptronModel` with specified labels (y)
+  PerceptronModel(const std::vector<std::string> &y);
+  ~PerceptronModel();
 
   // Save the model data into binary file `filename`
   void Save(const char *filename, Status *status);
@@ -89,4 +88,4 @@ class MulticlassPerceptronModel {
 
 }  // namespace MilkCat
 
-#endif  // SRC_ML_MULTICLASS_PERCEPTRON_MODEL_H_
+#endif  // SRC_ML_PERCEPTRON_MODEL_H_

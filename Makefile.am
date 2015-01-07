@@ -40,8 +40,6 @@ libmilkcat_a_SOURCES = src/libmilkcat.cc \
                        src/common/trie_tree.cc \
                        src/common/trie_tree.h \
                        src/include/milkcat.h \
-                       src/ml/averaged_multiclass_perceptron.cc \
-                       src/ml/averaged_multiclass_perceptron.h \
                        src/ml/beam.h \
                        src/ml/crf_model.cc \
                        src/ml/crf_model.h \
@@ -51,11 +49,11 @@ libmilkcat_a_SOURCES = src/libmilkcat.cc \
                        src/ml/feature_set.cc \
                        src/ml/hmm_model.cc \
                        src/ml/hmm_model.h \
-                       src/ml/multiclass_perceptron.cc \
-                       src/ml/multiclass_perceptron.h \
-                       src/ml/multiclass_perceptron_model.cc \
-                       src/ml/multiclass_perceptron_model.h \
                        src/ml/packed_score.h \
+                       src/ml/perceptron.cc \
+                       src/ml/perceptron.h \
+                       src/ml/perceptron_model.cc \
+                       src/ml/perceptron_model.h \
                        src/ml/sequence_feature_set.h \
                        src/parser/beam_arceager_dependency_parser.h \
                        src/parser/beam_arceager_dependency_parser.cc \

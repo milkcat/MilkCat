@@ -27,16 +27,19 @@
 #ifndef SRC_ML_MULTICLASS_PERCEPTRON_H_
 #define SRC_ML_MULTICLASS_PERCEPTRON_H_
 
+#include <vector>
+
 namespace milkcat {
 
 class FeatureSet;
-class MulticlassPerceptronModel;
+class PerceptronModel;
+template<class T> class PackedScore;
 
-// A perceptron for multiclass classification
-class MulticlassPerceptron {
+// A averaged perceptron for multiclass classification
+class Perceptron {
  public:
-  MulticlassPerceptron(MulticlassPerceptronModel *model);
-  virtual ~MulticlassPerceptron();
+  Perceptron(PerceptronModel *model);
+  virtual ~Perceptron();
 
   // Classify the given feature_set, returns the inferenced label id (yid).
   // Use `yname` to get the string of this label. 
@@ -50,23 +53,26 @@ class MulticlassPerceptron {
   // Online training the perceptron with one sample. Returns true if the weights
   // have not been updated (prediction is correct), else, returns false. 
   bool Train(const FeatureSet *feature_set, const char *label);
-  void Train(const FeatureSet *feature_set,
-             int correct_yid,
-             int incorrect_yid);
 
   // Update and add `value` for `yid` of `feature_set`
   void Update(const FeatureSet *feature_set, int yid, float value);
 
-  // Used in `AveragedMulticlassPerceptron`
-  virtual void UpdateCachedCost(int xid, int yid, float value);
-  virtual void IncCount();
-  virtual void FinishTrain();
+  // Increases the sample count for average training. It should be called when
+  // a sample is trained. Otherwise, it behaviors just like a normal perceptron
+  void IncreaseSampleCount();
 
- protected:
-  MulticlassPerceptronModel *model_;
+  // Finish the training of averaged perceptron. Average each weights from cached
+  // score
+  void FinishTrain();
 
  private:
+  PerceptronModel *model_;
   float *ycost_;
+  std::vector<PackedScore<float> *> cached_score_;
+  int sample_count_;
+
+  // Updates the cached average score. It is called by `Update`
+  void UpdateCachedScore(int xid, int yid, float value);
 };
 
 }  // namespace milkcat

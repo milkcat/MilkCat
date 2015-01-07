@@ -37,8 +37,8 @@
 namespace milkcat {
 
 class Status;
-class MulticlassPerceptronModel;
-class MulticlassPerceptron;
+class PerceptronModel;
+class Perceptron;
 class TermInstance;
 class PartOfSpeechTagInstance;
 class ReimuTrie;
@@ -49,7 +49,7 @@ template<class T> class StaticArray;
 class BeamArceagerDependencyParser: public DependencyParser {
  public:
   BeamArceagerDependencyParser(
-      MulticlassPerceptronModel *perceptron_model,
+      PerceptronModel *perceptron_model,
       FeatureTemplate *feature);
   ~BeamArceagerDependencyParser();
 
@@ -113,7 +113,7 @@ class BeamArceagerDependencyParser: public DependencyParser {
       State *incorrect_state,
       State *orcale_state,
       BeamArceagerDependencyParser *parser,
-      MulticlassPerceptron *percpetron);
+      Perceptron *percpetron);
 };
 
 }  // namespace milkcat

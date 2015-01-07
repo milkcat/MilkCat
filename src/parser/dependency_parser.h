@@ -37,8 +37,8 @@ class PartOfSpeechTagInstance;
 class TreeInstance;
 class Status;
 class ReadableFile;
-class MulticlassPerceptronModel;
-class MulticlassPerceptron;
+class PerceptronModel;
+class Perceptron;
 class FeatureTemplate;
 class FeatureSet;
 template <class T> class Pool;
@@ -50,7 +50,7 @@ class DependencyParser {
   class FeatureTemplate;
   class State;
 
-  DependencyParser(MulticlassPerceptronModel *perceptron_model,
+  DependencyParser(PerceptronModel *perceptron_model,
                    FeatureTemplate *feature);
   virtual ~DependencyParser();
 
@@ -81,7 +81,7 @@ class DependencyParser {
   int ysize();
 
  protected:
-  MulticlassPerceptron *perceptron_;
+  Perceptron *perceptron_;
   FeatureTemplate *feature_;
   FeatureSet *feature_set_;
   Pool<Node> *node_pool_;

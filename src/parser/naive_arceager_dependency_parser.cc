@@ -34,9 +34,8 @@
 #include <set>
 #include <vector>
 #include "ml/feature_set.h"
-#include "ml/averaged_multiclass_perceptron.h"
-#include "ml/multiclass_perceptron.h"
-#include "ml/multiclass_perceptron_model.h"
+#include "ml/perceptron.h"
+#include "ml/perceptron_model.h"
 #include "segmenter/term_instance.h"
 #include "parser/feature_template.h"
 #include "parser/node.h"
@@ -52,7 +51,7 @@
 namespace milkcat {
 
 NaiveArceagerDependencyParser::NaiveArceagerDependencyParser(
-    MulticlassPerceptronModel *perceptron_model,
+    PerceptronModel *perceptron_model,
     FeatureTemplate *feature): DependencyParser(perceptron_model, feature) {
   state_ = new State();
 }
@@ -65,8 +64,7 @@ NaiveArceagerDependencyParser::~NaiveArceagerDependencyParser() {
 NaiveArceagerDependencyParser *
 NaiveArceagerDependencyParser::New(Model::Impl *model_impl,
                                    Status *status) {
-  MulticlassPerceptronModel *
-  perceptron_model = model_impl->DependencyModel(status);
+  PerceptronModel *perceptron_model = model_impl->DependencyModel(status);
 
   FeatureTemplate *feature_template = NULL;
   if (status->ok()) feature_template = model_impl->DependencyTemplate(status);
@@ -89,14 +87,13 @@ NaiveArceagerDependencyParser::New(Model::Impl *model_impl,
 // Compare the yid by cost in `perceptron`
 class IdxCostPairCmp {
  public:
-  IdxCostPairCmp(MulticlassPerceptron *perceptron): 
-      perceptron_(perceptron) {
+  IdxCostPairCmp(Perceptron *perceptron): perceptron_(perceptron) {
   }
   bool operator()(int y1, int y2) {
     return perceptron_->ycost(y1) < perceptron_->ycost(y2);
   }
  private:
-  MulticlassPerceptron *perceptron_;
+  Perceptron *perceptron_;
 };
 
 int NaiveArceagerDependencyParser::Next() {  

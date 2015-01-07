@@ -35,8 +35,8 @@
 namespace milkcat {
 
 class Status;
-class MulticlassPerceptronModel;
-class MulticlassPerceptron;
+class PerceptronModel;
+class Perceptron;
 class TermInstance;
 class PartOfSpeechTagInstance;
 class FeatureSet;
@@ -49,7 +49,7 @@ template<class T> class Pool;
 class NaiveArceagerDependencyParser: public DependencyParser {
  public:
   NaiveArceagerDependencyParser(
-      MulticlassPerceptronModel *perceptron_model,
+      PerceptronModel *perceptron_model,
       FeatureTemplate *feature);
   ~NaiveArceagerDependencyParser();
 

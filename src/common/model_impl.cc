@@ -27,7 +27,7 @@
 
 #include "common/model_impl.h"
 
-#include "ml/multiclass_perceptron_model.h"
+#include "ml/perceptron_model.h"
 #include "common/milkcat_config.h"
 #include "common/trie_tree.h"
 #include "common/static_array.h"
@@ -292,11 +292,11 @@ const TrieTree *Model::Impl::Stopword(Status *status) {
   return stopword_;
 }
 
-MulticlassPerceptronModel *Model::Impl::DependencyModel(Status *status) {
+PerceptronModel *Model::Impl::DependencyModel(Status *status) {
   mutex.Lock();
   if (dependency_ == NULL) {
     std::string prefix = model_dir_path_ + kDepengencyFilePrefix;
-    dependency_ = MulticlassPerceptronModel::Open(prefix.c_str(), status);
+    dependency_ = PerceptronModel::Open(prefix.c_str(), status);
   }
   mutex.Unlock();
   return dependency_;  

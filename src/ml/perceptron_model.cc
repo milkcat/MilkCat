@@ -26,7 +26,7 @@
 
 #define DEBUG
 
-#include "ml/multiclass_perceptron_model.h"
+#include "ml/perceptron_model.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -44,7 +44,7 @@
 
 namespace milkcat {
 
-MulticlassPerceptronModel::MulticlassPerceptronModel(
+PerceptronModel::PerceptronModel(
     const std::vector<std::string> &y):
         xsize_(0),
         yname_(y) {
@@ -57,8 +57,8 @@ MulticlassPerceptronModel::MulticlassPerceptronModel(
   }
 }
 
-MulticlassPerceptronModel *
-MulticlassPerceptronModel::OpenText(const char *filename, Status *status) {
+PerceptronModel *
+PerceptronModel::OpenText(const char *filename, Status *status) {
   // Load maxent data from text model file
   char y[1024], x[1024], line[1024];
   ReimuTrie::int32 xid, yid;
@@ -78,10 +78,10 @@ MulticlassPerceptronModel::OpenText(const char *filename, Status *status) {
   delete fd;
   fd = NULL;
 
-  MulticlassPerceptronModel *self = NULL;
+  PerceptronModel *self = NULL;
   if (status->ok()) {
     std::vector<std::string> yname(yname_set.begin(), yname_set.end());
-    self = new MulticlassPerceptronModel(yname);
+    self = new PerceptronModel(yname);
   }
 
   // Get x, y cost
@@ -108,8 +108,8 @@ MulticlassPerceptronModel::OpenText(const char *filename, Status *status) {
   }
 }
 
-MulticlassPerceptronModel *
-MulticlassPerceptronModel::Open(const char *filename_prefix, Status *status) {
+PerceptronModel *
+PerceptronModel::Open(const char *filename_prefix, Status *status) {
   std::string prefix = filename_prefix;
   std::string metafile = prefix + ".meta";
   std::string xindex_file = prefix + ".x.idx";
@@ -117,7 +117,7 @@ MulticlassPerceptronModel::Open(const char *filename_prefix, Status *status) {
 
   // The metadata file
   ReadableFile *fd = ReadableFile::New(metafile.c_str(), status);
-  MulticlassPerceptronModel *self = NULL;
+  PerceptronModel *self = NULL;
 
   if (status->ok()) {
     int magic_number = 0;
@@ -144,7 +144,7 @@ MulticlassPerceptronModel::Open(const char *filename_prefix, Status *status) {
     for (int yid = 0; yid < ysize; ++yid) {
       yname.push_back(yname_buf[yid]);
     }
-    self = new MulticlassPerceptronModel(yname);
+    self = new PerceptronModel(yname);
   }
   delete fd;
   fd = NULL;
@@ -190,8 +190,7 @@ MulticlassPerceptronModel::Open(const char *filename_prefix, Status *status) {
 // int32_t index_size
 // char[index_size] index
 // float[xsize * ysize] cost
-void MulticlassPerceptronModel::Save(const char *filename_prefix,
-                                     Status *status) {
+void PerceptronModel::Save(const char *filename_prefix, Status *status) {
   std::string prefix = filename_prefix;
   std::string metafile = prefix + ".meta";
   std::string xindex_file = prefix + ".x.idx";
@@ -239,7 +238,7 @@ void MulticlassPerceptronModel::Save(const char *filename_prefix,
   delete fd;
 }
 
-MulticlassPerceptronModel::~MulticlassPerceptronModel() {
+PerceptronModel::~PerceptronModel() {
   delete xindex_;
   xindex_ = NULL;
 
@@ -253,7 +252,7 @@ MulticlassPerceptronModel::~MulticlassPerceptronModel() {
   }
 }
 
-int MulticlassPerceptronModel::GetOrInsertXId(const char *xname) {
+int PerceptronModel::GetOrInsertXId(const char *xname) {
   int val = xindex_->Get(xname, -1);
   if (val < 0) {
     xindex_->Put(xname, score_.size());
@@ -264,15 +263,15 @@ int MulticlassPerceptronModel::GetOrInsertXId(const char *xname) {
   }
 }
 
-int MulticlassPerceptronModel::yid(const char *yname) const { 
+int PerceptronModel::yid(const char *yname) const { 
   return yindex_->Get(yname, kIdNone);
 }
 
-int MulticlassPerceptronModel::xid(const char *xname) const {
+int PerceptronModel::xid(const char *xname) const {
   return xindex_->Get(xname, kIdNone);
 }
 
-PackedScore<float> *MulticlassPerceptronModel::get_score(int xid) {
+PackedScore<float> *PerceptronModel::get_score(int xid) {
   assert(xid < score_.size());
   return score_[xid];
 }

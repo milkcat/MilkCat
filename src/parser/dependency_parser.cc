@@ -30,9 +30,8 @@
 #include <set>
 #include <string>
 #include "ml/feature_set.h"
-#include "ml/averaged_multiclass_perceptron.h"
-#include "ml/multiclass_perceptron.h"
-#include "ml/multiclass_perceptron_model.h"
+#include "ml/perceptron.h"
+#include "ml/perceptron_model.h"
 #include "parser/dependency_parser.h"
 #include "parser/node.h"
 #include "parser/orcale.h"
@@ -47,11 +46,11 @@
 
 namespace milkcat {
 
-DependencyParser::DependencyParser(MulticlassPerceptronModel *perceptron_model,
+DependencyParser::DependencyParser(PerceptronModel *perceptron_model,
                                    FeatureTemplate *feature) {
   node_pool_ = new Pool<Node>();
   feature_set_ = new FeatureSet();
-  perceptron_ = new MulticlassPerceptron(perceptron_model);
+  perceptron_ = new Perceptron(perceptron_model);
   feature_ = feature;
 
   // Initialize the yid information from the prediction of perceptron

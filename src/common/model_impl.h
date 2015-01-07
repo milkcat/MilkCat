@@ -39,7 +39,7 @@
 
 namespace milkcat {
 
-class MulticlassPerceptronModel;
+class PerceptronModel;
 class TrieTree;
 template <class T> class StaticArray;
 template <class K, class V> class StaticHashTable;
@@ -86,7 +86,7 @@ class Model::Impl {
   const TrieTree *Stopword(Status *status);
 
   // Get the dependency model
-  MulticlassPerceptronModel *DependencyModel(Status *status);
+  PerceptronModel *DependencyModel(Status *status);
 
   // Get the feature template for dependency parsing
   DependencyParser::FeatureTemplate *DependencyTemplate(Status *status);
@@ -105,7 +105,7 @@ class Model::Impl {
   const HMMModel *hmm_pos_model_;
   const TrieTree *oov_property_;
   const TrieTree *stopword_;
-  MulticlassPerceptronModel *dependency_;
+  PerceptronModel *dependency_;
   DependencyParser::FeatureTemplate *dependency_feature_;
 
   // Load and set the user dictionary data specified by path
