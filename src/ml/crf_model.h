@@ -65,8 +65,8 @@ class CRFModel {
   // Gets id by yname, return -1 if it didn't exist
   int yid(const char *yname) const  {
     for (std::vector<std::string>::const_iterator
-         it = y_.cbegin(); it != y_.cend(); ++it) {
-      if (*it == yname) return it - y_.cbegin();
+         it = y_.begin(); it != y_.end(); ++it) {
+      if (*it == yname) return it - y_.begin();
     }
 
     return -1;

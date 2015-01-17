@@ -90,16 +90,17 @@ double PartOfSpeechTagger::Test(const char *test_corpus,
       tagger->Tag(tag_instance, term_instance);
       for (int i = 0; i < tag_instance->size(); ++i) {
         ++total;
+        /*
         printf("%s\t%s\t%s\n",
                term_instance->term_text_at(i),
                gold_tag_instance->part_of_speech_tag_at(i),
                tag_instance->part_of_speech_tag_at(i));
+        */
         if (strcmp(tag_instance->part_of_speech_tag_at(i),
                    gold_tag_instance->part_of_speech_tag_at(i)) == 0) {
           ++correct;
         }
       }
-      puts("");
     }
   }
 

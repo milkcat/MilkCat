@@ -140,6 +140,10 @@ int mc_parseriter_end(mc_parseriter_t *parseriter) {
   return parseriter->it->iterator->End();
 }
 
+int mc_parseriter_isbos(mc_parseriter_t *parseriter) {
+  return parseriter->it->iterator->is_begin_of_sentence();
+}
+
 void mc_parseriter_next(mc_parseriter_t *parseriter) {
   milkcat::Parser::Iterator *it = parseriter->it->iterator;
   it->Next();

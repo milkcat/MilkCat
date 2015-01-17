@@ -35,6 +35,7 @@ libmilkcat_a_SOURCES = src/libmilkcat.cc \
                        src/common/model_impl.cc \
                        src/common/model_impl.h \
                        src/common/reimu_trie.cc \
+                       src/common/reimu_trie.h \
                        src/common/static_array.h \
                        src/common/static_hashtable.h \
                        src/common/trie_tree.cc \

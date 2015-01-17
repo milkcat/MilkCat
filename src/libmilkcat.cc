@@ -248,8 +248,9 @@ void Parser::Iterator::Impl::Next() {
       current_position_ = 0;
       is_begin_of_sentence_ = true;
     }
+  } else {
+    is_begin_of_sentence_ = false;
   }
-  is_begin_of_sentence_ = false;
 }
 
 

@@ -223,6 +223,7 @@ mc_parseriter_t *mc_parseriter_new();
 void mc_parseriter_delete(mc_parseriter_t *parseriter);
 int mc_parseriter_end(mc_parseriter_t *parseriter);
 void mc_parseriter_next(mc_parseriter_t *parseriter);
+int mc_parseriter_isbos(mc_parseriter_t *parseriter);
 
 const char *mc_last_error();
 

@@ -47,7 +47,7 @@ const char *kCrfSegModelFile = "ctb_seg.crf";
 const char *kOovPropertyFile = "oov_property.idx";
 const char *kStopwordFile = "stopword.idx";
 const char *kDepengencyFilePrefix = "ctb5_dep";
-const char *kDependenctTemplateFile = "depparse.templ";
+const char *kDependenctTemplateFile = "depparse.tmpl";
 
 // ---------- Model::Impl ----------
 

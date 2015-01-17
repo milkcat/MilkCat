@@ -28,6 +28,7 @@
 #ifndef SRC_PERSER_DEPENDENCY_PARSER_H_
 #define SRC_PERSER_DEPENDENCY_PARSER_H_
 
+#include <string>
 #include <vector>
 
 namespace milkcat {
