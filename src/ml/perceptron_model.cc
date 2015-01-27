@@ -256,7 +256,7 @@ int PerceptronModel::GetOrInsertXId(const char *xname) {
   int val = xindex_->Get(xname, -1);
   if (val < 0) {
     xindex_->Put(xname, score_.size());
-    score_.push_back(new PackedScore<float>(ysize()));
+    score_.push_back(new PackedScore<float>());
     return score_.size() - 1;
   } else {
     return val;

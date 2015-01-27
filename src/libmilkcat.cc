@@ -192,7 +192,8 @@ Parser::Iterator::Impl::Impl():
     part_of_speech_tag_instance_(new PartOfSpeechTagInstance()),
     sentence_length_(0),
     current_position_(0),
-    end_(false) {
+    end_(true),
+    is_begin_of_sentence_(true) {
 }
 
 Parser::Iterator::Impl::~Impl() {

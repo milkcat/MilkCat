@@ -40,11 +40,23 @@ namespace milkcat {
 
 template<class T>
 class PackedScore {
+ private:
+  class IndexData {
+   public:
+    IndexData(): index(0), data(T()) {}
+    IndexData(int index, T data): index(index), data(data) {}
+    int index;
+    T data;
+    bool operator<(const IndexData &right) const {
+      return index < right.index;
+    }
+  };
+
  public:
   typedef int Iterator;
   enum { kMagicNumber = 0x5a };
 
-  PackedScore(int total_count): total_count_(total_count) {
+  PackedScore(): data_(NULL), size_(0) {
   }
 
   // Initialize the iterator
@@ -55,7 +67,8 @@ class PackedScore {
   // Gets the (index, value) pair and move iterator to next
   std::pair<int, T> Next(Iterator *it) {
     ++*it;
-    return std::pair<int, T>(index_[*it - 1], data_[*it - 1]);
+    IndexData id = data_[*it - 1];
+    return std::pair<int, T>(id.index, id.data);
   }
 
   // Returns true if the iterator has next value
@@ -65,22 +78,22 @@ class PackedScore {
 
   // Puts value into PackedScore, just like `score[index] = value`
   void Put(int index, T value) {
-    T *val = GetOrInsertByRef(index);
+    T *val = GetOrInsertByIndex(index);
     *val = value;
   }
 
   void Add(int index, T value) {
-    T *val = GetOrInsertByRef(index);
+    T *val = GetOrInsertByIndex(index);
     *val += value;
   }
 
   // Gets value by index 
   T Get(int index) const {
-    std::vector<int>::iterator
-    low = std::lower_bound(index_.begin(), index_.end(), index);
-    int position = low - index_.begin();
-    if (*low == index) {
-      return data_[position];
+    if (data_ == NULL) return 0;
+
+    int idx = BinarySearch(index);
+    if (data_[idx].index == index) {
+      return data_[idx].data;
     } else {
       return T();
     }
@@ -102,9 +115,9 @@ class PackedScore {
 
     PackedScore *self = NULL;
     if (status->ok()) {
-      self = new PackedScore<T>(total_count);
-      self->index_.resize(size);
-      self->data_.resize(size);
+      self = new PackedScore<T>();
+      self->size_ = size;
+      self->data_ = static_cast<IndexData *>(malloc(sizeof(IndexData) * size));
     }
 
     int32_t index;
@@ -113,8 +126,7 @@ class PackedScore {
       fd->ReadValue<int32_t>(&index, status);
       if (status->ok()) fd->ReadValue<float>(&value, status);
       if (status->ok()) {
-        self->index_[i] = index;
-        self->data_[i] = value;
+        self->data_[i] = IndexData(index, value);
       }
     }
 
@@ -130,37 +142,43 @@ class PackedScore {
   void Write(WritableFile *fd, Status *status) const {
     fd->WriteValue<int32_t>(kMagicNumber, status);
     if (status->ok()) fd->WriteValue<int32_t>(size(), status);
-    if (status->ok()) fd->WriteValue<int32_t>(total_count_, status);
+    if (status->ok()) fd->WriteValue<int32_t>(0, status);
     for (int i = 0; i < size() && status->ok(); ++i) {
-      fd->WriteValue<int32_t>(index_[i], status);
-      if (status->ok()) fd->WriteValue<float>(data_[i], status);
+      fd->WriteValue<int32_t>(data_[i].index, status);
+      if (status->ok()) fd->WriteValue<T>(data_[i].data, status);
     }
   }
 
   // Number of emissions
   int size() const {
-    assert(index_.size() == data_.size());
-    return index_.size();
+    return size_;
   }
-
-  // Total count of emissions 
-  int total_count() const { return total_count_; }
  
  private:
-  int total_count_;
-  std::vector<int> index_;
-  std::vector<T> data_;
+  int size_;
+  IndexData *data_;
 
-  T *GetOrInsertByRef(int index) {
-    std::vector<int>::iterator
-    low = std::lower_bound(index_.begin(), index_.end(), index);
-    int position = low - index_.begin();
-    if (low == index_.end() || *low != index) {
-      index_.insert(low, index);
-      typename std::vector<T>::iterator data_low = data_.begin() + position;
-      data_.insert(data_low, T());
+  // Binary searches `data_` find the matched index
+  int BinarySearch(int index) {
+    IndexData *p = std::lower_bound(
+        data_, data_ + size_, IndexData(index, T()));
+    return p - data_;
+  }
+
+  T *GetOrInsertByIndex(int index) {
+    int idx = BinarySearch(index);
+
+    // Inserts the index if does not exist
+    if (idx >= size_ || data_[idx].index != index) {
+      data_ = static_cast<IndexData *>(
+          realloc(data_, sizeof(IndexData) * (size_ + 1)));
+      for (int i = size_ - 1; i >= idx; --i) {
+        data_[i + 1] = data_[i];
+      }
+      data_[idx] = IndexData(index, T());
+      ++size_;
     }
-    return &data_[position]; 
+    return &data_[idx].data; 
   }
 };
 

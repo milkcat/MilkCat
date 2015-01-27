@@ -119,12 +119,19 @@ milkcat_LDADD = libmilkcat.a
 mctools_SOURCES = src/mctools.cc
 mctools_LDADD = libmilkcat.a
 
-TESTS = milkcat_capi_test parser_orcale_test reimu_trie_test
-check_PROGRAMS = milkcat_capi_test parser_orcale_test reimu_trie_test
+TESTS = milkcat_api_test milkcat_capi_test parser_orcale_test reimu_trie_test
+check_PROGRAMS = milkcat_api_test \
+                 milkcat_capi_test \
+                 parser_orcale_test \
+                 reimu_trie_test
 
 milkcat_capi_test_SOURCES = test/milkcat_capi_test.c
 milkcat_capi_test_CFLAGS = -DMODEL_DIR=\"$(top_srcdir)/data/\" -lstdc++ -I../src
 milkcat_capi_test_LDADD = libmilkcat.a
+
+milkcat_api_test_SOURCES = test/milkcat_api_test.cc
+milkcat_api_test_CXXFLAGS = -DMODEL_DIR=\"$(top_srcdir)/data/\" -I../src
+milkcat_api_test_LDADD = libmilkcat.a
 
 parser_orcale_test_SOURCES = test/parser_orcale_test.cc
 parser_orcale_test_LDADD = libmilkcat.a

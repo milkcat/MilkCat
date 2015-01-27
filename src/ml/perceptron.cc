@@ -115,7 +115,7 @@ bool Perceptron::Train(const FeatureSet *feature_set,
 
 void Perceptron::UpdateCachedScore(int xid, int yid, float value) {
   while (xid >= cached_score_.size()) {
-    cached_score_.push_back(new PackedScore<float>(model_->ysize()));
+    cached_score_.push_back(new PackedScore<float>());
   }
 
   PackedScore<float> *score = cached_score_[xid];
