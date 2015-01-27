@@ -39,7 +39,7 @@ int main() {
   mc_parser_t *parser = mc_parser_new(&parseropt, model);
   mc_parseriter_t *it = mc_parseriter_new();
   for (int i = 0; i < 5000; ++i) {
-    mc_parser_parse(parser, it, "今天的天气不错。");
+    mc_parser_predict(parser, it, "今天的天气不错。");
 
     assert(!mc_parseriter_end(it));
     assert(strcmp(it->word, "今天") == 0);

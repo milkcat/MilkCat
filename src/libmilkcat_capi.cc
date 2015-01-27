@@ -149,19 +149,19 @@ void mc_parseriter_next(mc_parseriter_t *parseriter) {
   it->Next();
   parseriter->word = it->word();
   parseriter->part_of_speech_tag = it->part_of_speech_tag();
-  parseriter->head = it->head_node();
-  parseriter->label = it->dependency_type();
+  parseriter->head = it->head();
+  parseriter->label = it->dependency_label();
 }
 
-void mc_parser_parse(mc_parser_t *parser,
-                     mc_parseriter_t *parseriter,
-                     const char *text) {
+void mc_parser_predict(mc_parser_t *parser,
+                       mc_parseriter_t *parseriter,
+                       const char *text) {
   milkcat::Parser::Iterator *it = parseriter->it->iterator;
-  parser->parser->Parse(text, it);
+  parser->parser->Predict(it, text);
   parseriter->word = it->word();
   parseriter->part_of_speech_tag = it->part_of_speech_tag();
-  parseriter->head = it->head_node();
-  parseriter->label = it->dependency_type();
+  parseriter->head = it->head();
+  parseriter->label = it->dependency_label();
 }
 
 const char *mc_last_error() {

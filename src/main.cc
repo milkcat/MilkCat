@@ -244,7 +244,7 @@ int ParserMain(int argc, char **argv) {
   }
 
   while (NULL != fgets(input_buffer, 1048576, fd)) {
-    parser->Parse(input_buffer, it);
+    parser->Predict(it, input_buffer);
     index = 0;
     while (!it->End()) {
       index++;
@@ -285,11 +285,11 @@ int ParserMain(int argc, char **argv) {
         fputs(it->part_of_speech_tag(), stdout);
 
         fputs("\t", stdout);
-        sprintf(buffer, "%d", it->head_node());
+        sprintf(buffer, "%d", it->head());
         fputs(buffer, stdout);
 
         fputs("\t", stdout);
-        fputs(it->dependency_type(), stdout);
+        fputs(it->dependency_label(), stdout);
 
         fputs("\n", stdout);
       }

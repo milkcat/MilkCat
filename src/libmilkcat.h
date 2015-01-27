@@ -80,7 +80,7 @@ class Parser::Impl {
   static Impl *New(const Options &options, Model *model);
   ~Impl();
 
-  void Parse(const char *text, Iterator *iterator);
+  void Predict(Iterator *iterator, const char *text);
 
   Segmenter *segmenter() const { return segmenter_; }
   PartOfSpeechTagger *part_of_speech_tagger() const {
@@ -140,14 +140,14 @@ class Parser::Iterator::Impl {
     if (end_) return 0;
     return term_instance_->term_type_at(current_position_);
   }
-  int head_node() const {
+  int head() const {
     if (end_) return 0;
     if (parser_->dependency_parser() != NULL)
       return tree_instance_->head_node_at(current_position_);
     else
       return 0;
   }
-  const char *dependency_type() const {
+  const char *dependency_label() const {
     if (end_) return "";
     if (parser_->dependency_parser() != NULL)
       return tree_instance_->dependency_type_at(current_position_);

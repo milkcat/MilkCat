@@ -280,11 +280,11 @@ const char *Parser::Iterator::part_of_speech_tag() const {
 int Parser::Iterator::type() const {
   return impl_->type();
 }
-int Parser::Iterator::head_node() const {
-  return impl_->head_node();
+int Parser::Iterator::head() const {
+  return impl_->head();
 }
-const char *Parser::Iterator::dependency_type() const {
-  return impl_->dependency_type();
+const char *Parser::Iterator::dependency_label() const {
+  return impl_->dependency_label();
 }
 bool Parser::Iterator::is_begin_of_sentence() const {
   return impl_->is_begin_of_sentence();
@@ -354,7 +354,7 @@ Parser::Impl *Parser::Impl::New(const Options &options, Model *model) {
   }
 }
 
-void Parser::Impl::Parse(const char *text, Parser::Iterator *iterator) {
+void Parser::Impl::Predict(Parser::Iterator *iterator, const char *text) {
   iterator->impl()->set_parser(this);
   iterator->impl()->Scan(text);
   iterator->Next();
@@ -388,8 +388,8 @@ Parser *Parser::New(const Options &options, Model *model) {
   }
 }
 
-void Parser::Parse(const char *text, Parser::Iterator *iterator) {
-  return impl_->Parse(text, iterator);
+void Parser::Predict(Parser::Iterator *iterator, const char *text) {
+  return impl_->Predict(iterator, text);
 }
 
 Parser::Options::Options(): segmenter_type_(kMixedSegmenter),

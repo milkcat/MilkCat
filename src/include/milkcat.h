@@ -91,7 +91,7 @@ class Parser {
   static Parser *New(const Options &options, Model *model);
 
   // Parses the text and stores the result into the iterator
-  void Parse(const char *text, Iterator *iterator);
+  void Predict(Iterator *iterator, const char *text);
 
   // Get the instance of the implementation class
   Impl *impl() { return impl_; }
@@ -130,6 +130,7 @@ class Parser::Options {
   int parser_type_;
 };
 
+// Iterator for the prediction of parser
 class Parser::Iterator {
  public:
   class Impl;
@@ -150,10 +151,10 @@ class Parser::Iterator {
   const char *part_of_speech_tag() const;
 
   // Get the head of current node (in dependency tree)
-  int head_node() const;
+  int head() const;
 
-  // Get the depengency type of current node
-  const char *dependency_type() const;
+  // Get the depengency lebel of current node
+  const char *dependency_label() const;
 
   // Get the type of current word (chinese word or english word or ...)
   int type() const;
@@ -215,9 +216,9 @@ void mc_model_delete(mc_model_t *model);
 void mc_parseropt_init(mc_parseropt_t *parseropt);
 mc_parser_t *mc_parser_new(mc_parseropt_t *parseropt, mc_model_t *model);
 void mc_parser_delete(mc_parser_t *model);
-void mc_parser_parse(mc_parser_t *parser,
-                     mc_parseriter_t *parseriter,
-                     const char *text);
+void mc_parser_predict(mc_parser_t *parser,
+                       mc_parseriter_t *parseriter,
+                       const char *text);
 
 mc_parseriter_t *mc_parseriter_new();
 void mc_parseriter_delete(mc_parseriter_t *parseriter);
