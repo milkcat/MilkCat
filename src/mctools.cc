@@ -46,9 +46,9 @@
 #include "ml/crf_tagger.h"
 #include "ml/perceptron_model.h"
 #include "include/milkcat.h"
-#include "parser/beam_arceager_dependency_parser.h"
+#include "parser/beam_yamada_parser.h"
 #include "parser/dependency_parser.h"
-#include "parser/naive_arceager_dependency_parser.h"
+#include "parser/yamada_parser.h"
 #include "tagger/crf_part_of_speech_tagger.h"
 #include "tagger/hmm_part_of_speech_tagger.h"
 #include "utils/utils.h"
@@ -360,7 +360,7 @@ int TrainNaiveArcEagerDependendyParser(int argc, char **argv) {
   int max_iteration = atol(argv[5]);
 
   Status status;
-  BeamArceagerDependencyParser::Train(
+  BeamYamadaParser::Train(
       corpus_file,
       template_file,
       model_prefix,
@@ -397,10 +397,10 @@ int TestDependendyParser(int argc, char **argv) {
     model = PerceptronModel::Open(model_prefix, &status);
   } 
 
-  BeamArceagerDependencyParser *parser = NULL;
+  BeamYamadaParser *parser = NULL;
   double LAS, UAS;
   if (status.ok()) {
-    parser = new BeamArceagerDependencyParser(model, feature);
+    parser = new BeamYamadaParser(model, feature);
     // parser = new NaiveArceagerDependencyParser(model, feature);
     DependencyParser::Test(
         corpus_file,

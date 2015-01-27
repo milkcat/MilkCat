@@ -23,9 +23,10 @@
 //
 // dependency_parser.h
 // naive_arceager_dependency_parser.h --- Created at 2013-08-10
+// yamada_parser.cc --- Created at 2015-01-27
 //
 
-#include "parser/naive_arceager_dependency_parser.h"
+#include "parser/yamada_parser.h"
 
 #include <assert.h>
 #include <stdio.h>
@@ -50,30 +51,27 @@
 
 namespace milkcat {
 
-NaiveArceagerDependencyParser::NaiveArceagerDependencyParser(
+YamadaParser::YamadaParser(
     PerceptronModel *perceptron_model,
     FeatureTemplate *feature): DependencyParser(perceptron_model, feature) {
   state_ = new State();
 }
 
-NaiveArceagerDependencyParser::~NaiveArceagerDependencyParser() {
+YamadaParser::~YamadaParser() {
   delete state_;
   state_ = NULL;
 }
 
-NaiveArceagerDependencyParser *
-NaiveArceagerDependencyParser::New(Model::Impl *model_impl,
-                                   Status *status) {
+YamadaParser *YamadaParser::New(Model::Impl *model_impl, Status *status) {
   PerceptronModel *perceptron_model = model_impl->DependencyModel(status);
 
   FeatureTemplate *feature_template = NULL;
   if (status->ok()) feature_template = model_impl->DependencyTemplate(status);
 
-  NaiveArceagerDependencyParser *self = NULL;
+  YamadaParser *self = NULL;
 
   if (status->ok()) {
-    self = new NaiveArceagerDependencyParser(perceptron_model,
-                                             feature_template);
+    self = new YamadaParser(perceptron_model, feature_template);
   }
 
   if (status->ok()) {
@@ -96,7 +94,7 @@ class IdxCostPairCmp {
   Perceptron *perceptron_;
 };
 
-int NaiveArceagerDependencyParser::Next() {  
+int YamadaParser::Next() {  
   int feature_num = feature_->Extract(state_,
                                       term_instance_,
                                       part_of_speech_tag_instance_,
@@ -126,19 +124,19 @@ int NaiveArceagerDependencyParser::Next() {
   return yid;
 }
 
-void NaiveArceagerDependencyParser::StoreResult(
+void YamadaParser::StoreResult(
     TreeInstance *tree_instance,
     const TermInstance *term_instance,
     const PartOfSpeechTagInstance *part_of_speech_tag_instance) {
   StoreStateIntoInstance(state_, tree_instance);
 }
 
-void NaiveArceagerDependencyParser::Step(int yid) {
+void YamadaParser::Step(int yid) {
   StateMove(state_, yid);
 }
 
 // Do some preparing work
-void NaiveArceagerDependencyParser::Start(
+void YamadaParser::Start(
     const TermInstance *term_instance,
     const PartOfSpeechTagInstance *part_of_speech_tag_instance) {
   term_instance_ = term_instance;
@@ -148,7 +146,7 @@ void NaiveArceagerDependencyParser::Start(
   state_->Initialize(node_pool_, term_instance->size());  
 }
 
-void NaiveArceagerDependencyParser::Parse(
+void YamadaParser::Parse(
     TreeInstance *tree_instance,
     const TermInstance *term_instance,
     const PartOfSpeechTagInstance *part_of_speech_tag_instance) {

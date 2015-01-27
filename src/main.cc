@@ -273,9 +273,6 @@ int ParserMain(int argc, char **argv) {
         fputs("  ", stdout);
       
       } else {
-        // Seperates sentences
-        if (it->is_begin_of_sentence()) puts("");
-
         // Use malt format to output the dependdency parsing result
         fputs("\t", stdout);
         sprintf(buffer, "%d", index);

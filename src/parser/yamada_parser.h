@@ -22,10 +22,11 @@
 // THE SOFTWARE.
 //
 // naive_arceager_dependency_parser.h --- Created at 2014-09-16
+// yamada_parser.h --- Created at 2015-01-27
 //
 
-#ifndef SRC_PARSER_NAIVE_ARCEAGER_DEPENDENCY_PARSER_H_
-#define SRC_PARSER_NAIVE_ARCEAGER_DEPENDENCY_PARSER_H_
+#ifndef SRC_PARSER_YAMADA_PARSER_H_
+#define SRC_PARSER_YAMADA_PARSER_H_
 
 #include <vector>
 #include <string>
@@ -42,19 +43,18 @@ class PartOfSpeechTagInstance;
 class FeatureSet;
 template<class T> class Pool;
 
-// This class implemented the original arceager dependency parser. Introduced 
-// by Nivre, Joakim. 
+// This class implemented the original Yamada (arc-standard) dependency parser.
+// Introduced by Nivre, Joakim. 
 // "Algorithms for deterministic incremental dependency parsing."
 // Computational Linguistics 34.4 (2008): 513-553.
-class NaiveArceagerDependencyParser: public DependencyParser {
+class YamadaParser: public DependencyParser {
  public:
-  NaiveArceagerDependencyParser(
+  YamadaParser(
       PerceptronModel *perceptron_model,
       FeatureTemplate *feature);
-  ~NaiveArceagerDependencyParser();
+  ~YamadaParser();
 
-  static NaiveArceagerDependencyParser *New(Model::Impl *model,
-                                            Status *status);
+  static YamadaParser *New(Model::Impl *model, Status *status);
   // Overrides DependencyParser::Parse
   void Parse(
       TreeInstance *tree_instance,
@@ -82,4 +82,4 @@ class NaiveArceagerDependencyParser: public DependencyParser {
 
 }  // namespace milkcat
 
-#endif  // SRC_PARSER_NAIVE_ARCEAGER_DEPENDENCY_PARSER_H_
+#endif  // SRC_PARSER_YAMADA_PARSER_H_

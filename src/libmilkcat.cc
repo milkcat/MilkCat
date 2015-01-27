@@ -42,7 +42,7 @@
 #include "tagger/crf_part_of_speech_tagger.h"
 #include "tagger/hmm_part_of_speech_tagger.h"
 #include "tagger/part_of_speech_tag_instance.h"
-#include "parser/beam_arceager_dependency_parser.h"
+#include "parser/beam_yamada_parser.h"
 #include "parser/dependency_parser.h"
 #include "parser/tree_instance.h"
 #include "tokenizer/tokenizer.h"
@@ -163,7 +163,7 @@ DependencyParser *DependencyParserFactory(Model::Impl *factory,
   switch (parser_type) {
     case kArcEagerParser:
       if (status->ok()) {
-        return BeamArceagerDependencyParser::New(factory, status);
+        return BeamYamadaParser::New(factory, status);
       } else {
         return NULL;
       }

@@ -22,10 +22,11 @@
 // THE SOFTWARE.
 //
 // beam_arceager_dependency_parser.h --- Created at 2014-10-31
+// beam_yamada_parser.h --- Created at 2015-01-27
 //
 
-#ifndef SRC_PARSER_BEAM_ARCEAGER_DEPENDENCY_PARSER_H_
-#define SRC_PARSER_BEAM_ARCEAGER_DEPENDENCY_PARSER_H_
+#ifndef SRC_PARSER_BEAM_YAMADA_PARSER_H_
+#define SRC_PARSER_BEAM_YAMADA_PARSER_H_
 
 #include <stdint.h>
 #include <vector>
@@ -46,14 +47,14 @@ class FeatureSet;
 template<class T> class Pool;
 template<class T> class StaticArray;
 
-class BeamArceagerDependencyParser: public DependencyParser {
+class BeamYamadaParser: public DependencyParser {
  public:
-  BeamArceagerDependencyParser(
+  BeamYamadaParser(
       PerceptronModel *perceptron_model,
       FeatureTemplate *feature);
-  ~BeamArceagerDependencyParser();
+  ~BeamYamadaParser();
 
-  // Training the BeamArceagerDependencyParser from `training_corpus` with
+  // Training the BeamYamadaParser from `training_corpus` with
   // the feature template from `template_filename` and stores the model into
   // `model_prefix`
   static void Train(
@@ -63,7 +64,7 @@ class BeamArceagerDependencyParser: public DependencyParser {
       int max_iteration,
       Status *status);
 
-  static BeamArceagerDependencyParser *New(Model::Impl *model,
+  static BeamYamadaParser *New(Model::Impl *model,
                                            Status *status);
   // Overrides DependencyParser::Parse
   void Parse(
@@ -102,7 +103,7 @@ class BeamArceagerDependencyParser: public DependencyParser {
   // Generates the possible transitions of the stack0 and input0 postag pair
   void GeneratePosTagBigramLabel(
       const char *training_corpus,
-      BeamArceagerDependencyParser *parser,
+      BeamYamadaParser *parser,
       Status *status);
 
   // Extracts features from `state` and put into `feature_set_`
@@ -112,10 +113,10 @@ class BeamArceagerDependencyParser: public DependencyParser {
   static void UpdateWeightForState(
       State *incorrect_state,
       State *orcale_state,
-      BeamArceagerDependencyParser *parser,
+      BeamYamadaParser *parser,
       Perceptron *percpetron);
 };
 
 }  // namespace milkcat
 
-#endif  // SRC_PARSER_BEAM_ARCEAGER_DEPENDENCY_PARSER_H_
+#endif  // SRC_PARSER_BEAM_YAMADA_PARSER_H_

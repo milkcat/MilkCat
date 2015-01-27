@@ -56,15 +56,13 @@ libmilkcat_a_SOURCES = src/libmilkcat.cc \
                        src/ml/perceptron_model.cc \
                        src/ml/perceptron_model.h \
                        src/ml/sequence_feature_set.h \
-                       src/parser/beam_arceager_dependency_parser.h \
-                       src/parser/beam_arceager_dependency_parser.cc \
+                       src/parser/beam_yamada_parser.h \
+                       src/parser/beam_yamada_parser.cc \
                        src/parser/dependency_parser.cc \
                        src/parser/dependency_parser.h \
                        src/parser/feature_template.cc \
                        src/parser/feature_template.h \
                        src/parser/feature_template-inl.h \
-                       src/parser/naive_arceager_dependency_parser.h \
-                       src/parser/naive_arceager_dependency_parser.cc \
                        src/parser/node.h \
                        src/parser/orcale.cc \
                        src/parser/orcale.h \
@@ -72,6 +70,8 @@ libmilkcat_a_SOURCES = src/libmilkcat.cc \
                        src/parser/state.h \
                        src/parser/tree_instance.cc \
                        src/parser/tree_instance.h \
+                       src/parser/yamada_parser.h \
+                       src/parser/yamada_parser.cc \
                        src/segmenter/bigram_segmenter.cc \
                        src/segmenter/bigram_segmenter.h \
                        src/segmenter/crf_segmenter.cc \

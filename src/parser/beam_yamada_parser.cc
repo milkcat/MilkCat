@@ -22,11 +22,12 @@
 // THE SOFTWARE.
 //
 // beam_arceager_dependency_parser.cc --- Created at 2014-10-31
+// beam_yamada_parser.cc --- Created at 2015-01-27
 //
 
 // #define DEBUG
 
-#include "parser/beam_arceager_dependency_parser.h"
+#include "parser/beam_yamada_parser.h"
 
 #include <algorithm>
 #include <map>
@@ -52,7 +53,7 @@
 
 namespace milkcat {
 
-class BeamArceagerDependencyParser::StateCmp {
+class BeamYamadaParser::StateCmp {
  public:
   // Since in `Beam` the least is the `Best`. So use `>` instead of '<'
   bool operator()(const State *s1, const State *s2) {
@@ -60,7 +61,7 @@ class BeamArceagerDependencyParser::StateCmp {
   }
 };
 
-BeamArceagerDependencyParser::BeamArceagerDependencyParser(
+BeamYamadaParser::BeamYamadaParser(
     PerceptronModel *perceptron_model,
     FeatureTemplate *feature):
         DependencyParser(perceptron_model, feature) {
@@ -71,7 +72,7 @@ BeamArceagerDependencyParser::BeamArceagerDependencyParser(
   agent_size_ = 0;
 }
 
-BeamArceagerDependencyParser::~BeamArceagerDependencyParser() {
+BeamYamadaParser::~BeamYamadaParser() {
   delete state_pool_;
   state_pool_ = NULL;
 
@@ -85,18 +86,16 @@ BeamArceagerDependencyParser::~BeamArceagerDependencyParser() {
   agent_ = NULL;
 }
 
-BeamArceagerDependencyParser *
-BeamArceagerDependencyParser::New(Model::Impl *model,
-                                  Status *status) {
+BeamYamadaParser *
+BeamYamadaParser::New(Model::Impl *model, Status *status) {
   PerceptronModel *perceptron_model = model->DependencyModel(status);
 
   FeatureTemplate *feature_template = NULL;
   if (status->ok()) feature_template = model->DependencyTemplate(status);
 
-  BeamArceagerDependencyParser *self = NULL;
+  BeamYamadaParser *self = NULL;
   if (status->ok()) {
-    self = new BeamArceagerDependencyParser(perceptron_model,
-                                            feature_template);
+    self = new BeamYamadaParser(perceptron_model, feature_template);
   }
 
   if (status->ok()) {
@@ -124,7 +123,7 @@ class CompareIdxByCostInArray {
 };
 
 // Start to parse the sentence
-void BeamArceagerDependencyParser::Start(
+void BeamYamadaParser::Start(
     const TermInstance *term_instance,
     const PartOfSpeechTagInstance *part_of_speech_tag_instance) {
   state_pool_->ReleaseAll();
@@ -141,8 +140,8 @@ void BeamArceagerDependencyParser::Start(
   beam_->Add(root_state);
 }
 
-BeamArceagerDependencyParser::State *
-BeamArceagerDependencyParser::StateCopyAndMove(State *state, int yid) {
+BeamYamadaParser::State *
+BeamYamadaParser::StateCopyAndMove(State *state, int yid) {
   State *next_state = state_pool_->Alloc();
   state->CopyTo(next_state);
 
@@ -153,7 +152,7 @@ BeamArceagerDependencyParser::StateCopyAndMove(State *state, int yid) {
   return next_state;
 }
 
-bool BeamArceagerDependencyParser::Step() {
+bool BeamYamadaParser::Step() {
   // Calculate the cost of transitions in each state of `beam_`, store them into
   // `agent_` 
   char postag_bigram[kPOSTagLengthMax * 2 + 5];
@@ -216,13 +215,13 @@ bool BeamArceagerDependencyParser::Step() {
   return true;
 }
 
-void BeamArceagerDependencyParser::StoreResult(
+void BeamYamadaParser::StoreResult(
     TreeInstance *tree_instance) {
   State *max_state = beam_->Best();
   StoreStateIntoInstance(max_state, tree_instance);
 }
 
-void BeamArceagerDependencyParser::Parse(
+void BeamYamadaParser::Parse(
     TreeInstance *tree_instance,
     const TermInstance *term_instance,
     const PartOfSpeechTagInstance *part_of_speech_tag_instance) {
@@ -232,7 +231,7 @@ void BeamArceagerDependencyParser::Parse(
   StoreResult(tree_instance);
 }
 
-void BeamArceagerDependencyParser::DumpBeam() {
+void BeamYamadaParser::DumpBeam() {
   for (int beam_idx = 0; beam_idx < beam_->size(); ++beam_idx) {
     State *state = beam_->at(beam_idx);
     std::vector<int> sequence;
@@ -254,7 +253,7 @@ void BeamArceagerDependencyParser::DumpBeam() {
   }
 }
 
-void BeamArceagerDependencyParser::ExtractFeatureFromState(
+void BeamYamadaParser::ExtractFeatureFromState(
     const State* state) {
   int feature_num = feature_->Extract(state,
                                       term_instance_,
@@ -263,10 +262,10 @@ void BeamArceagerDependencyParser::ExtractFeatureFromState(
 }
 
 // Training `perceptron` with an correct (orcale) and incorrect state pair,
-void BeamArceagerDependencyParser::UpdateWeightForState(
+void BeamYamadaParser::UpdateWeightForState(
     DependencyParser::State *incorrect_state,
     DependencyParser::State *correct_state,
-    BeamArceagerDependencyParser *parser,
+    BeamYamadaParser *parser,
     Perceptron *percpetron) {
   // Find the first incorrect state in the history of `incorrect_state`
   while (incorrect_state->correct() == false) {
@@ -296,7 +295,7 @@ int InsertIntoIndex(ReimuTrie *reimu_trie, const char *key, int *count) {
   return id;
 }
 
-void BeamArceagerDependencyParser::Train(
+void BeamYamadaParser::Train(
     const char *training_corpus,
     const char *template_filename,
     const char *model_prefix,
@@ -340,13 +339,13 @@ void BeamArceagerDependencyParser::Train(
   if (status->ok()) feature = FeatureTemplate::Open(template_filename, status);
 
   // Creates perceptron model, percpetron and the parser
-  BeamArceagerDependencyParser *parser = NULL;
+  BeamYamadaParser *parser = NULL;
   PerceptronModel *model = NULL;
   Perceptron *perceptron = NULL;
   if (status->ok()) {
     std::vector<std::string> yname(yname_set.begin(), yname_set.end());
     model = new PerceptronModel(yname);
-    parser = new BeamArceagerDependencyParser(model, feature);
+    parser = new BeamYamadaParser(model, feature);
     perceptron = new Perceptron(model);
   }
 
