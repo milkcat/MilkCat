@@ -31,16 +31,16 @@
 
 #include <stdint.h>
 #include <stdio.h>
-#include "include/milkcat.h"
-#include "ml/crf_model.h"
-#include "segmenter/crf_segmenter.h"
-#include "tagger/part_of_speech_tag_instance.h"
-#include "tokenizer/token_instance.h"
+#include "common/milkcat_config.h"
+#include "common/model_impl.h"
 #include "utils/utils.h"
 
 namespace milkcat {
 
-class TrieTree;
+class ReimuTrie;
+class CRFSegmenter;
+class TermInstance;
+class TokenInstance;
 
 class OutOfVocabularyWordRecognition {
  public:
@@ -62,7 +62,7 @@ class OutOfVocabularyWordRecognition {
  private:
   TermInstance *term_instance_;
   CRFSegmenter *crf_segmenter_;
-  const TrieTree *oov_property_;
+  const ReimuTrie *oov_property_;
   int8_t oov_properties_[kTokenMax];
 
   OutOfVocabularyWordRecognition();

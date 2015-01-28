@@ -259,7 +259,7 @@ int MakeIndexFile(int argc, char **argv) {
   const char *input_path = argv[argc - 2];
   const char *output_path = argv[argc - 1];
 
-  Darts::DoubleArray double_array;
+  ReimuTrie *index = new ReimuTrie();
 
   FILE *fd = fopen(input_path, "r");
   if (fd == NULL) {
@@ -269,37 +269,19 @@ int MakeIndexFile(int argc, char **argv) {
 
   char key_text[1024];
   int value = 0;
-  std::vector<std::pair<std::string, int> > key_value;
+  int count = 0;
   while (fscanf(fd, "%s %d", key_text, &value) != EOF) {
-    key_value.push_back(std::pair<std::string, int>(key_text, value));
+    index->Put(key_text, value);
+    ++count;
   }
-  sort(key_value.begin(), key_value.end());
-  printf("read %ld words.\n", key_value.size());
-
-  std::vector<const char *> keys;
-  std::vector<Darts::DoubleArray::value_type> values;
-
-  for (std::vector<std::pair<std::string, int> >::iterator
-       it = key_value.begin(); it != key_value.end(); ++it) {
-    keys.push_back(it->first.c_str());
-    values.push_back(it->second);
-  }
-
-  if (double_array.build(keys.size(), &keys[0], 0, &values[0]) != 0) {
-    fprintf(stderr,
-            "error: unable to build double array from file %s\n",
-            input_path);
-    return 1;
-  }
-
-  if (double_array.save(output_path) != 0) {
-    fprintf(stderr,
-            "error: unable to save double array to file %s\n",
-            output_path);
-    return 1;
+  if (index->Save(output_path) == true) {
+    printf("save %d words.\n", count);
+  } else {
+    puts("An error occured");
   }
 
   fclose(fd);
+  delete index;
   return 0;
 }
 

@@ -49,7 +49,7 @@ class ReimuTrie::Impl {
 
   // These functions are same to functions in ReimuTrie::
   static Impl *Open(const char *filename);
-  int32 Get(const char *key, int32 default_value);
+  int32 Get(const char *key, int32 default_value) const;
   void Put(const char *key, int32 value);
   bool Save(const char *filename);
   int size() const;
@@ -191,7 +191,7 @@ class ReimuTrie::Impl::Node {
 
 ReimuTrie::ReimuTrie() { impl_ = new ReimuTrie::Impl(); }
 ReimuTrie::~ReimuTrie() { delete impl_; }
-ReimuTrie::int32 ReimuTrie::Get(const char *key, int32 default_value) {
+ReimuTrie::int32 ReimuTrie::Get(const char *key, int32 default_value) const {
   return impl_->Get(key, default_value);
 }
 void ReimuTrie::Put(const char *key, int32 value) { impl_->Put(key, value); }
@@ -350,7 +350,8 @@ bool ReimuTrie::Impl::Traverse(
   return true;  
 }
 
-ReimuTrie::int32 ReimuTrie::Impl::Get(const char *key, int32 default_value) {
+ReimuTrie::int32
+ReimuTrie::Impl::Get(const char *key, int32 default_value) const {
   int from = 0;
   int32 value;
   bool path_exists = Traverse(&from, key, &value, default_value);

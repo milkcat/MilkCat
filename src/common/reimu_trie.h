@@ -51,7 +51,7 @@ class ReimuTrie {
 
   // Gets the corresponded value for `key`, if `key` does not exist, returns
   // `default_value`
-  int32 Get(const char *key, int32 default_value);
+  int32 Get(const char *key, int32 default_value) const;
 
   // Traverse ReimuTrie from `*from` and gets the value of `key`, then sets
   // `from` to the latest position in the trie. If the path didn't exist,

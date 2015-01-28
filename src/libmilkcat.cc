@@ -36,6 +36,7 @@
 #include "common/model_impl.h"
 #include "ml/crf_tagger.h"
 #include "segmenter/bigram_segmenter.h"
+#include "segmenter/crf_segmenter.h"
 #include "segmenter/mixed_segmenter.h"
 #include "segmenter/out_of_vocabulary_word_recognition.h"
 #include "segmenter/term_instance.h"

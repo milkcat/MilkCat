@@ -63,7 +63,6 @@ Model::Impl::Impl(const char *model_dir_path):
     crf_pos_model_(NULL),
     hmm_pos_model_(NULL),
     oov_property_(NULL),
-    stopword_(NULL),
     dependency_(NULL),
     dependency_feature_(NULL) {
 }
@@ -95,10 +94,7 @@ Model::Impl::~Impl() {
 
   delete oov_property_;
   oov_property_ = NULL;
-
-  delete stopword_;
-  stopword_ = NULL;
-
+  
   delete dependency_;
   dependency_ = NULL;
 
@@ -244,24 +240,19 @@ const HMMModel *Model::Impl::HMMPosModel(Status *status) {
   return hmm_pos_model_;
 }
 
-const TrieTree *Model::Impl::OOVProperty(Status *status) {
+const ReimuTrie *Model::Impl::OOVProperty(Status *status) {
   mutex.Lock();
   if (oov_property_ == NULL) {
     std::string model_path = model_dir_path_ + kOovPropertyFile;
-    oov_property_ = DoubleArrayTrieTree::New(model_path.c_str(), status);
+    oov_property_ = ReimuTrie::Open(model_path.c_str());
+    if (oov_property_ == NULL) {
+      std::string errmsg = "Unable to open out-of-vocabulary property file: ";
+      errmsg += model_path;
+      *status = Status::IOError(errmsg.c_str());
+    }
   }
   mutex.Unlock();
   return oov_property_;
-}
-
-const TrieTree *Model::Impl::Stopword(Status *status) {
-  mutex.Lock();
-  if (stopword_ == NULL) {
-    std::string model_path = model_dir_path_ + kStopwordFile;
-    stopword_ = DoubleArrayTrieTree::New(model_path.c_str(), status);
-  }
-  mutex.Unlock();
-  return stopword_;
 }
 
 PerceptronModel *Model::Impl::DependencyModel(Status *status) {

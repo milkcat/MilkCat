@@ -40,11 +40,11 @@
 namespace milkcat {
 
 class PerceptronModel;
-class TrieTree;
 template <class T> class StaticArray;
 template <class K, class V> class StaticHashTable;
 class CRFModel;
 class HMMModel;
+class ReimuTrie;
 
 // A factory class that can obtain any model data class needed by MilkCat
 // in singleton mode. All the GetXX fucnctions are thread safe
@@ -79,10 +79,7 @@ class Model::Impl {
   const HMMModel *HMMPosModel(Status *status);
 
   // Get the character's property in out-of-vocabulary word recognition
-  const TrieTree *OOVProperty(Status *status);
-
-  // Get the stopword list as an trietree index
-  const TrieTree *Stopword(Status *status);
+  const ReimuTrie *OOVProperty(Status *status);
 
   // Get the dependency model
   PerceptronModel *DependencyModel(Status *status);
@@ -102,8 +99,7 @@ class Model::Impl {
   const CRFModel *seg_model_;
   const CRFModel *crf_pos_model_;
   const HMMModel *hmm_pos_model_;
-  const TrieTree *oov_property_;
-  const TrieTree *stopword_;
+  const ReimuTrie *oov_property_;
   PerceptronModel *dependency_;
   DependencyParser::FeatureTemplate *dependency_feature_;
 

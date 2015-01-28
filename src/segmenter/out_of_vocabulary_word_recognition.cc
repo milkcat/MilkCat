@@ -31,7 +31,7 @@
 #include <string.h>
 #include "libmilkcat.h"
 #include "common/model_impl.h"
-#include "common/trie_tree.h"
+#include "common/reimu_trie.h"
 #include "include/milkcat.h"
 #include "segmenter/crf_segmenter.h"
 #include "tokenizer/token_instance.h"
@@ -85,7 +85,7 @@ void OutOfVocabularyWordRecognition::GetOOVProperties(
       continue;
     } else {
       const char *term_text = term_instance->term_text_at(i);
-      int oov_property = oov_property_->Search(term_text);
+      int oov_property = oov_property_->Get(term_text, -1);
       if (oov_property < 0) {
         oov_properties_[i] = kDoRecognize;
       } else {
