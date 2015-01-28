@@ -29,7 +29,7 @@
 #include "parser/orcale.h"
 
 #include "parser/tree_instance.h"
-#include "utils/string_builder.h"
+#include "util/string_builder.h"
 
 namespace milkcat {
 

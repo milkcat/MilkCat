@@ -94,19 +94,18 @@ libmilkcat_a_SOURCES = src/libmilkcat.cc \
                        src/tokenizer/token_lex.h \
                        src/tokenizer/tokenizer.cc \
                        src/tokenizer/tokenizer.h \
-                       src/utils/mutex.h \
-                       src/utils/mutex_posix.cc \
-                       src/utils/pool.h \
-                       src/utils/readable_file.cc \
-                       src/utils/readable_file.h \
-                       src/utils/status.h \
-                       src/utils/string_builder.h \
-                       src/utils/strlcpy.cc \
-                       src/utils/utils.cc \
-                       src/utils/utils.h \
-                       src/utils/utils_posix.cc \
-                       src/utils/writable_file.cc \
-                       src/utils/writable_file.h 
+                       src/util/mutex.h \
+                       src/util/mutex_posix.cc \
+                       src/util/pool.h \
+                       src/util/readable_file.cc \
+                       src/util/readable_file.h \
+                       src/util/status.h \
+                       src/util/string_builder.h \
+                       src/util/strlcpy.cc \
+                       src/util/util.cc \
+                       src/util/util.h \
+                       src/util/writable_file.cc \
+                       src/util/writable_file.h 
 
 bin_PROGRAMS = milkcat mctools
 

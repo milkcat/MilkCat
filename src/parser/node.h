@@ -28,7 +28,7 @@
 #ifndef SRC_PARSER_NODE_H_
 #define SRC_PARSER_NODE_H_
 
-#include "utils/utils.h"
+#include "util/util.h"
 
 namespace milkcat {
 

@@ -42,10 +42,10 @@
 #include "parser/dependency_parser.h"
 #include "parser/tree_instance.h"
 #include "tokenizer/tokenizer.h"
-#include "utils/mutex.h"
-#include "utils/utils.h"
-#include "utils/status.h"
-#include "utils/readable_file.h"
+#include "util/mutex.h"
+#include "util/util.h"
+#include "util/status.h"
+#include "util/readable_file.h"
 
 
 namespace milkcat {

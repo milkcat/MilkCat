@@ -31,7 +31,7 @@
 #include <assert.h>
 #include <string.h>
 #include "common/milkcat_config.h"
-#include "utils/utils.h"
+#include "util/util.h"
 
 namespace milkcat {
 

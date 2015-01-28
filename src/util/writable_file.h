@@ -21,31 +21,44 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 //
-// mutex.h --- Created at 2013-03-13
+// writable_file.h --- Created at 2014-02-03
 //
 
-#ifndef SRC_UTILS_MUTEX_H_
-#define SRC_UTILS_MUTEX_H_
+#ifndef SRC_UTIL_WRITABLE_FILE_H_
+#define SRC_UTIL_WRITABLE_FILE_H_
 
-#include "utils/utils.h"
+#include <stdio.h>
+#include <string>
+#include "util/status.h"
 
 namespace milkcat {
 
-class Mutex {
+class WritableFile {
  public:
-  Mutex();
-  ~Mutex();
+  // Open a file for write. On success, return an instance of WritableFile.
+  // On failed, set status != Status::OK()
+  static WritableFile *New(const char *path, Status *status);
+  ~WritableFile();
 
-  void Lock();
-  void Unlock();
+  // Writes a line to file
+  void WriteLine(const char *line, Status *status);
+
+  // Writes data to file
+  void Write(const void *data, int size, Status *status);
+
+  // Write an type T to file
+  template<typename T>
+  void WriteValue(const T &data, Status *status) {
+    Write(&data, sizeof(data), status);
+  }
 
  private:
-  class MutexImpl;
-  MutexImpl *impl_;
+  FILE *fd_;
+  std::string file_path_;
 
-  DISALLOW_COPY_AND_ASSIGN(Mutex);
+  WritableFile();
 };
 
 }  // namespace milkcat
 
-#endif  // SRC_UTILS_UTILS_H_
+#endif  // SRC_UTIL_WRITABLE_FILE_H_

@@ -21,44 +21,46 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 //
-// writable_file.h --- Created at 2014-02-03
+// pool.h --- Created at 2014-04-19
 //
 
-#ifndef SRC_UTILS_WRITABLE_FILE_H_
-#define SRC_UTILS_WRITABLE_FILE_H_
+#ifndef SRC_UTIL_POOL_H_
+#define SRC_UTIL_POOL_H_
 
-#include <stdio.h>
-#include <string>
-#include "utils/status.h"
+#include <vector>
 
 namespace milkcat {
 
-class WritableFile {
+template<class T>
+class Pool {
  public:
-  // Open a file for write. On success, return an instance of WritableFile.
-  // On failed, set status != Status::OK()
-  static WritableFile *New(const char *path, Status *status);
-  ~WritableFile();
+  Pool(): alloc_index_(0) {}
 
-  // Writes a line to file
-  void WriteLine(const char *line, Status *status);
+  ~Pool() {
+    for (typename std::vector<T *>::iterator
+         it = nodes_.begin(); it < nodes_.end(); ++it) {
+      delete *it;
+    }
+  }
 
-  // Writes data to file
-  void Write(const void *data, int size, Status *status);
+  // Alloc a node
+  T *Alloc() {
+    if (alloc_index_ == nodes_.size()) {
+      nodes_.push_back(new T());
+    }
+    return nodes_[alloc_index_++];
+  }
 
-  // Write an type T to file
-  template<typename T>
-  void WriteValue(const T &data, Status *status) {
-    Write(&data, sizeof(data), status);
+  // Release all node alloced before
+  void ReleaseAll() {
+    alloc_index_ = 0;
   }
 
  private:
-  FILE *fd_;
-  std::string file_path_;
-
-  WritableFile();
+  std::vector<T *> nodes_;
+  int alloc_index_;
 };
 
 }  // namespace milkcat
 
-#endif  // SRC_UTILS_WRITABLE_FILE_H_
+#endif  // SRC_UTIL_POOL_H_

@@ -32,7 +32,7 @@
 #include "common/instance_data.h"
 #include "include/milkcat.h"
 #include "tokenizer/token_instance.h"
-#include "utils/utils.h"
+#include "util/util.h"
 
 namespace milkcat {
 

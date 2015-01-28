@@ -33,8 +33,8 @@
 #include "ml/feature_set.h"
 #include "ml/perceptron_model.h"
 #include "ml/packed_score.h"
-#include "utils/status.h"
-#include "utils/utils.h"
+#include "util/status.h"
+#include "util/util.h"
 
 namespace milkcat {
 

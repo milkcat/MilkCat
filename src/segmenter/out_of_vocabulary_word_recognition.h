@@ -33,7 +33,7 @@
 #include <stdio.h>
 #include "common/milkcat_config.h"
 #include "common/model_impl.h"
-#include "utils/utils.h"
+#include "util/util.h"
 
 namespace milkcat {
 

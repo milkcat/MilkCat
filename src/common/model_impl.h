@@ -31,8 +31,8 @@
 #include <string>
 #include <vector>
 #include "parser/feature_template.h"
-#include "utils/mutex.h"
-#include "utils/utils.h"
+#include "util/mutex.h"
+#include "util/util.h"
 
 #ifndef SRC_COMMON_MODEL_FACTORY_H_
 #define SRC_COMMON_MODEL_FACTORY_H_

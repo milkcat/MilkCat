@@ -32,10 +32,10 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <string>
-#include "utils/utils.h"
-#include "utils/readable_file.h"
-#include "utils/writable_file.h"
-#include "utils/status.h"
+#include "util/readable_file.h"
+#include "util/writable_file.h"
+#include "util/util.h"
+#include "util/status.h"
 
 namespace milkcat {
 

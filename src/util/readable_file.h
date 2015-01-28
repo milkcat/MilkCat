@@ -21,48 +21,55 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 //
-// mutex-linux.cc --- Created at 2013-03-13
+// random_access_file.h --- Created at 2014-01-28
+// readable_file.h --- Created at 2014-02-03
 //
 
-#include "utils/mutex.h"
-#include <pthread.h>
+#ifndef SRC_UTIL_READABLE_FILE_H_
+#define SRC_UTIL_READABLE_FILE_H_
+
+#include <stdio.h>
+#include <stdint.h>
+#include <string>
+#include "util/status.h"
 
 namespace milkcat {
 
-class Mutex::MutexImpl {
+// open a random access file for read
+class ReadableFile {
  public:
-  MutexImpl() {
-    pthread_mutex_init(&mutex, NULL);
+  static ReadableFile *New(const char *file_path, Status *status);
+  ~ReadableFile();
+
+  // Read n bytes (size) from file and put to *ptr
+  bool Read(void *ptr, int size, Status *status);
+
+  // Read an type T from file
+  template<typename T>
+  bool ReadValue(T *data, Status *status) {
+    return Read(data, sizeof(T), status);
   }
 
-  ~MutexImpl() {
-    pthread_mutex_destroy(&mutex);
-  }
+  // Read a line from file, if failed return false. NOTE: The line string 
+  // contains the CR or CR-LF characters 
+  bool ReadLine(char *buf, int size, Status *status);
 
-  void Lock() {
-    pthread_mutex_lock(&mutex);
-  }
+  bool Eof() { return Tell() >= size_; }
 
-  void Unlock() {
-    pthread_mutex_unlock(&mutex);
-  }
+  // Get current position in file
+  int64_t Tell();
+
+  // Get the file size
+  int64_t Size() { return size_; }
 
  private:
-  pthread_mutex_t mutex;
+  FILE *fd_;
+  int64_t size_;
+  std::string file_path_;
+
+  ReadableFile();
 };
 
-Mutex::Mutex(): impl_(new MutexImpl()) {}
-Mutex::~Mutex() {
-  delete impl_;
-  impl_ = NULL;
-}
-
-void Mutex::Lock() {
-  impl_->Lock();
-}
-
-void Mutex::Unlock() {
-  impl_->Unlock();
-}
-
 }  // namespace milkcat
+
+#endif  // SRC_UTIL_READABLE_FILE_H_

@@ -30,7 +30,7 @@
 
 #include <vector>
 #include "parser/dependency_parser.h"
-#include "utils/utils.h"
+#include "util/util.h"
 
 namespace milkcat {
 

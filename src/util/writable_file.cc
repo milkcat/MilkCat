@@ -24,7 +24,8 @@
 // writable_file.cc --- Created at 2014-02-04
 //
 
-#include "utils/writable_file.h"
+#include "util/writable_file.h"
+
 #include <string>
 
 namespace milkcat {

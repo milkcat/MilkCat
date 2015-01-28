@@ -31,7 +31,7 @@
 #include "ml/crf_tagger.h"
 #include "segmenter/segmenter.h"
 #include "tokenizer/token_instance.h"
-#include "utils/utils.h"
+#include "util/util.h"
 
 namespace milkcat {
 

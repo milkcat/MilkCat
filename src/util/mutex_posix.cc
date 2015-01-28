@@ -21,46 +21,48 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 //
-// pool.h --- Created at 2014-04-19
+// mutex-linux.cc --- Created at 2013-03-13
 //
 
-#ifndef SRC_UTILS_POOL_H_
-#define SRC_UTILS_POOL_H_
-
-#include <vector>
+#include "util/mutex.h"
+#include <pthread.h>
 
 namespace milkcat {
 
-template<class T>
-class Pool {
+class Mutex::MutexImpl {
  public:
-  Pool(): alloc_index_(0) {}
-
-  ~Pool() {
-    for (typename std::vector<T *>::iterator
-         it = nodes_.begin(); it < nodes_.end(); ++it) {
-      delete *it;
-    }
+  MutexImpl() {
+    pthread_mutex_init(&mutex, NULL);
   }
 
-  // Alloc a node
-  T *Alloc() {
-    if (alloc_index_ == nodes_.size()) {
-      nodes_.push_back(new T());
-    }
-    return nodes_[alloc_index_++];
+  ~MutexImpl() {
+    pthread_mutex_destroy(&mutex);
   }
 
-  // Release all node alloced before
-  void ReleaseAll() {
-    alloc_index_ = 0;
+  void Lock() {
+    pthread_mutex_lock(&mutex);
+  }
+
+  void Unlock() {
+    pthread_mutex_unlock(&mutex);
   }
 
  private:
-  std::vector<T *> nodes_;
-  int alloc_index_;
+  pthread_mutex_t mutex;
 };
 
-}  // namespace milkcat
+Mutex::Mutex(): impl_(new MutexImpl()) {}
+Mutex::~Mutex() {
+  delete impl_;
+  impl_ = NULL;
+}
 
-#endif  // SRC_UTILS_POOL_H_
+void Mutex::Lock() {
+  impl_->Lock();
+}
+
+void Mutex::Unlock() {
+  impl_->Unlock();
+}
+
+}  // namespace milkcat

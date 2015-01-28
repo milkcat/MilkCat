@@ -22,12 +22,11 @@
 // THE SOFTWARE.
 //
 // utils.h --- Created at 2013-08-10
+// util.h --- Created at 2015-01-28
 //
 
-
-
-#ifndef SRC_UTILS_UTILS_H_
-#define SRC_UTILS_UTILS_H_
+#ifndef SRC_UTIL_UTIL_H_
+#define SRC_UTIL_UTIL_H_
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -35,7 +34,7 @@
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
-#include "utils/status.h"
+#include "util/status.h"
 
 #if defined(HAVE_UNORDERED_MAP)
 #include <unordered_map>
@@ -57,11 +56,6 @@ char *trim(char *str);
 
 const char *_filename(const char *path);
 
-// Sleep for seconds
-void Sleep(double seconds);
-
-// Get number of processors/cores in current machine
-int HardwareConcurrency();
 
 #if defined(HAVE_UNORDERED_MAP)
 using std::unordered_map;
@@ -111,4 +105,4 @@ using unordered_map = std::map<TK, TV>;
         TypeName(const TypeName&); \
         void operator=(const TypeName&)
 
-#endif  // SRC_UTILS_UTILS_H_
+#endif  // SRC_UTIL_UTIL_H_

@@ -21,46 +21,35 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 //
-// string_builder.h --- Created at 2014-06-03
+// utils.cc --- Created at 2013-08-31
 //
 
+#include "util/util.h"
+
 #include <stdio.h>
-#include "utils/utils.h"
+#include <stdlib.h>
+#include <string.h>
+#include <ctype.h>
 
 namespace milkcat {
 
-// StringBuilder builds a string with a limited size. It writes to the buffer
-// directly instead of use its own buffer.
-class StringBuilder {
- public:
-  StringBuilder(char *buffer, int capability): 
-      buffer_(buffer), capability_(capability), size_(0) {
-  }
+char *trim(char *s) {
+  char *p = s;
+  int l = strlen(p);
 
-  // Append functions
-  StringBuilder &operator <<(const char *str) {
-    // LOG("Append string: " << str);
-    int len = strlcpy(buffer_ + size_, str, capability_ - size_);
-    size_ += len;
-    return *this;
-  }
-  StringBuilder &operator <<(char ch) {
-    if (capability_ > size_ + 1) {
-      buffer_[size_++] = ch;
-      buffer_[size_] = '\0';
-    }
-    return *this;
-  }
-  StringBuilder &operator <<(int val) {
-    int len = sprintf(buffer_ + size_, "%d", val);
-    size_ += len;
-    return *this;
-  }
+  while (isspace(p[l - 1])) p[--l] = 0;
+  while (*p && isspace(*p)) ++p, --l;
 
- private:
-  char *buffer_;
-  int capability_;
-  int size_;
-};
+  memmove(s, p, l + 1);
+  return s;
+}
+
+const char *_filename(const char *path) {
+  int len = strlen(path);
+  const char *p = path + len;
+
+  while (*(p - 1) != '/' && *(p - 1) != '\\' && p != path) p--;
+  return p;
+}
 
 }  // namespace milkcat

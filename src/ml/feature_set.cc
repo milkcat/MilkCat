@@ -25,7 +25,7 @@
 //
 
 #include "ml/feature_set.h"
-#include "utils/utils.h"
+#include "util/util.h"
 
 namespace milkcat {
 

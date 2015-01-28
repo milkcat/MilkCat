@@ -39,7 +39,7 @@
 #include "include/milkcat.h"
 #include "segmenter/term_instance.h"
 #include "tokenizer/token_instance.h"
-#include "utils/utils.h"
+#include "util/util.h"
 
 namespace milkcat {
 

@@ -31,7 +31,7 @@
 #include "common/milkcat_config.h"
 #include "ml/hmm_model.h"
 #include "ml/sequence_feature_set.h"
-#include "utils/utils.h"
+#include "util/util.h"
 
 namespace milkcat {
 

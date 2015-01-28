@@ -29,7 +29,7 @@
 
 #include <algorithm>
 #include "parser/node.h"
-#include "utils/pool.h"
+#include "util/pool.h"
 
 namespace milkcat {
 

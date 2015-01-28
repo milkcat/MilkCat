@@ -36,7 +36,7 @@
 #include "include/milkcat.h"
 #include "ml/beam.h"
 #include "segmenter/segmenter.h"
-#include "utils/pool.h"
+#include "util/pool.h"
 
 namespace milkcat {
 

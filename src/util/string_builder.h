@@ -21,55 +21,51 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 //
-// random_access_file.h --- Created at 2014-01-28
-// readable_file.h --- Created at 2014-02-03
+// string_builder.h --- Created at 2014-06-03
 //
 
-#ifndef SRC_UTILS_READABLE_FILE_H_
-#define SRC_UTILS_READABLE_FILE_H_
+#ifndef UTIL_STRING_BUILDER_H_
+#define UTIL_STRING_BUILDER_H_
 
 #include <stdio.h>
-#include <stdint.h>
-#include <string>
-#include "utils/status.h"
+#include "util/util.h"
 
 namespace milkcat {
 
-// open a random access file for read
-class ReadableFile {
+// StringBuilder builds a string with a limited size. It writes to the buffer
+// directly instead of use its own buffer.
+class StringBuilder {
  public:
-  static ReadableFile *New(const char *file_path, Status *status);
-  ~ReadableFile();
-
-  // Read n bytes (size) from file and put to *ptr
-  bool Read(void *ptr, int size, Status *status);
-
-  // Read an type T from file
-  template<typename T>
-  bool ReadValue(T *data, Status *status) {
-    return Read(data, sizeof(T), status);
+  StringBuilder(char *buffer, int capability): 
+      buffer_(buffer), capability_(capability), size_(0) {
   }
 
-  // Read a line from file, if failed return false. NOTE: The line string 
-  // contains the CR or CR-LF characters 
-  bool ReadLine(char *buf, int size, Status *status);
-
-  bool Eof() { return Tell() >= size_; }
-
-  // Get current position in file
-  int64_t Tell();
-
-  // Get the file size
-  int64_t Size() { return size_; }
+  // Append functions
+  StringBuilder &operator <<(const char *str) {
+    // LOG("Append string: " << str);
+    int len = strlcpy(buffer_ + size_, str, capability_ - size_);
+    size_ += len;
+    return *this;
+  }
+  StringBuilder &operator <<(char ch) {
+    if (capability_ > size_ + 1) {
+      buffer_[size_++] = ch;
+      buffer_[size_] = '\0';
+    }
+    return *this;
+  }
+  StringBuilder &operator <<(int val) {
+    int len = sprintf(buffer_ + size_, "%d", val);
+    size_ += len;
+    return *this;
+  }
 
  private:
-  FILE *fd_;
-  int64_t size_;
-  std::string file_path_;
-
-  ReadableFile();
+  char *buffer_;
+  int capability_;
+  int size_;
 };
 
 }  // namespace milkcat
 
-#endif  // SRC_UTILS_READABLE_FILE_H_
+#endif  // UTIL_STRING_BUILDER_H_

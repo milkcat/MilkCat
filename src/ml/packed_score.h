@@ -32,9 +32,9 @@
 #include <algorithm>
 #include <vector>
 #include <utility>
-#include "utils/readable_file.h"
-#include "utils/status.h"
-#include "utils/writable_file.h"
+#include "util/readable_file.h"
+#include "util/status.h"
+#include "util/writable_file.h"
 
 namespace milkcat {
 

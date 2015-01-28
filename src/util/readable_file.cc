@@ -25,10 +25,11 @@
 // readable_file.cc --- Created at 2014-02-03
 //
 
-#include "utils/readable_file.h"
+#include "util/readable_file.h"
+
 #include <stdio.h>
 #include <string>
-#include "utils/status.h"
+#include "util/status.h"
 
 namespace milkcat {
 

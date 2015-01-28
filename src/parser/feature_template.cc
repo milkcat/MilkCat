@@ -37,8 +37,8 @@
 #include "parser/state.h"
 #include "segmenter/term_instance.h"
 #include "tagger/part_of_speech_tag_instance.h"
-#include "utils/readable_file.h"
-#include "utils/string_builder.h"
+#include "util/readable_file.h"
+#include "util/string_builder.h"
 
 namespace milkcat {
 

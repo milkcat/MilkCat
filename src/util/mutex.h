@@ -21,34 +21,31 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 //
-// utils.cc --- Created at 2013-08-31
+// mutex.h --- Created at 2013-03-13
 //
 
-#include "utils/utils.h"
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <ctype.h>
+#ifndef SRC_UTIL_MUTEX_H_
+#define SRC_UTIL_MUTEX_H_
+
+#include "util/util.h"
 
 namespace milkcat {
 
-char *trim(char *s) {
-  char *p = s;
-  int l = strlen(p);
+class Mutex {
+ public:
+  Mutex();
+  ~Mutex();
 
-  while (isspace(p[l - 1])) p[--l] = 0;
-  while (*p && isspace(*p)) ++p, --l;
+  void Lock();
+  void Unlock();
 
-  memmove(s, p, l + 1);
-  return s;
-}
+ private:
+  class MutexImpl;
+  MutexImpl *impl_;
 
-const char *_filename(const char *path) {
-  int len = strlen(path);
-  const char *p = path + len;
-
-  while (*(p - 1) != '/' && *(p - 1) != '\\' && p != path) p--;
-  return p;
-}
+  DISALLOW_COPY_AND_ASSIGN(Mutex);
+};
 
 }  // namespace milkcat
+
+#endif  // SRC_UTIL_MUTEX_H_

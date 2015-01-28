@@ -38,7 +38,7 @@
 #include <stdio.h>
 #include <limits.h>
 #include <string>
-#include "utils/utils.h"
+#include "util/util.h"
 
 namespace milkcat {
 

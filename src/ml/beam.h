@@ -30,7 +30,7 @@
 #include <assert.h>
 #include <stdio.h>
 #include <algorithm>
-#include "utils/utils.h"
+#include "util/util.h"
 
 namespace milkcat {
 

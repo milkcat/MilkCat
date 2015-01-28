@@ -31,7 +31,7 @@
 #include <string>
 #include "config.h"
 #include "include/milkcat.h"
-#include "utils/readable_file.h"
+#include "util/readable_file.h"
 
 using milkcat::Parser;
 using milkcat::Model;

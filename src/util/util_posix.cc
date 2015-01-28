@@ -25,7 +25,7 @@
 //
 
 #include <unistd.h>
-#include "utils.h"
+#include "util/util.h"
 
 namespace milkcat {
 
