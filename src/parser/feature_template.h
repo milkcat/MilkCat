@@ -35,7 +35,6 @@ namespace milkcat {
 
 class TermInstance;
 class PartOfSpeechTagInstance;
-class TrieTree;
 class FeatureSet;
 class Status;
 class ReimuTrie;
@@ -109,7 +108,7 @@ class DependencyParser::FeatureTemplate {
   const TermInstance *term_instance_;
   const PartOfSpeechTagInstance *part_of_speech_tag_instance_;
   const State *state_;
-  TrieTree *feature_index_;
+  ReimuTrie *feature_index_;
   const std::vector<std::string> feature_template_;
 
   int min_count_;

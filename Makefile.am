@@ -28,7 +28,6 @@ lib_LIBRARIES = libmilkcat.a
 libmilkcat_a_SOURCES = src/libmilkcat.cc \
                        src/libmilkcat_capi.cc \
                        src/libmilkcat.h \
-                       src/common/darts.h \
                        src/common/instance_data.cc \
                        src/common/instance_data.h \
                        src/common/milkcat_config.h \
@@ -38,8 +37,6 @@ libmilkcat_a_SOURCES = src/libmilkcat.cc \
                        src/common/reimu_trie.h \
                        src/common/static_array.h \
                        src/common/static_hashtable.h \
-                       src/common/trie_tree.cc \
-                       src/common/trie_tree.h \
                        src/include/milkcat.h \
                        src/ml/beam.h \
                        src/ml/crf_model.cc \

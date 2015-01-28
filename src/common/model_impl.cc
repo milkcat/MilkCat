@@ -32,7 +32,6 @@
 #include "common/reimu_trie.h"
 #include "common/static_array.h"
 #include "common/static_hashtable.h"
-#include "common/trie_tree.h"
 #include "ml/crf_model.h"
 #include "ml/hmm_model.h"
 
@@ -94,7 +93,7 @@ Model::Impl::~Impl() {
 
   delete oov_property_;
   oov_property_ = NULL;
-  
+
   delete dependency_;
   dependency_ = NULL;
 

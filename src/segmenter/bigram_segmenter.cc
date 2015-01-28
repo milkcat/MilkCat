@@ -36,7 +36,6 @@
 #include "common/milkcat_config.h"
 #include "common/model_impl.h"
 #include "common/reimu_trie.h"
-#include "common/trie_tree.h"
 #include "include/milkcat.h"
 #include "segmenter/term_instance.h"
 #include "tokenizer/token_instance.h"

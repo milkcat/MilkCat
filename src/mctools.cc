@@ -37,11 +37,9 @@
 #include <string>
 #include <algorithm>
 #include <set>
-#include "common/darts.h"
 #include "common/reimu_trie.h"
 #include "common/static_array.h"
 #include "common/static_hashtable.h"
-#include "common/trie_tree.h"
 #include "ml/crf_model.h"
 #include "ml/crf_tagger.h"
 #include "ml/perceptron_model.h"

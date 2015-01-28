@@ -32,7 +32,6 @@
 #include <stdio.h>
 #include <map>
 #include "common/reimu_trie.h"
-#include "common/trie_tree.h"
 #include "ml/feature_set.h"
 #include "parser/node.h"
 #include "parser/state.h"
@@ -90,21 +89,19 @@ DependencyParser::FeatureTemplate::~FeatureTemplate() {
 }
 
 void DependencyParser::FeatureTemplate::InitializeFeatureIndex() {
-  std::map<std::string, int> feature_index;
-  feature_index["STw"] = kSTw;
-  feature_index["STt"] = kSTt;
-  feature_index["N0w"] = kN0w;
-  feature_index["N0t"] = kN0t;
-  feature_index["N1w"] = kN1w;
-  feature_index["N1t"] = kN1t;
-  feature_index["N2t"] = kN2t;
-  feature_index["STPt"] = kSTPt;
-  feature_index["STLCt"] = kSTLCt;
-  feature_index["STRCt"] = kSTRCt;
-  feature_index["N0LCt"] = kN0LCt;
-  feature_index["N0RCt"] = kN0RCt;
-
-  feature_index_ = DoubleArrayTrieTree::NewFromMap(feature_index);
+  feature_index_ = new ReimuTrie();
+  feature_index_->Put("STw", kSTw);
+  feature_index_->Put("STt", kSTt);
+  feature_index_->Put("N0w", kN0w);
+  feature_index_->Put("N0t", kN0t);
+  feature_index_->Put("N1w", kN1w);
+  feature_index_->Put("N1t", kN1t);
+  feature_index_->Put("N2t", kN2t);
+  feature_index_->Put("STPt", kSTPt);
+  feature_index_->Put("STLCt", kSTLCt);
+  feature_index_->Put("STRCt", kSTRCt);
+  feature_index_->Put("N0LCt", kN0LCt);
+  feature_index_->Put("N0RCt", kN0RCt);
 }
 
 int DependencyParser::FeatureTemplate::Extract(
@@ -135,6 +132,7 @@ int DependencyParser::FeatureTemplate::Extract(
 
   feature_set->Clear();
   bool ignore = false;
+  char feature_name[24];
   for (std::vector<std::string>::const_iterator 
        it = feature_template_.begin();
        it != feature_template_.end();
@@ -155,7 +153,9 @@ int DependencyParser::FeatureTemplate::Extract(
           ++q;
         }
         int len = q - p - 1;
-        int fid = feature_index_->Search(p + 1, len);
+        strlcpy(feature_name, p + 1, len + 1);
+        puts(feature_name);
+        int fid = feature_index_->Get(feature_name, -1);
 
         if (fid < 0) ERROR("Template file corrputed.");
         builder << single_feature_[fid];
