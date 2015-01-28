@@ -35,6 +35,7 @@
 #include "libmilkcat.h"
 #include "common/milkcat_config.h"
 #include "common/model_impl.h"
+#include "common/reimu_trie.h"
 #include "common/trie_tree.h"
 #include "include/milkcat.h"
 #include "segmenter/term_instance.h"
@@ -65,6 +66,19 @@ struct BigramSegmenter::Node {
   }
 };
 
+struct BigramSegmenter::TraverseState {
+  int index_from;
+  int userindex_from;
+  bool index_end;
+  bool userindex_end;
+
+  TraverseState(): index_from(0),
+                   userindex_from(0),
+                   index_end(false), 
+                   userindex_end(false) {
+  }
+};
+
 // Compare two Node in cost
 class BigramSegmenter::NodeComparator {
  public:
@@ -80,8 +94,7 @@ BigramSegmenter::BigramSegmenter(): beam_size_(0),
                                     bigram_cost_(NULL),
                                     index_(NULL),
                                     user_index_(NULL),
-                                    has_user_index_(false),
-                                    use_disabled_term_ids_(false) {
+                                    has_user_index_(false) {
 }
 
 BigramSegmenter::~BigramSegmenter() {
@@ -122,9 +135,6 @@ BigramSegmenter *BigramSegmenter::New(Model::Impl *model_factory,
   if (status->ok() && use_bigram == true) 
     self->bigram_cost_ = model_factory->BigramCost(status);
 
-  // Default is not use disabled term-ids
-  self->use_disabled_term_ids_ = false;
-
   if (status->ok()) {
     return self;
   } else {
@@ -139,30 +149,39 @@ BigramSegmenter *BigramSegmenter::New(Model::Impl *model_factory,
 // NOTE: If the word in current position exists both in system dictionary and
 // user dictionary, returns the term-id in system dictionary and stores the cost
 // of user dictionary into unigram_cost if its value is not kDefaultCost
-inline int BigramSegmenter::GetTermIdAndUnigramCost(
-    const char *token_str,
-    bool *system_flag,
-    bool *user_flag,
-    size_t *system_node,
-    size_t *user_node,
+int BigramSegmenter::GetTermIdAndUnigramCost(
+    const char *token_string,
+    TraverseState *traverse_state,
     double *right_cost) {
 
-  int term_id = TrieTree::kNone,
-      uterm_id = TrieTree::kNone;
+  ReimuTrie::int32 term_id, uterm_id;
 
-  if (*system_flag) {
-    term_id = index_->Traverse(token_str, system_node);
-    if (term_id == TrieTree::kNone) *system_flag = false;
+  if (traverse_state->index_end == false) {
+    bool exist = index_->Traverse(
+        &traverse_state->index_from,
+        token_string,
+        &term_id,
+        -1);
+    if (exist == false) {
+      traverse_state->index_end = true;
+      term_id = -1;
+    }
     if (term_id >= 0) {
       *right_cost = unigram_cost_->get(term_id);
       LOG("System unigram find ", term_id, " ", *right_cost);
     }
   }
 
-  if (*user_flag) {
-    uterm_id = user_index_->Traverse(token_str, user_node);
-    if (uterm_id == TrieTree::kNone) *user_flag = false;
-
+  if (traverse_state->userindex_end == false) {
+    bool exist = user_index_->Traverse(
+        &traverse_state->userindex_from,
+        token_string,
+        &uterm_id,
+        -1);
+    if (exist == false) {
+      traverse_state->userindex_end = true;
+      uterm_id = -1;
+    }
     if (uterm_id >= 0) {
       double cost = user_cost_->get(uterm_id - kUserTermIdStart);
       LOG("User unigram find ", uterm_id, " ", cost);
@@ -174,17 +193,10 @@ inline int BigramSegmenter::GetTermIdAndUnigramCost(
         // exist
         term_id = uterm_id;
       } else if (cost != kDefaultCost) {
-        // If word exists in system dictionary only when the cost in user
-        // dictionary not equals kDefaultCost, stores the cost to right_cost
+        // The word exists in both system and user index. So when the cost in 
+        // user index is not `kDefaultCost`, use the cost in user index.
         *right_cost = cost;
       }
-    }
-  }
-
-  // If term-id in disabled list, set term_id to TrieTree::kNone
-  if (use_disabled_term_ids_ == true) {
-    if (disabled_term_ids_.find(term_id) != disabled_term_ids_.end()) {
-      term_id = TrieTree::kNone;
     }
   }
 
@@ -216,27 +228,10 @@ inline double BigramSegmenter::CalculateBigramCost(int left_id,
   return cost;
 }
 
-int BigramSegmenter::GetTermId(const char *term_str) {
-  bool system_flag = true;
-  bool user_flag = has_user_index_;
-  size_t system_node = 0;
-  size_t user_node = 0;
-  double cost = 0.0;
-
-  return GetTermIdAndUnigramCost(term_str,
-                                 &system_flag,
-                                 &user_flag,
-                                 &system_node,
-                                 &user_node,
-                                 &cost);
-}
-
 void BigramSegmenter::BuildBeamFromPosition(TokenInstance *token_instance, 
                                             int position) {
-  size_t index_node = 0,
-         user_node = 0;
-  bool index_flag = true, 
-       user_flag = has_user_index_;
+  TraverseState traverse_state;
+  traverse_state.userindex_end = !has_user_index_;
   double cost, right_cost;
   const Node *node = NULL;
   Node *new_node = NULL;
@@ -245,15 +240,12 @@ void BigramSegmenter::BuildBeamFromPosition(TokenInstance *token_instance,
   const char *token_str = NULL;
   int length_end = token_instance->size() - position;
   for (int length = 0; length < length_end; ++length) {
-    LOG("Position: [", position, ", ", position + length + 1, ")");
+    LOG("Position: [%d, %d)\n", position, position + length + 1);
 
     // Get current term-id from system and user dictionary
     token_str = token_instance->token_text_at(position + length);
     int term_id = GetTermIdAndUnigramCost(token_str,
-                                          &index_flag,
-                                          &user_flag,
-                                          &index_node,
-                                          &user_node,
+                                          &traverse_state,
                                           &right_cost);
 
     double min_cost = 1e38;
@@ -286,6 +278,7 @@ void BigramSegmenter::BuildBeamFromPosition(TokenInstance *token_instance,
       // One token out-of-vocabulary word should be always put into Decode
       // Graph When no arc to next bucket
       if (length == 0 && beams_[position + 1]->size() == 0) {
+        LOG("Add OOV at %d\n", position);
         for (int node_id = 0;
              node_id < beams_[position]->size();
              ++node_id) {
@@ -304,7 +297,7 @@ void BigramSegmenter::BuildBeamFromPosition(TokenInstance *token_instance,
       }  // end if node count == 0
     }  // end if term_id >= 0
 
-    if (index_flag == false && user_flag == false) break;
+    if (traverse_state.index_end && traverse_state.userindex_end) break;
   }  // end for length
 }
 

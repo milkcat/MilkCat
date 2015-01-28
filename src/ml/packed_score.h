@@ -45,7 +45,7 @@ class PackedScore {
    public:
     IndexData(): index(0), data(T()) {}
     IndexData(int index, T data): index(index), data(data) {}
-    int index;
+    int32_t index;
     T data;
     bool operator<(const IndexData &right) const {
       return index < right.index;
@@ -57,6 +57,11 @@ class PackedScore {
   enum { kMagicNumber = 0x5a };
 
   PackedScore(): data_(NULL), size_(0) {
+  }
+
+  ~PackedScore() {
+    free(data_);
+    data_ = NULL;
   }
 
   // Initialize the iterator

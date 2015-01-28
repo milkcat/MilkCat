@@ -40,13 +40,16 @@
 
 namespace milkcat {
 
-class TrieTree;
+class ReimuTrie;
 class TokenInstance;
 class TermInstance;
-class Model;
 class Status;
 
 class BigramSegmenter: public Segmenter {
+ private:
+  // Stores the state in traversing the trie
+  struct TraverseState;
+
  public:
   // A node in decode graph
   struct Node;
@@ -62,26 +65,6 @@ class BigramSegmenter: public Segmenter {
 
   // Segment a token instance into term instance
   void Segment(TermInstance *term_instance, TokenInstance *token_instance);
-
-  // Get the recent segmentation cost
-  double RecentSegCost() { return cost_; }
-
-  // Get term-id by string. Return term-id if term exists, or a negative value
-  // if the term neither in system dictionary nor in user dictionry.
-  int GetTermId(const char *term_str);
-
-  // Add a disabled term-id to segmenter. When the term-id is disabled, just
-  // like it doesn't exists in the dictionary for segmenter.
-  void AddDisabledTermId(int term_id) {
-    use_disabled_term_ids_ = true;
-    disabled_term_ids_.insert(term_id);
-  }
-
-  // Clear all disabled term-ids in this segmenter
-  void ClearAllDisabledTermIds() {
-    disabled_term_ids_.clear();
-    use_disabled_term_ids_ = false;
-  }
 
  private:
   class NodeComparator;
@@ -101,18 +84,13 @@ class BigramSegmenter: public Segmenter {
   const StaticArray<float> *user_cost_;
   const StaticHashTable<int64_t, float> *bigram_cost_;
 
-
   // Index for words in dictionary
-  const TrieTree *index_;
-  const TrieTree *user_index_;
+  const ReimuTrie *index_;
+  const ReimuTrie *user_index_;
   bool has_user_index_;
 
   // Stores the final cost of recent segmentation
   double cost_;
-
-  // The disabled term-ids variables
-  bool use_disabled_term_ids_;
-  std::set<int> disabled_term_ids_;
 
   BigramSegmenter();
 
@@ -121,12 +99,10 @@ class BigramSegmenter: public Segmenter {
                              double left_cost,
                              double right_cost);
 
-  int GetTermIdAndUnigramCost(const char *token_str,
-                              bool *system_flag,
-                              bool *user_flag,
-                              size_t *system_node,
-                              size_t *user_node,
-                              double *right_cost);
+  int GetTermIdAndUnigramCost(
+      const char *token_string,
+      TraverseState *traverse_state,
+      double *right_cost);
 
   // Builds the beams_ from the words starts from current position in index
   void BuildBeamFromPosition(TokenInstance *token_instance, int position);

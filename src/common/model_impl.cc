@@ -29,9 +29,10 @@
 
 #include "ml/perceptron_model.h"
 #include "common/milkcat_config.h"
-#include "common/trie_tree.h"
+#include "common/reimu_trie.h"
 #include "common/static_array.h"
 #include "common/static_hashtable.h"
+#include "common/trie_tree.h"
 #include "ml/crf_model.h"
 #include "ml/hmm_model.h"
 
@@ -105,23 +106,28 @@ Model::Impl::~Impl() {
   dependency_feature_ = NULL;
 }
 
-const TrieTree *Model::Impl::Index(Status *status) {
+const ReimuTrie *Model::Impl::Index(Status *status) {
   mutex.Lock();
   if (unigram_index_ == NULL) {
     std::string model_path = model_dir_path_ + kUnigramIndexFile;
-    unigram_index_ = DoubleArrayTrieTree::New(model_path.c_str(), status);
+    unigram_index_ = ReimuTrie::Open(model_path.c_str());
+    if (unigram_index_ == NULL) {
+      std::string errmsg = "Unable to open ";
+      errmsg += model_path;
+      *status = Status::IOError(errmsg.c_str());
+    }
   }
   mutex.Unlock();
   return unigram_index_;
 }
 
-void Model::Impl::LoadUserDictionary(const char *path, Status *status) {
+void Model::Impl::ReadUserDictionary(const char *path, Status *status) {
   char line[1024], word[1024];
   std::string errmsg;
-  ReadableFile *fd;
+  ReadableFile *fd = NULL;
   float default_cost = kDefaultCost, cost;
-  std::vector<float> user_costs;
-  std::map<std::string, int> term_ids;
+  std::vector<float> user_cost;
+  ReimuTrie *user_index = new ReimuTrie();
 
   if (status->ok()) fd = ReadableFile::New(path, status);
   while (status->ok() && !fd->Eof()) {
@@ -140,28 +146,16 @@ void Model::Impl::LoadUserDictionary(const char *path, Status *status) {
         trim(word);
         cost = default_cost;
       }
-      term_ids.insert(std::pair<std::string, int>(
-          word, 
-          kUserTermIdStart + term_ids.size()));
-      user_costs.push_back(cost);
+      user_index->Put(word, kUserTermIdStart + user_cost.size());
+      user_cost.push_back(cost);
     }
   }
 
-  if (status->ok() && term_ids.size() == 0) {
-    errmsg = std::string("User dictionary ") + path + " is empty.";
-    *status = Status::Corruption(errmsg.c_str());
-  }
-
-
-  // Build the index and the cost array from user dictionary
-  if (status->ok()) {
-    delete user_index_;
-    user_index_ = DoubleArrayTrieTree::NewFromMap(term_ids);
-  }
   if (status->ok()) {
     delete user_cost_;
-    user_cost_ = StaticArray<float>::NewFromArray(user_costs.data(),
-                                                  user_costs.size());
+    user_index_ = user_index;
+    user_cost_ = StaticArray<float>::NewFromArray(user_cost.data(),
+                                                  user_cost.size());
   }
 
   delete fd;
@@ -170,7 +164,7 @@ void Model::Impl::LoadUserDictionary(const char *path, Status *status) {
 bool Model::Impl::SetUserDictionary(const char *path) {
   Status status;
   mutex.Lock();
-  LoadUserDictionary(path, &status);
+  ReadUserDictionary(path, &status);
   mutex.Unlock();
 
   if (status.ok()) {
@@ -180,29 +174,7 @@ bool Model::Impl::SetUserDictionary(const char *path) {
   }
 }
 
-void Model::Impl::SetUserDictionary(
-    const unordered_map<std::string, float> &words) {
-  std::map<std::string, int> term_ids;
-  std::vector<float> costs;
-
-  mutex.Lock();
-  for (unordered_map<std::string, float>::const_iterator
-       it = words.begin(); it != words.end(); ++it) {
-    term_ids.insert(std::make_pair(
-        it->first, 
-        kUserTermIdStart + term_ids.size()));
-    costs.push_back(it->second);
-  }
-
-  delete user_index_;
-  user_index_ = DoubleArrayTrieTree::NewFromMap(term_ids);
-
-  delete user_cost_;
-  user_cost_ = StaticArray<float>::NewFromArray(costs.data(), costs.size());
-  mutex.Unlock();  
-}
-
-const TrieTree *Model::Impl::UserIndex(Status *status) {
+const ReimuTrie *Model::Impl::UserIndex(Status *status) {
   if (user_index_) {
     return user_index_;
   } else {

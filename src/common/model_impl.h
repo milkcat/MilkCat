@@ -55,16 +55,15 @@ class Model::Impl {
 
   // Get the index for word which were used in unigram cost, bigram cost
   // hmm pos model and oov property
-  const TrieTree *Index(Status *status);
+  const ReimuTrie *Index(Status *status);
 
   // Sets the user dictionary for the segmenter
   bool SetUserDictionary(const char *path);
-  void SetUserDictionary(const unordered_map<std::string, float> &words);
 
   // If the model has loaded the user dictionary
   bool HasUserDictionary() const { return user_index_ != NULL; }
 
-  const TrieTree *UserIndex(Status *status);
+  const ReimuTrie *UserIndex(Status *status);
   const StaticArray<float> *UserCost(Status *status);
 
   const StaticArray<float> *UnigramCost(Status *status);
@@ -95,8 +94,8 @@ class Model::Impl {
   std::string model_dir_path_;
   Mutex mutex;
 
-  const TrieTree *unigram_index_;
-  const TrieTree *user_index_;
+  const ReimuTrie *unigram_index_;
+  const ReimuTrie *user_index_;
   const StaticArray<float> *unigram_cost_;
   const StaticArray<float> *user_cost_;
   const StaticHashTable<int64_t, float> *bigram_cost_;
@@ -109,7 +108,7 @@ class Model::Impl {
   DependencyParser::FeatureTemplate *dependency_feature_;
 
   // Load and set the user dictionary data specified by path
-  void LoadUserDictionary(const char *userdict_path, Status *status);
+  void ReadUserDictionary(const char *userdict_path, Status *status);
 };
 
 }  // namespace milkcat
