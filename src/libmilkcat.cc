@@ -46,6 +46,7 @@
 #include "parser/beam_yamada_parser.h"
 #include "parser/dependency_parser.h"
 #include "parser/tree_instance.h"
+#include "parser/yamada_parser.h"
 #include "tokenizer/tokenizer.h"
 #include "tokenizer/token_instance.h"
 #include "util/util.h"
@@ -75,8 +76,9 @@ enum ParserType {
   kNoTagger = 0x000ff000,
 
   // Depengency parser type
-  kArcEagerParser = 0x00100000,
-  kNoParser = 0x00000000,
+  kYamadaParser = 0x00100000,
+  kBeamYamadaParser = 0x00200000,
+  kNoParser = 0x00000000
 };
 
 Tokenization *TokenizerFactory(int analyzer_type) {
@@ -162,7 +164,14 @@ DependencyParser *DependencyParserFactory(Model::Impl *factory,
                                           Status *status) {
   parser_type = kParserMask & parser_type;
   switch (parser_type) {
-    case kArcEagerParser:
+    case kYamadaParser:
+      if (status->ok()) {
+        return YamadaParser::New(factory, status);
+      } else {
+        return NULL;
+      }
+
+    case kBeamYamadaParser:
       if (status->ok()) {
         return BeamYamadaParser::New(factory, status);
       } else {
@@ -423,9 +432,13 @@ void Parser::Options::UseCrfPOSTagger() {
 void Parser::Options::NoPOSTagger() {
   tagger_type_ = kNoTagger;
 }
-void Parser::Options::UseArcEagerDependencyParser() {
+void Parser::Options::UseBeamYamadaParser() {
   if (tagger_type_ == kNoTagger) tagger_type_ = kMixedTagger;
-  parser_type_ = kArcEagerParser;
+  parser_type_ = kBeamYamadaParser;
+}
+void Parser::Options::UseYamadaParser() {
+  if (tagger_type_ == kNoTagger) tagger_type_ = kMixedTagger;
+  parser_type_ = kYamadaParser;
 }
 void Parser::Options::NoDependencyParser() {
   parser_type_ = kNoParser;

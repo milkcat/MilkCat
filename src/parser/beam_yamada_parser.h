@@ -51,7 +51,8 @@ class BeamYamadaParser: public DependencyParser {
  public:
   BeamYamadaParser(
       PerceptronModel *perceptron_model,
-      FeatureTemplate *feature);
+      FeatureTemplate *feature,
+      int beam_size);
   ~BeamYamadaParser();
 
   // Training the BeamYamadaParser from `training_corpus` with
@@ -62,10 +63,11 @@ class BeamYamadaParser: public DependencyParser {
       const char *template_filename,
       const char *model_prefix,
       int max_iteration,
+      int beam_size,
       Status *status);
 
-  static BeamYamadaParser *New(Model::Impl *model,
-                                           Status *status);
+  static BeamYamadaParser *New(Model::Impl *model, Status *status);
+
   // Overrides DependencyParser::Parse
   void Parse(
       TreeInstance *tree_instance,
@@ -75,14 +77,12 @@ class BeamYamadaParser: public DependencyParser {
  private:
   class StateCmp;
 
-  enum {
-    kBeamSize = 8
-  };
   Pool<State> *state_pool_;
   float *agent_;
   Beam<State, StateCmp> *beam_;
   Beam<State, StateCmp> *next_beam_;
   int agent_size_;
+  int beam_size_;
 
   // Copys `state` and applies transition `yid` to the new state
   State *StateCopyAndMove(State *state, int yid);
@@ -96,15 +96,6 @@ class BeamYamadaParser: public DependencyParser {
 
   // Stores the parsing result into tree_instance
   void StoreResult(TreeInstance *tree_instance);
-
-  // Dumps the beam data (Just for debugging)
-  void DumpBeam();
-
-  // Generates the possible transitions of the stack0 and input0 postag pair
-  void GeneratePosTagBigramLabel(
-      const char *training_corpus,
-      BeamYamadaParser *parser,
-      Status *status);
 
   // Extracts features from `state` and put into `feature_set_`
   void ExtractFeatureFromState(const State* state);

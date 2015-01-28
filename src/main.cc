@@ -156,8 +156,11 @@ void GetArgs(int argc, char **argv, Options *options) {
           options->parser_options.NoPOSTagger();
           options->display_tag = false;   
         } else if (strcmp(optarg, "dep") == 0) {
-          options->parser_options.UseArcEagerDependencyParser();
-          options->conll_format = true;   
+          options->parser_options.UseYamadaParser();
+          options->conll_format = true;
+        } else if (strcmp(optarg, "beam_dep") == 0) {
+          options->parser_options.UseBeamYamadaParser();
+          options->conll_format = true;  
         } else {
           PrintUsage();
           exit(1);

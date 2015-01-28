@@ -55,20 +55,7 @@ const char bigram_test_word[][64] = {
   "博丽灵梦", "是", "与", "雾雨魔理沙", "并列", "的", "第一", "自", "机"
 };
 
-int parser_test() {
-  Model *model = Model::New(MODEL_DIR);
-  assert(model);
-
-  Parser::Options options;
-  options.UseMixedSegmenter();
-  options.UseMixedPOSTagger();
-  options.UseArcEagerDependencyParser();
-
-  Parser *parser = Parser::New(options, model);
-  assert(parser);
-  Parser::Iterator *parseriter = new Parser::Iterator();
-  parser->Predict(parseriter, "我的猫喜欢喝牛奶");
-
+void check_prediction(Parser::Iterator *parseriter) {
   for (int i = 0; i < kLength; ++i) {
     assert(parseriter->End() == false);
     if (i == 0) {
@@ -82,12 +69,37 @@ int parser_test() {
     assert(parseriter->head() == head[i]);
     parseriter->Next();
   }
+} 
 
+int parser_test() {
+  Model *model = Model::New(MODEL_DIR);
+  assert(model);
+
+  Parser::Options options;
+  options.UseMixedSegmenter();
+  options.UseMixedPOSTagger();
+  options.UseBeamYamadaParser();
+
+  // Testes beam yamada parser
+  Parser *parser = Parser::New(options, model);
+  assert(parser);
+  Parser::Iterator *parseriter = new Parser::Iterator();
+  parser->Predict(parseriter, "我的猫喜欢喝牛奶");
+  check_prediction(parseriter);
   assert(parseriter->End() == true);
-  delete parseriter;
   delete parser;
+
+  // Testes beam yamada parser
+  options.UseYamadaParser();
+  parser = Parser::New(options, model);
+  assert(parser);
+  parser->Predict(parseriter, "我的猫喜欢喝牛奶");
+  check_prediction(parseriter);
+  assert(parseriter->End() == true);
+  delete parser;
+
+  delete parseriter;
   delete model;
-  
   return 0;
 }
 

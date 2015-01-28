@@ -63,7 +63,7 @@ YamadaParser::~YamadaParser() {
 }
 
 YamadaParser *YamadaParser::New(Model::Impl *model_impl, Status *status) {
-  PerceptronModel *perceptron_model = model_impl->DependencyModel(status);
+  PerceptronModel *perceptron_model = model_impl->YamadaModel(status);
 
   FeatureTemplate *feature_template = NULL;
   if (status->ok()) feature_template = model_impl->DependencyTemplate(status);

@@ -55,20 +55,6 @@
 
 namespace milkcat {
 
-#pragma pack(1)
-struct BigramRecord {
-  int32_t word_left;
-  int32_t word_right;
-  float weight;
-};
-
-struct HMMEmitRecord {
-  int32_t term_id;
-  int32_t tag_id;
-  float weight;
-};
-#pragma pack(0)
-
 #define UNIGRAM_INDEX_FILE "unigram.idx"
 #define UNIGRAM_DATA_FILE "unigram.bin"
 #define BIGRAM_FILE "bigram.bin"
@@ -320,23 +306,25 @@ void DisplayProgress(int64_t bytes_processed,
           bytes_per_second / static_cast<double>(1024 * 1024));
 }
 
-int TrainNaiveArcEagerDependendyParser(int argc, char **argv) {
-  if (argc != 6) {
+int TrainDependendyParser(int argc, char **argv) {
+  if (argc != 7) {
     fprintf(stderr,
             "Usage: milkcat-tools --depparser-train corpus_file template_file "
-            "model_file iteration\n");
+            "model_file beam_size iteration\n");
     return 1;
   }
   const char *corpus_file = argv[2];
   const char *template_file = argv[3];
   const char *model_prefix = argv[4];
-  int max_iteration = atol(argv[5]);
+  int beam_size = atol(argv[5]);
+  int max_iteration = atol(argv[6]);
 
   Status status;
   BeamYamadaParser::Train(
       corpus_file,
       template_file,
       model_prefix,
+      beam_size,
       max_iteration,
       &status);
 
@@ -350,15 +338,16 @@ int TrainNaiveArcEagerDependendyParser(int argc, char **argv) {
 }
 
 int TestDependendyParser(int argc, char **argv) {
-  if (argc != 5) {
+  if (argc != 6) {
     fprintf(stderr,
             "Usage: milkcat-tools --depparser-test corpus_file template_file "
-            "model_file\n");
+            "model_file beam_size\n");
     return 1;
   }
   const char *corpus_file = argv[2];
   const char *template_file = argv[3];
   const char *model_prefix = argv[4];
+  int beam_size = atol(argv[5]);
   char filename[2048];
 
   Status status;
@@ -373,7 +362,7 @@ int TestDependendyParser(int argc, char **argv) {
   BeamYamadaParser *parser = NULL;
   double LAS, UAS;
   if (status.ok()) {
-    parser = new BeamYamadaParser(model, feature);
+    parser = new BeamYamadaParser(model, feature, beam_size);
     // parser = new NaiveArceagerDependencyParser(model, feature);
     DependencyParser::Test(
         corpus_file,
@@ -490,7 +479,7 @@ int main(int argc, char **argv) {
   } else if (strcmp(tool, "multiperc") == 0) {
     return milkcat::MakeMulticlassPerceptronFile(argc, argv);
   } else if (strcmp(tool, "--depparser-train") == 0) {
-    return milkcat::TrainNaiveArcEagerDependendyParser(argc, argv);
+    return milkcat::TrainDependendyParser(argc, argv);
   } else if (strcmp(tool, "--depparser-test") == 0) {
     return milkcat::TestDependendyParser(argc, argv);
   } else if (strcmp(tool, "--postagger-test") == 0) {

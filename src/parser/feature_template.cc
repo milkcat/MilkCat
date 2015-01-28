@@ -154,7 +154,6 @@ int DependencyParser::FeatureTemplate::Extract(
         }
         int len = q - p - 1;
         strlcpy(feature_name, p + 1, len + 1);
-        puts(feature_name);
         int fid = feature_index_->Get(feature_name, -1);
 
         if (fid < 0) ERROR("Template file corrputed.");

@@ -63,13 +63,14 @@ class BeamYamadaParser::StateCmp {
 
 BeamYamadaParser::BeamYamadaParser(
     PerceptronModel *perceptron_model,
-    FeatureTemplate *feature):
-        DependencyParser(perceptron_model, feature) {
+    FeatureTemplate *feature,
+    int beam_size): DependencyParser(perceptron_model, feature) {
   state_pool_ = new Pool<State>();
-  agent_ = new float[perceptron_model->ysize() * kBeamSize];
-  beam_ = new Beam<State, StateCmp>(kBeamSize);
-  next_beam_ = new Beam<State, StateCmp>(kBeamSize);
+  agent_ = new float[perceptron_model->ysize() * beam_size];
+  beam_ = new Beam<State, StateCmp>(beam_size);
+  next_beam_ = new Beam<State, StateCmp>(beam_size);
   agent_size_ = 0;
+  beam_size_ = beam_size;
 }
 
 BeamYamadaParser::~BeamYamadaParser() {
@@ -88,14 +89,16 @@ BeamYamadaParser::~BeamYamadaParser() {
 
 BeamYamadaParser *
 BeamYamadaParser::New(Model::Impl *model, Status *status) {
-  PerceptronModel *perceptron_model = model->DependencyModel(status);
+  PerceptronModel *perceptron_model = model->BeamYamadaModel(status);
 
   FeatureTemplate *feature_template = NULL;
   if (status->ok()) feature_template = model->DependencyTemplate(status);
 
   BeamYamadaParser *self = NULL;
   if (status->ok()) {
-    self = new BeamYamadaParser(perceptron_model, feature_template);
+    self = new BeamYamadaParser(perceptron_model,
+                                feature_template,
+                                kParserBeamSize);
   }
 
   if (status->ok()) {
@@ -168,7 +171,7 @@ bool BeamYamadaParser::Step() {
   }
   agent_size_ = beam_->size() * ysize;
   
-  // Partial sorts the agent to get the N-best transitions (N = kBeamSize)
+  // Partial sorts the agent to get the N-best transitions (N = beam_size_)
   CompareIdxByCostInArray cmp(agent_, agent_size_);
   std::vector<int> idx_heap;
   for (int agent_idx = 0; agent_idx < agent_size_; ++agent_idx) {
@@ -176,7 +179,7 @@ bool BeamYamadaParser::Step() {
     int beam_idx = agent_idx / ysize;
     if (Allow(beam_->at(beam_idx), yid)) {
       // If state allows transition `yid`, stores them into `idx_heap`
-      if (idx_heap.size() < kBeamSize) {
+      if (idx_heap.size() < beam_size_) {
         idx_heap.push_back(agent_idx);
         std::push_heap(idx_heap.begin(), idx_heap.end(), cmp);
       } else if (cmp(idx_heap[0], agent_idx) == false) {
@@ -231,28 +234,6 @@ void BeamYamadaParser::Parse(
   StoreResult(tree_instance);
 }
 
-void BeamYamadaParser::DumpBeam() {
-  for (int beam_idx = 0; beam_idx < beam_->size(); ++beam_idx) {
-    State *state = beam_->at(beam_idx);
-    std::vector<int> sequence;
-    std::vector<bool> corr_sequence;
-    while (state->previous() != NULL) {
-      sequence.push_back(state->last_transition());
-      corr_sequence.push_back(state->correct());
-      state = state->previous();
-    }
-    printf("BEAM %d: ", beam_idx);
-    while (!sequence.empty()) {
-      printf("%s(%c)  ",
-             perceptron_->yname(sequence.back()),
-             corr_sequence.back()? 'T': 'F');
-      sequence.pop_back();
-      corr_sequence.pop_back();
-    }
-    printf(", weight = %f\n", beam_->at(beam_idx)->weight());
-  }
-}
-
 void BeamYamadaParser::ExtractFeatureFromState(
     const State* state) {
   int feature_num = feature_->Extract(state,
@@ -299,6 +280,7 @@ void BeamYamadaParser::Train(
     const char *training_corpus,
     const char *template_filename,
     const char *model_prefix,
+    int beam_size,
     int max_iteration,
     Status *status) {
   // Some instances
@@ -345,7 +327,7 @@ void BeamYamadaParser::Train(
   if (status->ok()) {
     std::vector<std::string> yname(yname_set.begin(), yname_set.end());
     model = new PerceptronModel(yname);
-    parser = new BeamYamadaParser(model, feature);
+    parser = new BeamYamadaParser(model, feature, beam_size);
     perceptron = new Perceptron(model);
   }
 

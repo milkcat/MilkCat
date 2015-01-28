@@ -46,7 +46,8 @@ const char *kCrfPosModelFile = "ctb_pos.crf";
 const char *kCrfSegModelFile = "ctb_seg.crf";
 const char *kOovPropertyFile = "oov_property.idx";
 const char *kStopwordFile = "stopword.idx";
-const char *kDepengencyFilePrefix = "ctb5_dep";
+const char *kBeamYamadaModelPrefix = "ctb_dep.b8";
+const char *kYamadaModelPrefix = "ctb_dep.b1";
 const char *kDependenctTemplateFile = "depparse.tmpl";
 
 // ---------- Model::Impl ----------
@@ -254,10 +255,20 @@ const ReimuTrie *Model::Impl::OOVProperty(Status *status) {
   return oov_property_;
 }
 
-PerceptronModel *Model::Impl::DependencyModel(Status *status) {
+PerceptronModel *Model::Impl::YamadaModel(Status *status) {
   mutex.Lock();
   if (dependency_ == NULL) {
-    std::string prefix = model_dir_path_ + kDepengencyFilePrefix;
+    std::string prefix = model_dir_path_ + kYamadaModelPrefix;
+    dependency_ = PerceptronModel::Open(prefix.c_str(), status);
+  }
+  mutex.Unlock();
+  return dependency_;  
+}
+
+PerceptronModel *Model::Impl::BeamYamadaModel(Status *status) {
+  mutex.Lock();
+  if (dependency_ == NULL) {
+    std::string prefix = model_dir_path_ + kBeamYamadaModelPrefix;
     dependency_ = PerceptronModel::Open(prefix.c_str(), status);
   }
   mutex.Unlock();

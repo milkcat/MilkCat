@@ -82,7 +82,8 @@ class Model::Impl {
   const ReimuTrie *OOVProperty(Status *status);
 
   // Get the dependency model
-  PerceptronModel *DependencyModel(Status *status);
+  PerceptronModel *YamadaModel(Status *status);
+  PerceptronModel *BeamYamadaModel(Status *status);
 
   // Get the feature template for dependency parsing
   DependencyParser::FeatureTemplate *DependencyTemplate(Status *status);

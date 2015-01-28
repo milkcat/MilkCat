@@ -18,9 +18,12 @@ dist_pkgdata_DATA = data/bigram.bin \
                     data/unigram.bin \
                     data/unigram.idx \
                     data/depparse.tmpl \
-                    data/ctb5_dep.meta \
-                    data/ctb5_dep.x.idx \
-                    data/ctb5_dep.cost.data
+                    data/ctb_dep.b1.meta \
+                    data/ctb_dep.b1.x.idx \
+                    data/ctb_dep.b1.cost.data \
+                    data/ctb_dep.b8.meta \
+                    data/ctb_dep.b8.x.idx \
+                    data/ctb_dep.b8.cost.data
 
 include_HEADERS = src/include/milkcat.h
 

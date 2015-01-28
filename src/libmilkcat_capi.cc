@@ -98,8 +98,11 @@ mc_parser_t *mc_parser_new(mc_parseropt_t *parseropt, mc_model_t *model) {
     case MC_NO_DEPPARSER:
       option.NoDependencyParser();
       break;
-    case MC_BEAM_DEPPARSER:
-      option.UseArcEagerDependencyParser();
+    case MC_YAMADA_DEPPARSER:
+      option.UseYamadaParser();
+      break;
+    case MC_BEAMYAMADA_DEPPARSER:
+      option.UseBeamYamadaParser();
       break;
     default:
       milkcat::global_status = milkcat::Status::RuntimeError(

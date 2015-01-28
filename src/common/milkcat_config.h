@@ -43,7 +43,8 @@ enum {
   kHmmModelMagicNumber = 0x3322,
   kMulticlassPerceptronModelMagicNumber = 0x1a1a,
   kCrfModelMagicNumber = 0x1234,
-  kLabelSizeMax = 64
+  kLabelSizeMax = 64,
+  kParserBeamSize = 8
 };
 
 const float kDefaultCost = 6.0;

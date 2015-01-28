@@ -118,7 +118,8 @@ class Parser::Options {
   void UseCrfPOSTagger();
   void NoPOSTagger();
 
-  void UseArcEagerDependencyParser();
+  void UseYamadaParser();
+  void UseBeamYamadaParser();
   void NoDependencyParser();
 
   // Get the type value of current setting
@@ -202,7 +203,8 @@ typedef struct mc_parseriter_t {
 #define MC_NO_POSTAGGER 3
 
 #define MC_NO_DEPPARSER 0
-#define MC_BEAM_DEPPARSER 1
+#define MC_YAMADA_DEPPARSER 1
+#define MC_BEAMYAMADA_DEPPARSER 2
 
 typedef struct mc_parseropt_t {
   int segmenter;
