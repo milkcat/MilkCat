@@ -50,6 +50,11 @@ const char label[][64] = {
   "NMOD", "DEG", "SBJ", "ROOT", "OBJ", "OBJ"
 };
 
+const int kBigramTextLength = 9;
+const char bigram_test_word[][64] = {
+  "博丽灵梦", "是", "与", "雾雨魔理沙", "并列", "的", "第一", "自", "机"
+};
+
 int parser_test() {
   Model *model = Model::New(MODEL_DIR);
   assert(model);
@@ -96,6 +101,10 @@ int empty_string_test() {
   Parser::Iterator *parseriter = new Parser::Iterator();
   parser->Predict(parseriter, "");
   assert(parseriter->End() == true);
+
+  // Checks calling Next function after End() == true 
+  parseriter->Next();
+  parseriter->Next();
   delete parseriter;
   delete parser;
   delete model;
@@ -103,9 +112,48 @@ int empty_string_test() {
   return 0;
 }
 
+int bigram_segmenter_test() {
+  // Prepares user dictionary
+  FILE *fd = fopen("user.txt", "w");
+  assert(fd);
+
+  fputs("博丽灵梦\n", fd);
+  fputs("雾雨魔理沙 2.0\n", fd);
+  fputs("一自 100.0\n", fd);
+  fclose(fd);
+
+  Model *model = Model::New(MODEL_DIR);
+  assert(model->SetUserDictionary("NOT_EXIST.txt") == false);
+  assert(model->SetUserDictionary("user.txt") == true);
+  assert(model);
+
+  Parser::Options options;
+  options.UseBigramSegmenter();
+  options.NoPOSTagger();
+  Parser *parser = Parser::New(options, model);
+  assert(parser);
+  Parser::Iterator *parseriter = new Parser::Iterator();
+  parser->Predict(parseriter, "博丽灵梦是与雾雨魔理沙并列的第一自机");
+
+  for (int i = 0; i < kBigramTextLength; ++i) {
+    assert(parseriter->End() == false);
+    puts(parseriter->word());
+    assert(strcmp(parseriter->word(), bigram_test_word[i]) == 0);
+    parseriter->Next();
+  }
+
+  assert(parseriter->End() == true);
+  delete parseriter;
+  delete parser;
+  delete model;
+  
+  return 0; 
+}
+
 int main() {
   parser_test();
   empty_string_test();
+  bigram_segmenter_test();
 
   return 0;
 }
