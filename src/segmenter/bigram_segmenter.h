@@ -74,7 +74,7 @@ class BigramSegmenter: public Segmenter {
   int beam_size_;
 
   // Buckets contain nodes for viterbi decoding
-  Beam<Node, NodeComparator> *beams_[kTokenMax + 1];
+  Beam<Node, NodeComparator> *lattice_[kTokenMax + 1];
 
   // NodePool instance to alloc and release node
   Pool<Node> *node_pool_;
@@ -89,8 +89,6 @@ class BigramSegmenter: public Segmenter {
   const ReimuTrie *user_index_;
   bool has_user_index_;
 
-  // Stores the final cost of recent segmentation
-  double cost_;
 
   BigramSegmenter();
 
@@ -104,12 +102,12 @@ class BigramSegmenter: public Segmenter {
       TraverseState *traverse_state,
       double *right_cost);
 
-  // Builds the beams_ from the words starts from current position in index
-  void BuildBeamFromPosition(TokenInstance *token_instance, int position);
+  // Adds possible term to the lattice at `position`
+  void AddPossibleTermToLattice(TokenInstance *token_instance, int position);
 
-  // Finds the best result from beams_ and save the result to term_instance 
-  void FindTheBestResult(TermInstance *term_instance,
-                         TokenInstance *token_instance);
+  // Finds the best result from lattice and stores into term_instance 
+  void StoreResult(TermInstance *term_instance,
+                   TokenInstance *token_instance);
 };
 
 }  // namespace milkcat

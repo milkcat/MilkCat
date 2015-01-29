@@ -101,10 +101,10 @@ BigramSegmenter::~BigramSegmenter() {
   node_pool_ = NULL;
 
   for (int i = 0;
-       i < sizeof(beams_) / sizeof(Beam<Node, NodeComparator> *);
+       i < sizeof(lattice_) / sizeof(Beam<Node, NodeComparator> *);
        ++i) {
-    delete beams_[i];
-    beams_[i] = NULL;
+    delete lattice_[i];
+    lattice_[i] = NULL;
   }
 }
 
@@ -116,11 +116,11 @@ BigramSegmenter *BigramSegmenter::New(Model::Impl *model_factory,
   self->beam_size_ = use_bigram? kDefaultBeamSize: 1;
   self->node_pool_ = new Pool<Node>();
 
-  // Initialize the beams_
+  // Initialize the lattice_
   for (int i = 0;
-       i < sizeof(self->beams_) / sizeof(Beam<Node, NodeComparator> *);
+       i < sizeof(self->lattice_) / sizeof(Beam<Node, NodeComparator> *);
        ++i) {
-    self->beams_[i] = new Beam<Node, NodeComparator>(self->beam_size_);
+    self->lattice_[i] = new Beam<Node, NodeComparator>(self->beam_size_);
   }
 
   self->index_ = model_factory->Index(status);
@@ -230,15 +230,15 @@ inline double BigramSegmenter::CalculateBigramCost(int left_id,
   return cost;
 }
 
-void BigramSegmenter::BuildBeamFromPosition(TokenInstance *token_instance, 
-                                            int position) {
+void BigramSegmenter::AddPossibleTermToLattice(
+    TokenInstance *token_instance, int position) {
   TraverseState traverse_state;
   traverse_state.userindex_end = !has_user_index_;
   double cost, right_cost;
   const Node *node = NULL;
   Node *new_node = NULL;
 
-  beams_[position]->Shrink();
+  lattice_[position]->Shrink();
   const char *token_str = NULL;
   int length_end = token_instance->size() - position;
   for (int length = 0; length < length_end; ++length) {
@@ -252,14 +252,14 @@ void BigramSegmenter::BuildBeamFromPosition(TokenInstance *token_instance,
     double min_cost = 1e38;
     const Node *min_node = NULL;
 
-    assert(beams_[position]->size() > 0);
+    assert(lattice_[position]->size() > 0);
 
     if (term_id >= 0) {
       // This token exists in unigram data
       for (int node_id = 0;
-           node_id < beams_[position]->size();
+           node_id < lattice_[position]->size();
            ++node_id) {
-        node = beams_[position]->at(node_id);
+        node = lattice_[position]->at(node_id);
         double cost = CalculateBigramCost(node->term_id,
                                           term_id,
                                           node->cost,
@@ -273,16 +273,16 @@ void BigramSegmenter::BuildBeamFromPosition(TokenInstance *token_instance,
       // Add the min_node to decode graph
       new_node = node_pool_->Alloc();
       new_node->set_value(position + length + 1, term_id, min_cost, min_node);
-      beams_[position + length + 1]->Add(new_node);
+      lattice_[position + length + 1]->Add(new_node);
     } else {
       // One token out-of-vocabulary word should be always put into Decode
       // Graph When no arc to next bucket
-      if (length == 0 && beams_[position + 1]->size() == 0) {
+      if (length == 0 && lattice_[position + 1]->size() == 0) {
         LOG("Add OOV at %d\n", position);
         for (int node_id = 0;
-             node_id < beams_[position]->size();
+             node_id < lattice_[position]->size();
              ++node_id) {
-          node = beams_[position]->at(node_id);
+          node = lattice_[position]->at(node_id);
           cost = node->cost + 20;
 
           if (cost < min_cost) {
@@ -293,7 +293,7 @@ void BigramSegmenter::BuildBeamFromPosition(TokenInstance *token_instance,
 
         new_node = node_pool_->Alloc();
         new_node->set_value(position + length + 1, 0, min_cost, min_node);
-        beams_[position + 1]->Add(new_node);
+        lattice_[position + 1]->Add(new_node);
       }  // end if node count == 0
     }  // end if term_id >= 0
 
@@ -301,13 +301,10 @@ void BigramSegmenter::BuildBeamFromPosition(TokenInstance *token_instance,
   }  // end for length
 }
 
-void BigramSegmenter::FindTheBestResult(TermInstance *term_instance, 
-                                        TokenInstance *token_instance) {
+void BigramSegmenter::StoreResult(TermInstance *term_instance, 
+                                  TokenInstance *token_instance) {
   // Find the best result from decoding graph
-  const Node *node = beams_[token_instance->size()]->Best();
-
-  // Set the cost data for RecentSegCost()
-  cost_ = node->cost;
+  const Node *node = lattice_[token_instance->size()]->Best();
 
   term_instance->set_size(node->term_position + 1);
   int beam_id, from_beam_id, term_type;
@@ -341,19 +338,19 @@ void BigramSegmenter::Segment(TermInstance *term_instance,
   Node *new_node = node_pool_->Alloc();
   new_node->set_value(0, 0, 0, NULL);
   // Add begin-of-sentence node
-  beams_[0]->Add(new_node);
+  lattice_[0]->Add(new_node);
 
   // Strat decoding
   for (int beam_id = 0; beam_id < token_instance->size(); ++beam_id) {
     // Shrink current bucket to ensure node number < n_best
-    BuildBeamFromPosition(token_instance, beam_id);
+    AddPossibleTermToLattice(token_instance, beam_id);
   }  // end for decode_start
 
-  FindTheBestResult(term_instance, token_instance);
+  StoreResult(term_instance, token_instance);
 
   // Clear decode_node
   for (int i = 0; i < token_instance->size() + 1; ++i) {
-    beams_[i]->Clear();
+    lattice_[i]->Clear();
   }
   node_pool_->ReleaseAll();
 }
