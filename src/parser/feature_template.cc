@@ -29,6 +29,7 @@
 #include "parser/feature_template.h"
 #include "parser/feature_template-inl.h"
 
+#include <assert.h>
 #include <stdio.h>
 #include <map>
 #include "common/reimu_trie.h"
@@ -45,63 +46,103 @@ namespace milkcat {
 const char *DependencyParser::FeatureTemplate::kRootTerm = "ROOT";
 const char *DependencyParser::FeatureTemplate::kRootTag = "ROOT";
 
-DependencyParser::FeatureTemplate::FeatureTemplate(
-    const std::vector<std::string> &feature_template): 
-        term_instance_(NULL),
-        part_of_speech_tag_instance_(NULL),
-        state_(NULL),
-        feature_index_(NULL),
-        feature_template_(feature_template),
-        word_count_(NULL),
-        min_count_(0) {
-  InitializeFeatureIndex();
+DependencyParser::FeatureTemplate::FeatureTemplate(): 
+    term_instance_(NULL),
+    part_of_speech_tag_instance_(NULL),
+    state_(NULL) {
 }
 
 DependencyParser::FeatureTemplate *
 DependencyParser::FeatureTemplate::Open(const char *filename, Status *status) {
   // Read template file
   char line[1024];
-  std::vector<std::string> template_vector;
+  std::vector<std::string> feature_template;
   ReadableFile *fd = ReadableFile::New(filename, status);
+
+  FeatureTemplate *self = new FeatureTemplate();
 
   while (status->ok() && !fd->Eof()) {
     fd->ReadLine(line, sizeof(line), status);
     if (status->ok()) {
       trim(line);
-      template_vector.push_back(line);
+      feature_template.push_back(line);
     }
   }
   delete fd;
   fd = NULL;
 
+  // Compiles the template
+  if (status->ok())  self->CompileTemplate(feature_template, status);
+
   if (status->ok()) {
-    DependencyParser::FeatureTemplate *
-    self = new DependencyParser::FeatureTemplate(template_vector);
     return self;
   } else {
+    delete self;
     return NULL;
   }
 }
 
 DependencyParser::FeatureTemplate::~FeatureTemplate() {
-  delete feature_index_;
-  feature_index_ = NULL;
 }
 
-void DependencyParser::FeatureTemplate::InitializeFeatureIndex() {
-  feature_index_ = new ReimuTrie();
-  feature_index_->Put("STw", kSTw);
-  feature_index_->Put("STt", kSTt);
-  feature_index_->Put("N0w", kN0w);
-  feature_index_->Put("N0t", kN0t);
-  feature_index_->Put("N1w", kN1w);
-  feature_index_->Put("N1t", kN1t);
-  feature_index_->Put("N2t", kN2t);
-  feature_index_->Put("STPt", kSTPt);
-  feature_index_->Put("STLCt", kSTLCt);
-  feature_index_->Put("STRCt", kSTRCt);
-  feature_index_->Put("N0LCt", kN0LCt);
-  feature_index_->Put("N0RCt", kN0RCt);
+
+void DependencyParser::FeatureTemplate::CompileTemplate(
+    const std::vector<std::string> &feature_template,
+    Status *status) {
+  ReimuTrie *feature_index = new ReimuTrie();
+  feature_index->Put("STw", kSTw);
+  feature_index->Put("STt", kSTt);
+  feature_index->Put("N0w", kN0w);
+  feature_index->Put("N0t", kN0t);
+  feature_index->Put("N1w", kN1w);
+  feature_index->Put("N1t", kN1t);
+  feature_index->Put("N2t", kN2t);
+  feature_index->Put("STPt", kSTPt);
+  feature_index->Put("STLCt", kSTLCt);
+  feature_index->Put("STRCt", kSTRCt);
+  feature_index->Put("N0LCt", kN0LCt);
+  feature_index->Put("N0RCt", kN0RCt);
+  assert(kAtomicFeatureNumber < 127 - ' ');
+
+  char feature_name[24];
+  compiled_template_.clear();
+  for (std::vector<std::string>::const_iterator it = feature_template.begin();
+       it != feature_template.end() && status->ok();
+       ++it) {
+    std::string compiled_template;
+    const char *templ = it->c_str();
+    const char *p = templ, *q = NULL;
+    while (*p && status->ok()) {
+      if (*p != '[') {
+        compiled_template += *p;
+        p++;
+      } else {
+        const char *q = p;
+        while (*q != ']') {
+          if (*q == '\0') {
+            *status = Status::Corruption(
+                "Template file corrputed, missing ']'");
+          }
+          ++q;
+        }
+        int len = q - p - 1;
+        strlcpy(feature_name, p + 1, len + 1);
+        int fid = feature_index->Get(feature_name, -1);
+
+        if (fid < 0) {
+          std::string errmsg = "Template file corrputed, unexpected feature: ";
+          errmsg += feature_name;
+          *status = Status::Corruption(errmsg.c_str());
+        }
+        compiled_template += '[';
+        compiled_template += static_cast<char>(' ' + fid);
+        p = q + 1;
+      }
+    }
+    compiled_template_.push_back(compiled_template);
+  }
+
+  delete feature_index;
 }
 
 int DependencyParser::FeatureTemplate::Extract(
@@ -116,28 +157,26 @@ int DependencyParser::FeatureTemplate::Extract(
   term_instance_ = term_instance;
   part_of_speech_tag_instance_ = part_of_speech_tag_instance;
 
-  // First initialize each feature string into single_feature_
-  strlcpy(single_feature_[kSTw], STw(), kFeatureStringMax);
-  strlcpy(single_feature_[kSTt], STt(), kFeatureStringMax);
-  strlcpy(single_feature_[kN0w], N0w(), kFeatureStringMax);
-  strlcpy(single_feature_[kN0t], N0t(), kFeatureStringMax);
-  strlcpy(single_feature_[kN1w], N1w(), kFeatureStringMax);
-  strlcpy(single_feature_[kN1t], N1t(), kFeatureStringMax);
-  strlcpy(single_feature_[kN2t], N2t(), kFeatureStringMax);
-  strlcpy(single_feature_[kSTPt], STPt(), kFeatureStringMax);
-  strlcpy(single_feature_[kSTLCt], STLCt(), kFeatureStringMax);
-  strlcpy(single_feature_[kSTRCt], STRCt(), kFeatureStringMax);
-  strlcpy(single_feature_[kN0LCt], N0LCt(), kFeatureStringMax);
-  strlcpy(single_feature_[kN0RCt], N0RCt(), kFeatureStringMax);
+  // First initialize each feature string into atomic_feature_
+  strlcpy(atomic_feature_[kSTw], STw(), kFeatureStringMax);
+  strlcpy(atomic_feature_[kSTt], STt(), kFeatureStringMax);
+  strlcpy(atomic_feature_[kN0w], N0w(), kFeatureStringMax);
+  strlcpy(atomic_feature_[kN0t], N0t(), kFeatureStringMax);
+  strlcpy(atomic_feature_[kN1w], N1w(), kFeatureStringMax);
+  strlcpy(atomic_feature_[kN1t], N1t(), kFeatureStringMax);
+  strlcpy(atomic_feature_[kN2t], N2t(), kFeatureStringMax);
+  strlcpy(atomic_feature_[kSTPt], STPt(), kFeatureStringMax);
+  strlcpy(atomic_feature_[kSTLCt], STLCt(), kFeatureStringMax);
+  strlcpy(atomic_feature_[kSTRCt], STRCt(), kFeatureStringMax);
+  strlcpy(atomic_feature_[kN0LCt], N0LCt(), kFeatureStringMax);
+  strlcpy(atomic_feature_[kN0RCt], N0RCt(), kFeatureStringMax);
 
   feature_set->Clear();
-  bool ignore = false;
   char feature_name[24];
   for (std::vector<std::string>::const_iterator 
-       it = feature_template_.begin();
-       it != feature_template_.end();
+       it = compiled_template_.begin();
+       it != compiled_template_.end();
        ++it) {
-    ignore = false;
     StringBuilder builder(feature_set->at(feature_num),
                           FeatureSet::kFeatureSizeMax);
     const char *templ = it->c_str();
@@ -147,21 +186,13 @@ int DependencyParser::FeatureTemplate::Extract(
         builder << *p;
         p++;
       } else {
-        const char *q = p;
-        while (*q != ']') {
-          if (*q == '\0') ERROR("Template file corrputed.");
-          ++q;
-        }
-        int len = q - p - 1;
-        strlcpy(feature_name, p + 1, len + 1);
-        int fid = feature_index_->Get(feature_name, -1);
-
-        if (fid < 0) ERROR("Template file corrputed.");
-        builder << single_feature_[fid];
-        p = q + 1;
+        p++;
+        int fid = *p - ' ';
+        builder << atomic_feature_[fid];
+        p++;
       }
     }
-    if (ignore == false) feature_num++;
+    feature_num++;
   }
   feature_set->set_size(feature_num);
 

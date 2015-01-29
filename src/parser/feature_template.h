@@ -47,7 +47,7 @@ class DependencyParser::FeatureTemplate {
   static const char *kRootTerm;
   static const char *kRootTag;
 
-  // The features used in dependency parsing
+  // The atomic features used in dependency parsing
   enum {
     kSTw = 0,
     kSTt,
@@ -61,20 +61,19 @@ class DependencyParser::FeatureTemplate {
     kSTRCt,
     kN0LCt,
     kN0RCt,
-    kSingleFeatureNumber
+    kAtomicFeatureNumber
   };
 
   // Get feature template from `filename`. On failed, return NULL
   static FeatureTemplate *Open(const char *filename, Status *status);
 
-  FeatureTemplate(const std::vector<std::string> &feature_template);
+  FeatureTemplate();
   ~FeatureTemplate();
 
-  // Sets word_count and enables word count threshold for features
-  void DiscardInfrequentWord(ReimuTrie *word_count, int min_count) {
-    word_count_ = word_count;
-    min_count_ = min_count;
-  }
+  // Compiles the feature template and stores it into compiled_template_
+  // If the template is illegal sets *status != Status::OK()
+  void CompileTemplate(const std::vector<std::string> &feature_template,
+                       Status *status);
 
   // Returns the tag or term string of a node
   const char *Tag(const Node *node);
@@ -104,17 +103,11 @@ class DependencyParser::FeatureTemplate {
               FeatureSet *feature_set);
 
  private:
-  char single_feature_[kSingleFeatureNumber][kFeatureStringMax];
+  char atomic_feature_[kAtomicFeatureNumber][kFeatureStringMax];
   const TermInstance *term_instance_;
   const PartOfSpeechTagInstance *part_of_speech_tag_instance_;
   const State *state_;
-  ReimuTrie *feature_index_;
-  const std::vector<std::string> feature_template_;
-
-  int min_count_;
-  ReimuTrie *word_count_;
-
-  void InitializeFeatureIndex();
+  std::vector<std::string> compiled_template_;
 };
 
 }  // namespace milkcat
