@@ -161,7 +161,7 @@ bool BeamYamadaParser::Step() {
   char postag_bigram[kPOSTagLengthMax * 2 + 5];
   int ysize = perceptron_->ysize();
   for (int beam_idx = 0; beam_idx < beam_->size(); ++beam_idx) {
-    ExtractFeatureFromState(beam_->at(beam_idx));
+    ExtractFeatureFromState(beam_->at(beam_idx), feature_set_);
     int yid = perceptron_->Classify(feature_set_);
     
     for (int yid = 0; yid < ysize; ++yid) {
@@ -235,11 +235,12 @@ void BeamYamadaParser::Parse(
 }
 
 void BeamYamadaParser::ExtractFeatureFromState(
-    const State* state) {
+    const State* state,
+    FeatureSet *feature_set) {
   int feature_num = feature_->Extract(state,
                                       term_instance_,
                                       part_of_speech_tag_instance_,
-                                      feature_set_);
+                                      feature_set);
 }
 
 // Training `perceptron` with an correct (orcale) and incorrect state pair,
@@ -255,10 +256,10 @@ void BeamYamadaParser::UpdateWeightForState(
     incorrect_state = incorrect_state->previous();
     correct_state = correct_state->previous();
     
-    parser->ExtractFeatureFromState(correct_state);
+    parser->ExtractFeatureFromState(correct_state, parser->feature_set_);
     percpetron->Update(parser->feature_set_, correct_yid, 1.0f);
 
-    parser->ExtractFeatureFromState(incorrect_state);
+    parser->ExtractFeatureFromState(incorrect_state, parser->feature_set_);
     percpetron->Update(parser->feature_set_, incorrect_yid, -1.0f);
   }
 }

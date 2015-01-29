@@ -97,8 +97,8 @@ class BeamYamadaParser: public DependencyParser {
   // Stores the parsing result into tree_instance
   void StoreResult(TreeInstance *tree_instance);
 
-  // Extracts features from `state` and put into `feature_set_`
-  void ExtractFeatureFromState(const State* state);
+  // Extracts features from `state` and put into `feature_set`
+  void ExtractFeatureFromState(const State* state, FeatureSet *feature_set);
 
   // Training `perceptron` with an correct (orcale) and incorrect state pair
   static void UpdateWeightForState(
