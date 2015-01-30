@@ -1,17 +1,17 @@
 MilkCat
 =======
 
-MilkCat是一个简单、高效的中文自然语言处理的工具包，包含分词、词性标注、依存句法分析等常用功能。采用C++编写，支持多线程，并提供Python等各种语言的接口。
+MilkCat是由C++实现的开源依存句法分析库，自带中文分词以及词性标注，当然也可以作为分词和词性标注库来使用。MilkCat除了提供C++ API本身外，还支持C、python、Go等多种语言的接口。
 
-现在处于beta测试阶段 - 欢迎尝试
+现在处于beta阶段
 
 模型以及性能
 ----------
 
 ### 分词
 
-BIGRAM: 3.5MB/s, F=94.6% (bakeoff2005 MSRA)
-CRF: 1.5MB/s, F=96.6% 
+BIGRAM: 3.5MB/s, F=94.6% (bakeoff2005 MSRA)  
+CRF: 1.5MB/s, F=96.6%   
 BIGRAM+CRF未登录词识别: 2.0MB/s
 
 ### 词性标注
@@ -20,7 +20,7 @@ CRF: 61.5k word/s, TA=93.9% (CTB8)
 
 ### 依存句法分析
 
-Yamada: 45.5k word/s, UAS=82.9 (CTB5)
+Yamada: 45.5k word/s, UAS=82.9 (CTB5)  
 Beam Yamada: 8.4k word/s, UAS=84.9 (CTB5)
 
 在线演示
