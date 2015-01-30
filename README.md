@@ -3,14 +3,31 @@ MilkCat
 
 MilkCat是一个简单、高效的中文自然语言处理的工具包，包含分词、词性标注、依存句法分析等常用功能。采用C++编写，支持多线程，并提供Python等各种语言的接口。
 
-现在处于*dogfood*阶段 - 欢迎尝试
+现在处于beta测试阶段 - 欢迎尝试
+
+Demo
+----
+
+在[Milk.Cat](http://milk.cat)中有简单的演示
+
+下载
+----
+
+```sh
+wget http://milk.cat/milkcat-0.4.tar.gz
+```
+
+或者
+
+```sh
+wget http://milkcat.qiniudn.com/milkcat-0.4.tar.gz
+```
 
 安装
 ----
 
 ```sh
-wget http://milkcat.qiniudn.com/MilkCat-master.tar.gz
-tar xzvf MilkCat-master.tar.gz && cd milkcat-0.2
+tar xzvf milkcat-0.4.tar.gz && cd milkcat-0.4
 ./configure
 make && make install
 ```
@@ -18,7 +35,7 @@ make && make install
 运行
 ----
 
-安装完成之后可以在命令行使用，比如
+安装完成之后可以在命令行使用
 
 ```sh
 $ milkcat corpus.txt
@@ -61,7 +78,7 @@ using milkcat::Parser;
 int main() {
   Parser *parser = Parser::New();
   Parser::Iterator *it = new Parser::Iterator();
-  parser->Parse("这个是MilkCat的简单测试。", it);
+  parser->Predict(it, "我的猫喜欢喝牛奶。");
 
   while (!it->End()) {
     printf("%s/%s  ", it->word(), it->part_of_speech_tag());
@@ -81,6 +98,6 @@ int main() {
 ```sh
 $ g++ -o milkcat_demo example.cc -lmilkcat
 $ ./milkcat_demo
-这个/PN  是/VC  MilkCat/NN  的/DEG  简单/JJ  测试/NN  。/PU
+我/PN  的/DEG  猫/NN  喜欢/VV  喝/VV  牛奶/NN  。/PU
 ```
 
