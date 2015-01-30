@@ -36,14 +36,6 @@
 #endif
 #include "util/status.h"
 
-#if defined(HAVE_UNORDERED_MAP)
-#include <unordered_map>
-#elif defined(HAVE_TR1_UNORDERED_MAP)
-#include <tr1/unordered_map>
-#else
-#include <map>
-#endif
-
 namespace milkcat {
 
 /*
@@ -55,16 +47,6 @@ size_t strlcpy(char *dst, const char *src, size_t siz);
 char *trim(char *str);
 
 const char *_filename(const char *path);
-
-
-#if defined(HAVE_UNORDERED_MAP)
-using std::unordered_map;
-#elif defined(HAVE_TR1_UNORDERED_MAP)
-using std::tr1::unordered_map;
-#else
-template<typename TK, typename TV>
-using unordered_map = std::map<TK, TV>;
-#endif
 
 }  // namespace milkcat
 

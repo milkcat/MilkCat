@@ -11,10 +11,6 @@ AC_PROG_RANLIB
 AM_INIT_AUTOMAKE([-Wall -Werror foreign]) 
 AC_CONFIG_MACRO_DIR([m4])
 
-AC_LANG_PUSH(C++)
-AC_CHECK_HEADERS([tr1/unordered_map unordered_map])
-AC_LANG_POP()
-
 # Set the model dir
 pkgdatadir=${datadir}/${PACKAGE}
 
