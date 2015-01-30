@@ -189,8 +189,10 @@ int MakeGramModel(int argc, char **argv) {
   std::map<std::pair<std::string, std::string>, int> bigram_data;
   Status status;
 
-  if (argc != 4)
-    status = Status::Info("Usage: mc_model gram [UNIGRAM FILE] [BIGRAM FILE]");
+  if (argc != 4) {
+    status = Status::Info(
+      "Usage: milkcat-tools gram [UNIGRAM FILE] [BIGRAM FILE]");
+  }
 
   const char *unigram_file = argv[argc - 2];
   const char *bigram_file = argv[argc - 1];
@@ -236,7 +238,7 @@ int MakeGramModel(int argc, char **argv) {
 
 int MakeIndexFile(int argc, char **argv) {
   if (argc != 4) {
-    fprintf(stderr, "Usage: mc_model dict [INPUT-FILE] [OUTPUT-FILE]\n");
+    fprintf(stderr, "Usage: milkcat-tools dict [INPUT-FILE] [OUTPUT-FILE]\n");
     return 1;
   }
 
@@ -269,11 +271,11 @@ int MakeIndexFile(int argc, char **argv) {
   return 0;
 }
 
-int MakeMulticlassPerceptronFile(int argc, char **argv) {
+int MakePerceptronFile(int argc, char **argv) {
   Status status;
 
   if (argc != 4)
-    status = Status::Info("Usage: mc_model multiperc "
+    status = Status::Info("Usage: milkcat-tools perc "
                           "text-model-file binary-model-file");
 
   printf("Load text formatted model: %s \n", argv[argc - 2]);
@@ -309,7 +311,7 @@ void DisplayProgress(int64_t bytes_processed,
 int TrainDependendyParser(int argc, char **argv) {
   if (argc != 7) {
     fprintf(stderr,
-            "Usage: milkcat-tools --depparser-train corpus_file template_file "
+            "Usage: milkcat-tools depparser-train corpus_file template_file "
             "model_file beam_size iteration\n");
     return 1;
   }
@@ -340,7 +342,7 @@ int TrainDependendyParser(int argc, char **argv) {
 int TestDependendyParser(int argc, char **argv) {
   if (argc != 6) {
     fprintf(stderr,
-            "Usage: milkcat-tools --depparser-test corpus_file template_file "
+            "Usage: milkcat-tools depparser-test corpus_file template_file "
             "model_file beam_size\n");
     return 1;
   }
@@ -388,7 +390,7 @@ int TestDependendyParser(int argc, char **argv) {
 int TestPartOfSpeechTagger(int argc, char **argv) {
   if (argc != 4) {
     fprintf(stderr,
-            "Usage: milkcat-tools --postagger-test corpus_file model_file\n");
+            "Usage: milkcat-tools postagger-test corpus_file model_file\n");
     return 1;
   }
   const char *corpus_file = argv[2];
@@ -421,7 +423,7 @@ int TestPartOfSpeechTagger(int argc, char **argv) {
 int TrainHmmPartOfSpeechTagger(int argc, char **argv) {
   if (argc != 5) {
     fprintf(stderr,
-            "Usage: milkcat-tools --postagger-train hmm corpus_file"
+            "Usage: milkcat-tools postagger-train hmm corpus_file"
             " model_file\n");
     return 1;
   }
@@ -441,7 +443,7 @@ int TrainHmmPartOfSpeechTagger(int argc, char **argv) {
 int WapitiConvert(int argc, char **argv) {
   if (argc != 5) {
     fprintf(stderr,
-            "Usage: milkcat-tools --wapiti-conv wapiti_dump_file "
+            "Usage: milkcat-tools wapiti-conv wapiti_dump_file "
             " template_file model_file\n");
     return 1;
   }
@@ -466,7 +468,9 @@ int WapitiConvert(int argc, char **argv) {
 
 int main(int argc, char **argv) {
   if (argc < 2) {
-    fprintf(stderr, "Usage: mc_model [dict|gram|hmm|maxent]\n");
+    fprintf(stderr, "Usage: milkcat-tools [dict|gram|perc|depparser-train|"
+                    "depparser-test|postagger-test|postagger-train|"
+                    "wapiti-conv]\n");
     return 1;
   }
 
@@ -476,20 +480,22 @@ int main(int argc, char **argv) {
     return milkcat::MakeIndexFile(argc, argv);
   } else if (strcmp(tool, "gram") == 0) {
     return milkcat::MakeGramModel(argc, argv);
-  } else if (strcmp(tool, "multiperc") == 0) {
-    return milkcat::MakeMulticlassPerceptronFile(argc, argv);
-  } else if (strcmp(tool, "--depparser-train") == 0) {
+  } else if (strcmp(tool, "perc") == 0) {
+    return milkcat::MakePerceptronFile(argc, argv);
+  } else if (strcmp(tool, "depparser-train") == 0) {
     return milkcat::TrainDependendyParser(argc, argv);
-  } else if (strcmp(tool, "--depparser-test") == 0) {
+  } else if (strcmp(tool, "depparser-test") == 0) {
     return milkcat::TestDependendyParser(argc, argv);
-  } else if (strcmp(tool, "--postagger-test") == 0) {
+  } else if (strcmp(tool, "postagger-test") == 0) {
     return milkcat::TestPartOfSpeechTagger(argc, argv);
-  } else if (strcmp(tool, "--postagger-train") == 0) {
+  } else if (strcmp(tool, "postagger-train") == 0) {
     return milkcat::TrainHmmPartOfSpeechTagger(argc, argv);  
-  } else if (strcmp(tool, "--wapiti-conv") == 0) {
+  } else if (strcmp(tool, "wapiti-conv") == 0) {
     return milkcat::WapitiConvert(argc, argv);
   } else {
-    fprintf(stderr, "Usage: mc_model [dict|gram|hmm|maxent|vocab|tfidf]\n");
+    fprintf(stderr, "Usage: milkcat-tools [dict|gram|perc|depparser-train|"
+                    "depparser-test|postagger-test|postagger-train|"
+                    "wapiti-conv]\n");
     return 1;
   }
 

@@ -110,13 +110,13 @@ libmilkcat_a_SOURCES = src/libmilkcat.cc \
                        src/util/writable_file.cc \
                        src/util/writable_file.h 
 
-bin_PROGRAMS = milkcat mctools
+bin_PROGRAMS = milkcat milkcat-tools
 
 milkcat_SOURCES = src/main.cc
 milkcat_LDADD = libmilkcat.a
 
-mctools_SOURCES = src/mctools.cc
-mctools_LDADD = libmilkcat.a
+milkcat_tools_SOURCES = src/milkcat_tools.cc
+milkcat_tools_LDADD = libmilkcat.a
 
 TESTS = milkcat_api_test milkcat_capi_test parser_orcale_test reimu_trie_test
 check_PROGRAMS = milkcat_api_test \
