@@ -2,7 +2,7 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ([2.69])
-AC_INIT(MilkCat, 0.3, ling032x@gmail.com)
+AC_INIT(MilkCat, 0.4, ling032x@gmail.com)
 AC_CONFIG_AUX_DIR([scripts])
 
 AC_PROG_CC
