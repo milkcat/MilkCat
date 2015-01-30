@@ -31,6 +31,13 @@ Beam Yamada: 8.4k word/s, UAS=84.9 (CTB5)
 下载
 ----
 
+
+```sh
+wget http://milkcat.qiniudn.com/milkcat-0.4.tar.gz
+```
+
+或者
+
 ```sh
 wget http://milk.cat/milkcat-0.4.tar.gz
 ```
@@ -38,7 +45,7 @@ wget http://milk.cat/milkcat-0.4.tar.gz
 或者
 
 ```sh
-wget http://milkcat.qiniudn.com/milkcat-0.4.tar.gz
+wget https://github.com/milkcat/MilkCat/releases/download/v0.4-beta.1/milkcat-0.4.tar.gz
 ```
 
 安装
@@ -66,20 +73,6 @@ $ milkcat -m crf_seg corpus.txt
 ```
 
 用CRF分词模型对corpus.txt进行分词。
-
-Python例子
---------------
-
-pymilkcat安装包以及安装方法参见 [pymilkcat](https://github.com/milkcat/pymilkcat)
-
-```python
->>> import pymilkcat
->>> parser = pymilkcat.Parser()
->>> parser.pos_tag('这个是MilkCat的简单测试。')
-```
-
-[('这个', 'PN'), ('是', 'VC'), ('MilkCat', 'NN'), ('的', 'DEG'), ('简单', 'JJ'), ('测试', 'NN'), ('。', 'PU')]
-
 
 C++例子
 ---------
