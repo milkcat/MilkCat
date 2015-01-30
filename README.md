@@ -5,10 +5,28 @@ MilkCat是一个简单、高效的中文自然语言处理的工具包，包含�
 
 现在处于beta测试阶段 - 欢迎尝试
 
-Demo
-----
+模型以及性能
+----------
 
-在[Milk.Cat](http://milk.cat)中有简单的演示
+### 分词
+
+BIGRAM: 3.5MB/s, F=94.6% (bakeoff2005 MSRA)
+CRF: 1.5MB/s, F=96.6% 
+BIGRAM+CRF未登录词识别: 2.0MB/s
+
+### 词性标注
+
+CRF: 61.5k word/s, TA=93.9% (CTB8)
+
+### 依存句法分析
+
+Yamada: 45.5k word/s, UAS=82.9 (CTB5)
+Beam Yamada: 8.4k word/s, UAS=84.9 (CTB5)
+
+在线演示
+-------
+
+[演示地址](http://milk.cat)
 
 下载
 ----
@@ -49,7 +67,7 @@ $ milkcat -m crf_seg corpus.txt
 
 用CRF分词模型对corpus.txt进行分词。
 
-Python语言例子
+Python例子
 --------------
 
 pymilkcat安装包以及安装方法参见 [pymilkcat](https://github.com/milkcat/pymilkcat)
@@ -63,7 +81,7 @@ pymilkcat安装包以及安装方法参见 [pymilkcat](https://github.com/milkca
 [('这个', 'PN'), ('是', 'VC'), ('MilkCat', 'NN'), ('的', 'DEG'), ('简单', 'JJ'), ('测试', 'NN'), ('。', 'PU')]
 
 
-C++语言例子
+C++例子
 ---------
 
 从版本0.3开始起程序API从C转变至C++，C API将与Python类似作为语言支持实现。
