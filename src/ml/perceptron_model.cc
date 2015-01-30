@@ -146,6 +146,7 @@ PerceptronModel::Open(const char *filename_prefix, Status *status) {
     }
     self = new PerceptronModel(yname);
   }
+  delete[] yname_buf;
   delete fd;
   fd = NULL;
 

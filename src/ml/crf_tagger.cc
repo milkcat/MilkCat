@@ -70,6 +70,9 @@ CRFTagger::~CRFTagger() {
 
   delete transition_table_;
   transition_table_ = NULL;
+
+  delete lattice_;
+  lattice_ = NULL;
 }
 
 void CRFTagger::TagRange(SequenceFeatureSet *sequence_feature_set,
@@ -342,7 +345,7 @@ CRFTagger::TransitionTable::TransitionTable(const CRFModel *model):
   AllowAll();
 }
 CRFTagger::TransitionTable::~TransitionTable() {
-  delete transition_;
+  delete[] transition_;
   transition_ = NULL;
 }
 
@@ -380,7 +383,7 @@ CRFTagger::Lattice::Lattice(const CRFModel *model) {
 
 CRFTagger::Lattice::~Lattice() {
   for (int idx = 0; idx < kSequenceMax; ++idx) {
-    delete lattice_[idx];
+    delete[] lattice_[idx];
     lattice_[idx] = NULL;
   }
 }

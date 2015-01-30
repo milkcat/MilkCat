@@ -199,6 +199,7 @@ ReimuTrie *ReimuTrie::Open(const char *filename) {
   Impl *impl = Impl::Open(filename);
   if (impl != NULL) {
     ReimuTrie *self = new ReimuTrie();
+    delete self->impl_;
     self->impl_ = impl;
     return self;
   } else {

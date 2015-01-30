@@ -93,7 +93,7 @@ CRFPartOfSpeechTagger::~CRFPartOfSpeechTagger() {
   delete crf_tagger_;
   crf_tagger_ = NULL;
 
-  delete hmm_crf_ymap_;
+  delete[] hmm_crf_ymap_;
   hmm_crf_ymap_ = NULL;
 }
 

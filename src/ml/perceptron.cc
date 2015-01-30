@@ -53,7 +53,7 @@ Perceptron::Perceptron(PerceptronModel *model):
 }
 
 Perceptron::~Perceptron() {
-  delete ycost_;
+  delete[] ycost_;
   ycost_ = NULL;
 
   for (std::vector<PackedScore<float> *>::iterator

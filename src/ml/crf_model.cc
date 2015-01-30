@@ -293,6 +293,7 @@ CRFModel *CRFModel::New(const char *model_prefix, Status *status) {
     }
   }
 
+  delete fd;
   if (status->ok()) {
     return self;
   } else {
