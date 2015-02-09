@@ -370,6 +370,7 @@ void ReimuTrie::Impl::Put(const char *key, int32 value) {
     Restore();
   }
 
+  _assert(*key != '\0');
   const uint8 *p = reinterpret_cast<const uint8 *>(key);
   int from = 0, to;
   while (*p != 0) {
@@ -603,6 +604,9 @@ void ReimuTrie::Impl::MoveSubTree(int from,
     int child_base = array_[child_idx].base();
     for (int i = 0; i < 256; ++i) {
       int grandson_idx = XOR(child_base, i);
+
+      // `grandson_idx` may larger than size_ when child_base is a value node
+      if (grandson_idx > size_) continue;
       if (array_[grandson_idx].check() == child_idx) {
         array_[grandson_idx].set_check(new_child_idx);
       }

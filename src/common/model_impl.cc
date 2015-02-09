@@ -128,6 +128,11 @@ void Model::Impl::ReadUserDictionary(const char *path, Status *status) {
   if (status->ok()) fd = ReadableFile::New(path, status);
   while (status->ok() && !fd->Eof()) {
     fd->ReadLine(line, sizeof(line), status);
+    
+    // Ignore empty line
+    trim(line);
+    if (*line == '\0') continue;
+
     if (status->ok()) {
       char *p = strchr(line, ' ');
 
