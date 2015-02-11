@@ -187,9 +187,7 @@ DependencyParser *DependencyParserFactory(Model::Impl *factory,
   }
 }
 
-// The global state saves the current of model and analyzer.
-// If any errors occured, global_status != Status::OK()
-Status global_status;
+char gLastErrorMessage[kLastErrorStringMax] = "";
 
 // ----------------------------- Parser::Iterator -----------------------------
 
@@ -326,7 +324,7 @@ Parser::Impl::~Impl() {
 }
 
 Parser::Impl *Parser::Impl::New(const Options &options, Model *model) {
-  global_status = Status::OK();
+  Status status = Status::OK();
   Impl *self = new Parser::Impl();
   int type = options.TypeValue();
   Model::Impl *model_impl = model? model->impl(): NULL;
@@ -339,25 +337,26 @@ Parser::Impl *Parser::Impl::New(const Options &options, Model *model) {
     self->own_model_ = false;
   }
 
-  if (global_status.ok())
+  if (status.ok())
     self->segmenter_ = SegmenterFactory(
         self->model_impl_,
         type,
-        &global_status);
+        &status);
 
-  if (global_status.ok())
+  if (status.ok())
     self->part_of_speech_tagger_ = PartOfSpeechTaggerFactory(
         self->model_impl_,
         type,
-        &global_status);
+        &status);
 
-  if (global_status.ok())
+  if (status.ok())
     self->dependency_parser_ = DependencyParserFactory(
         self->model_impl_,
         type,
-        &global_status);
+        &status);
 
-  if (!global_status.ok()) {
+  if (!status.ok()) {
+    strlcpy(gLastErrorMessage, status.what(), sizeof(gLastErrorMessage));
     delete self;
     return NULL;
   } else {
@@ -469,7 +468,7 @@ bool Model::SetUserDictionary(const char *userdict_path) {
 }
 
 const char *LastError() {
-  return global_status.what();
+  return gLastErrorMessage;
 }
 
 }  // namespace milkcat

@@ -73,8 +73,9 @@ mc_parser_t *mc_parser_new(mc_parseropt_t *parseropt, mc_model_t *model) {
       option.UseMixedSegmenter();
       break;
     default:
-      milkcat::global_status = milkcat::Status::RuntimeError(
-          "Illegal segmenter type");
+      strlcpy(milkcat::gLastErrorMessage,
+              "Illegal segmenter type",
+              sizeof(milkcat::gLastErrorMessage));
       return NULL;
   }
 
@@ -89,8 +90,9 @@ mc_parser_t *mc_parser_new(mc_parseropt_t *parseropt, mc_model_t *model) {
       option.NoPOSTagger();
       break;
     default:
-      milkcat::global_status = milkcat::Status::RuntimeError(
-          "Illegal postagger type");
+      strlcpy(milkcat::gLastErrorMessage,
+              "Illegal part-of-speech tagger type",
+              sizeof(milkcat::gLastErrorMessage));
       return NULL;
   }
 
@@ -105,8 +107,9 @@ mc_parser_t *mc_parser_new(mc_parseropt_t *parseropt, mc_model_t *model) {
       option.UseBeamYamadaParser();
       break;
     default:
-      milkcat::global_status = milkcat::Status::RuntimeError(
-          "Illegal depparser type");
+      strlcpy(milkcat::gLastErrorMessage,
+              "Illegal dependency parser type",
+              sizeof(milkcat::gLastErrorMessage));
       return NULL;
   }
 

@@ -27,6 +27,7 @@
 
 #include "common/model_impl.h"
 
+#include "libmilkcat.h"
 #include "ml/perceptron_model.h"
 #include "common/milkcat_config.h"
 #include "common/reimu_trie.h"
@@ -118,7 +119,7 @@ const ReimuTrie *Model::Impl::Index(Status *status) {
 }
 
 void Model::Impl::ReadUserDictionary(const char *path, Status *status) {
-  char line[1024], word[1024];
+  char line[1024], word[1024], cost_string[1024];
   std::string errmsg;
   ReadableFile *fd = NULL;
   float default_cost = kDefaultCost, cost;
@@ -129,19 +130,26 @@ void Model::Impl::ReadUserDictionary(const char *path, Status *status) {
   while (status->ok() && !fd->Eof()) {
     fd->ReadLine(line, sizeof(line), status);
     
-    // Ignore empty line
-    trim(line);
-    if (*line == '\0') continue;
-
     if (status->ok()) {
-      char *p = strchr(line, ' ');
+      // Ignore empty line
+      trim(line);
+      if (*line == '\0') continue;
 
+      char *p = strchr(line, ' ');
       // Checks if the entry has a cost
       if (p != NULL) {
         strlcpy(word, line, p - line + 1);
+        strlcpy(cost_string, p, sizeof(cost_string));
         trim(word);
-        trim(p);
-        cost = static_cast<float>(atof(p));
+        trim(cost_string);
+        char *end = NULL;
+        cost = strtof(cost_string, &end);
+        // If second field is not a valid float number
+        if (*end != '\0') {
+          std::string errmsg = "unexpected cost field: ";
+          errmsg += line;
+          *status = Status::RuntimeError(errmsg.c_str());
+        }
       } else {
         strlcpy(word, line, sizeof(word));
         trim(word);
@@ -171,6 +179,7 @@ bool Model::Impl::SetUserDictionary(const char *path) {
   if (status.ok()) {
     return true;
   } else {
+    strlcpy(gLastErrorMessage, status.what(), sizeof(gLastErrorMessage));
     return false;
   }
 }

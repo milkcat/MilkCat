@@ -50,8 +50,8 @@
 
 namespace milkcat {
   
-// The global status
-extern milkcat::Status global_status;
+// The global error message
+extern char gLastErrorMessage[kLastErrorStringMax];
 
 const int kTokenizerMask = 0x0000000f;
 const int kSegmenterMask = 0x00000ff0;

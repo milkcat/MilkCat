@@ -44,7 +44,8 @@ enum {
   kMulticlassPerceptronModelMagicNumber = 0x1a1a,
   kCrfModelMagicNumber = 0x1234,
   kLabelSizeMax = 64,
-  kParserBeamSize = 8
+  kParserBeamSize = 8,
+  kLastErrorStringMax = 1024
 };
 
 const float kDefaultCost = 6.0;
