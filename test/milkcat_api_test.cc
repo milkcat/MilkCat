@@ -132,6 +132,7 @@ int bigram_segmenter_test() {
   fputs("博丽灵梦\n", fd);
   fputs("雾雨魔理沙 2.0\n", fd);
   fputs("一自 100.0\n", fd);
+  fputs("\n", fd);
   fclose(fd);
 
   Model *model = Model::New(MODEL_DIR);
