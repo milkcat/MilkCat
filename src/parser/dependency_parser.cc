@@ -69,7 +69,7 @@ DependencyParser::DependencyParser(PerceptronModel *perceptron_model,
     } else {
       std::string err = "Unexpected label: ";
       err += yname;
-      ERROR(err.c_str());
+      MC_ERROR(err.c_str());
     }
     
     if (strcmp(yname, "rightarc_ROOT") == 0 ||
@@ -98,7 +98,7 @@ void DependencyParser::StateMove(State *state, int yid) const {
       state->Shift();
       break;
     default:
-      ERROR("Unexpected transition");
+      MC_ERROR("Unexpected transition");
   }  
 }
 
@@ -112,7 +112,7 @@ bool DependencyParser::Allow(const State *state, int yid) const {
     case kShift:
       return state->AllowShift();
     default:
-      ERROR("Unexpected transition");
+      MC_ERROR("unexpected transition");
       return true;
   }
 }

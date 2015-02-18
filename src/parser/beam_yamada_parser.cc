@@ -116,7 +116,7 @@ class CompareIdxByCostInArray {
       array_(array), array_size_(size) {
   }
   bool operator()(int idx1, int idx2) {
-    ASSERT(idx1 < array_size_ && idx2 < array_size_, "Idx overflow");
+    MC_ASSERT(idx1 < array_size_ && idx2 < array_size_, "idx overflow");
     // To make a minimum heap, use `>` instead '<'
     return array_[idx1] > array_[idx2];
   }
@@ -158,15 +158,14 @@ BeamYamadaParser::StateCopyAndMove(State *state, int yid) {
 bool BeamYamadaParser::Step() {
   // Calculate the cost of transitions in each state of `beam_`, store them into
   // `agent_` 
-  char postag_bigram[kPOSTagLengthMax * 2 + 5];
   int ysize = perceptron_->ysize();
   for (int beam_idx = 0; beam_idx < beam_->size(); ++beam_idx) {
     ExtractFeatureFromState(beam_->at(beam_idx), feature_set_);
     int yid = perceptron_->Classify(feature_set_);
     
     for (int yid = 0; yid < ysize; ++yid) {
-      agent_[beam_idx * ysize + yid] = perceptron_->ycost(yid) + 
-                                       beam_->at(beam_idx)->weight();
+      agent_[beam_idx * ysize + yid] = static_cast<float>(
+          perceptron_->ycost(yid) + beam_->at(beam_idx)->weight());
     }
   }
   agent_size_ = beam_->size() * ysize;
@@ -179,7 +178,7 @@ bool BeamYamadaParser::Step() {
     int beam_idx = agent_idx / ysize;
     if (Allow(beam_->at(beam_idx), yid)) {
       // If state allows transition `yid`, stores them into `idx_heap`
-      if (idx_heap.size() < beam_size_) {
+      if (static_cast<int>(idx_heap.size()) < beam_size_) {
         idx_heap.push_back(agent_idx);
         std::push_heap(idx_heap.begin(), idx_heap.end(), cmp);
       } else if (cmp(idx_heap[0], agent_idx) == false) {
@@ -361,7 +360,7 @@ void BeamYamadaParser::Train(
 
           // Move `correct_state` according to `orcale`
           correct_state = parser->StateCopyAndMove(correct_state, yid);
-          ASSERT(yid != PerceptronModel::kIdNone, "Unexpected label");
+          MC_ASSERT(yid != PerceptronModel::kIdNone, "unexpected label");
 
           // Marks `correct = true` for the correct state in beam_
           parser->Step();

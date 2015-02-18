@@ -45,7 +45,7 @@ class DependencyParser::Node {
     head_id_ = kNone;
     right_child_id_ = kNone;
     left_child_id_ = kNone;
-    strcpy(dependency_label_, "NULL");
+    strlcpy(dependency_label_, "NULL", sizeof(dependency_label_));
   }
 
   int id() const { return id_; }

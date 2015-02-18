@@ -28,9 +28,12 @@
 #ifndef SRC_UTIL_UTIL_H_
 #define SRC_UTIL_UTIL_H_
 
-#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdint.h>
+#include <stdio.h>
+
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
@@ -44,9 +47,14 @@ namespace milkcat {
  * Returns strlen(src); if retval >= siz, truncation occurred.
  */
 size_t strlcpy(char *dst, const char *src, size_t siz);
-char *trim(char *str);
 
+char *trim(char *str);
 const char *_filename(const char *path);
+
+// 64-bit version of ftell
+int64_t ftell64(FILE *fd);
+
+char *strtok_r(char *s, const char *delim, char **last);
 
 }  // namespace milkcat
 
@@ -56,7 +64,7 @@ const char *_filename(const char *path);
 #define LOG(...)
 #endif 
 
-#define ERROR(message) \
+#define MC_ERROR(message) \
         do { \
           fprintf(stderr,  \
                   "[%s:%d] ERROR: ", \
@@ -69,7 +77,7 @@ const char *_filename(const char *path);
 
 
 #ifndef NOASSERT
-#define ASSERT(cond, message) \
+#define MC_ASSERT(cond, message) \
         if (!(cond)) { \
           fprintf(stderr,  \
                   "[%s:%d] ASSERT failed: ", \
@@ -80,7 +88,7 @@ const char *_filename(const char *path);
           exit(1); \
         }
 #else
-#define ASSERT(cond, message)
+#define MC_ASSERT(cond, message)
 #endif  // NOASSERT
 
 #define DISALLOW_COPY_AND_ASSIGN(TypeName) \

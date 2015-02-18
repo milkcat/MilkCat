@@ -50,7 +50,7 @@ class Beam {
 
   int size() const { return size_; }
   T *at(int index) const {
-    ASSERT(index < beam_size_, "Beam index overflow");
+    MC_ASSERT(index < beam_size_, "invalid beam index");
     return items_[index];
   }
 
@@ -68,7 +68,7 @@ class Beam {
 
   // Get minimal node in the bucket
   T *Best() {
-    ASSERT(size_ != 0, "No item in beam");
+    MC_ASSERT(size_ != 0, "beam is empty");
     return *std::min_element(items_, items_ + size_, comparator_);
   }
 

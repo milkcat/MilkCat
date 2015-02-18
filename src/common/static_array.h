@@ -48,11 +48,13 @@ class StaticArray {
     }
 
     if (status->ok()) {
-      self->data_ = new T[fd->Size() / type_size];
-      self->size_ = fd->Size() / type_size;
+      self->data_ = new T[static_cast<int>(fd->Size() / type_size)];
+      self->size_ = static_cast<int>(fd->Size() / type_size);
     }
 
-    if (status->ok()) fd->Read(self->data_, fd->Size(), status);
+    if (status->ok()) {
+      fd->Read(self->data_, static_cast<int>(fd->Size()), status);
+    }
 
     if (fd != NULL) delete fd;
     if (status->ok()) {

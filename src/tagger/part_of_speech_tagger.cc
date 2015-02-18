@@ -76,7 +76,6 @@ double PartOfSpeechTagger::Test(const char *test_corpus,
                                 PartOfSpeechTagger *tagger,
                                 Status *status) {
   char *line = new char[1024 * 1024];
-  char word[1024], tag[1024];
   ReadableFile *fd = ReadableFile::New(test_corpus, status);
   TermInstance *term_instance = new TermInstance();
   PartOfSpeechTagInstance *gold_tag_instance = new PartOfSpeechTagInstance();

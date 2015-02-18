@@ -38,7 +38,7 @@ InstanceData::InstanceData(int string_number,
     string_data_ = new char **[string_number];
     for (int i = 0; i < string_number; ++i) {
       string_data_[i] = new char *[capability];
-      for (size_t j = 0; j < capability; ++j) {
+      for (int j = 0; j < capability; ++j) {
         string_data_[i][j] = new char[kFeatureLengthMax];
       }
     }
@@ -59,7 +59,7 @@ InstanceData::InstanceData(int string_number,
 InstanceData::~InstanceData() {
   if (string_data_ != NULL) {
     for (int i = 0; i < string_number_; ++i) {
-      for (size_t j = 0; j < capability_; ++j) {
+      for (int j = 0; j < capability_; ++j) {
         delete[] string_data_[i][j];
       }
       delete[] string_data_[i];

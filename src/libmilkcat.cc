@@ -330,7 +330,7 @@ Parser::Impl *Parser::Impl::New(const Options &options, Model *model) {
   Model::Impl *model_impl = model? model->impl(): NULL;
 
   if (model_impl == NULL) {
-    self->model_impl_ = new Model::Impl(MODEL_PATH);
+    self->model_impl_ = new Model::Impl(MODEL_DIR);
     self->own_model_ = true;
   } else {
     self->model_impl_ = model_impl;
@@ -458,7 +458,7 @@ Model::~Model() {
 
 Model *Model::New(const char *model_dir) {
   Model *self = new Model();
-  self->impl_ = new Model::Impl(model_dir? model_dir: MODEL_PATH);
+  self->impl_ = new Model::Impl(model_dir? model_dir: MODEL_DIR);
 
   return self;
 }

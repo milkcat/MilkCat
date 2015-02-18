@@ -85,14 +85,13 @@ PerceptronModel::OpenText(const char *filename, Status *status) {
   }
 
   // Get x, y cost
-  bool exist;
   if (status->ok()) fd = ReadableFile::New(filename, status);
   while (status->ok() && !fd->Eof()) {
     fd->ReadLine(line, 1024, status);
     if (status->ok()) {
       sscanf(line, "%s %s %f", y, x, &cost);
       yid = self->yindex_->Get(y, -1);
-      ASSERT(yid >= 0, "yindex corrupted");
+      MC_ASSERT(yid >= 0, "yindex corrupted");
       xid = self->GetOrInsertXId(x);
       self->get_score(xid)->Put(yid, cost);
     }
@@ -273,7 +272,7 @@ int PerceptronModel::xid(const char *xname) const {
 }
 
 PackedScore<float> *PerceptronModel::get_score(int xid) {
-  assert(xid < score_.size());
+  assert(xid < static_cast<int>(score_.size()));
   return score_[xid];
 }
 

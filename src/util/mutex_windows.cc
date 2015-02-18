@@ -21,39 +21,51 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 //
-// config.h
-// milkcat_config.h --- Created at 2013-09-17
+// mutex_windows.cc --- Created at 2015-02-18
 //
 
-#ifndef SRC_COMMON_MILKCAT_CONFIG_H_
-#define SRC_COMMON_MILKCAT_CONFIG_H_
+#include "util/mutex.h"
 
-#include <stdlib.h>
-
-#ifndef MODEL_DIR
-#define MODEL_DIR "milkcat-data/"
-#endif
+#include <windows.h>
+#include "util/util.h"
 
 namespace milkcat {
 
-enum {
-  kSequenceMax = 4096,
-  kTokenMax = kSequenceMax,
-  kFeatureLengthMax = 100,
-  kTermLengthMax = kFeatureLengthMax,
-  kPOSTagLengthMax = 10,
-  kHMMSegmentAndPOSTaggingNBest = 3,
-  kUserTermIdStart = 0x40000000,
-  kHmmModelMagicNumber = 0x3322,
-  kMulticlassPerceptronModelMagicNumber = 0x1a1a,
-  kCrfModelMagicNumber = 0x1234,
-  kLabelSizeMax = 64,
-  kParserBeamSize = 8,
-  kLastErrorStringMax = 1024
+class Mutex::MutexImpl {
+ public:
+  MutexImpl() {
+    mutex_ = CreateMutex(NULL, FALSE, NULL);
+  }
+
+  ~MutexImpl() {
+    CloseHandle(mutex_);
+  }
+
+  void Lock() {
+    MC_ASSERT(ReleaseMutex(mutex_), "release mutex error");
+  }
+
+  void Unlock() {
+    DWORD wait_result = WaitForSingleObject(mutex_, INFINITE);
+    MC_ASSERT(wait_result == WAIT_OBJECT_0, "wait for mutex error");
+  }
+
+ private:
+  HANDLE mutex_;
 };
 
-const float kDefaultCost = 6.0;
+Mutex::Mutex(): impl_(new MutexImpl()) {}
+Mutex::~Mutex() {
+  delete impl_;
+  impl_ = NULL;
+}
+
+void Mutex::Lock() {
+  impl_->Lock();
+}
+
+void Mutex::Unlock() {
+  impl_->Unlock();
+}
 
 }  // namespace milkcat
-
-#endif  // SRC_COMMON_MILKCAT_CONFIG_H_

@@ -30,6 +30,7 @@
 #include <stdio.h>
 #include <string>
 #include "util/status.h"
+#include "util/util.h"
 
 namespace milkcat {
 
@@ -40,7 +41,7 @@ ReadableFile *ReadableFile::New(const char *file_path, Status *status) {
 
   if ((self->fd_ = fopen(file_path, "rb")) != NULL) {
     fseek(self->fd_, 0, SEEK_END);
-    self->size_ = ftello(self->fd_);
+    self->size_ = ftell64(self->fd_);
     fseek(self->fd_, 0, SEEK_SET);
     return self;
 
@@ -81,7 +82,7 @@ ReadableFile::~ReadableFile() {
 }
 
 int64_t ReadableFile::Tell() {
-  return ftello(fd_);
+  return ftell64(fd_);
 }
 
 }  // namespace milkcat

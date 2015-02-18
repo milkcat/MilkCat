@@ -99,7 +99,7 @@ bool Perceptron::Train(const FeatureSet *feature_set,
                                  const char *label) {
   int predict_yid = Classify(feature_set);
   int correct_yid = model_->yid(label);
-  ASSERT(correct_yid >= 0, "Unexcpected label");
+  MC_ASSERT(correct_yid >= 0, "unexcpected label");
   // printf("Train: %s\n", label);
   // printf("Predict: %s\n", model_->yname(predict_yid));
 
@@ -114,7 +114,7 @@ bool Perceptron::Train(const FeatureSet *feature_set,
 }
 
 void Perceptron::UpdateCachedScore(int xid, int yid, float value) {
-  while (xid >= cached_score_.size()) {
+  while (xid >= static_cast<int>(cached_score_.size())) {
     cached_score_.push_back(new PackedScore<float>());
   }
 

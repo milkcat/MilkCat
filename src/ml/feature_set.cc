@@ -33,7 +33,7 @@ FeatureSet::FeatureSet(): top_(0) {
 }
 
 void FeatureSet::Add(const char *feature_string) {
-  ASSERT(top_ < kFeatureNumberMax, "Too many features");
+  MC_ASSERT(top_ < kFeatureNumberMax, "too many features");
   strlcpy(feature_string_[top_], feature_string, kFeatureSizeMax);
   top_++;
 }

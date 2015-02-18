@@ -12,3 +12,11 @@ private
 
 data/*
 !data/Makefile.am
+
+Debug
+Release
+vsproject/Debug
+vsproject/Release
+*.opensdf
+*.sdf
+*.suo

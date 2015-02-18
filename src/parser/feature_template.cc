@@ -150,7 +150,6 @@ int DependencyParser::FeatureTemplate::Extract(
     const TermInstance *term_instance,
     const PartOfSpeechTagInstance *part_of_speech_tag_instance,
     FeatureSet *feature_set) {
-  Node *node;
   int feature_num = 0;
 
   state_ = state;
@@ -172,7 +171,6 @@ int DependencyParser::FeatureTemplate::Extract(
   strlcpy(atomic_feature_[kN0RCt], N0RCt(), kFeatureStringMax);
 
   feature_set->Clear();
-  char feature_name[24];
   for (std::vector<std::string>::const_iterator 
        it = compiled_template_.begin();
        it != compiled_template_.end();

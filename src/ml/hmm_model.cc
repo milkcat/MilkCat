@@ -109,7 +109,9 @@ void HMMModel::Save(const char *model_filename, Status *status) {
   if (status->ok()) fd->WriteValue<int32_t>(xsize_, status);
 
   if (status->ok()) {
-    for (int yid = 0; yid < yname_.size() && status->ok(); ++yid) {
+    for (int yid = 0;
+         yid < static_cast<int>(yname_.size()) && status->ok();
+         ++yid) {
       memset(label, 0, sizeof(label));
       strlcpy(label, yname_[yid].c_str(), sizeof(label));
       fd->Write(label, kLabelSizeMax, status);
@@ -138,7 +140,7 @@ void HMMModel::Save(const char *model_filename, Status *status) {
 }
 
 void HMMModel::AddEmission(const char *word, const EmissionArray &emission) {
-  ASSERT(index_->Get(word, -1) == -1, "Word already exists");
+  MC_ASSERT(index_->Get(word, -1) == -1, "word already exists");
 
   index_->Put(word, xsize_);
   ++xsize_;

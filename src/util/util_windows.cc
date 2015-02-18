@@ -21,39 +21,18 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 //
-// config.h
-// milkcat_config.h --- Created at 2013-09-17
+// util_windows.cc --- Created at 2015-02-18
 //
 
-#ifndef SRC_COMMON_MILKCAT_CONFIG_H_
-#define SRC_COMMON_MILKCAT_CONFIG_H_
+#include "util.h"
 
-#include <stdlib.h>
-
-#ifndef MODEL_DIR
-#define MODEL_DIR "milkcat-data/"
-#endif
+#include <stdint.h>
+#include <stdio.h>
 
 namespace milkcat {
 
-enum {
-  kSequenceMax = 4096,
-  kTokenMax = kSequenceMax,
-  kFeatureLengthMax = 100,
-  kTermLengthMax = kFeatureLengthMax,
-  kPOSTagLengthMax = 10,
-  kHMMSegmentAndPOSTaggingNBest = 3,
-  kUserTermIdStart = 0x40000000,
-  kHmmModelMagicNumber = 0x3322,
-  kMulticlassPerceptronModelMagicNumber = 0x1a1a,
-  kCrfModelMagicNumber = 0x1234,
-  kLabelSizeMax = 64,
-  kParserBeamSize = 8,
-  kLastErrorStringMax = 1024
-};
+int64_t ftell64(FILE *fd) {
+  return _ftelli64(fd);
+}
 
-const float kDefaultCost = 6.0;
-
-}  // namespace milkcat
-
-#endif  // SRC_COMMON_MILKCAT_CONFIG_H_
+}

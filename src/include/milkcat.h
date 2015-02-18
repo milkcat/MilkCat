@@ -30,6 +30,16 @@
 #include <stdint.h>
 #include <stdlib.h>
 
+#ifdef _WIN32
+
+#ifdef MILKCAT_EXPORTS
+#define MILKCAT_API __declspec(dllexport)
+#else 
+#define MILKCAT_API __declspec(dllimport)
+#endif  // MILKCAT_EXPORTS
+
+#endif  // _WIN32
+
 #ifdef __cplusplus
 
 namespace milkcat {
@@ -38,7 +48,7 @@ class Parser;
 
 // ---------------------------- Model ----------------------------------------
 
-class Model {
+class MILKCAT_API Model {
  public:
   class Impl;
 
@@ -66,7 +76,7 @@ class Model {
 // parse the text and it returns an Parser::Iterator to iterate each word and
 // its part-of-speech tag. After iterating, you should use Parser::Release to
 // release the iterator
-class Parser {
+class MILKCAT_API Parser {
  public:
   class Impl;
   class Iterator;
@@ -102,7 +112,7 @@ class Parser {
 };
 
 // The options for the parser
-class Parser::Options {
+class MILKCAT_API Parser::Options {
  public:
   Options();
 
@@ -132,7 +142,7 @@ class Parser::Options {
 };
 
 // Iterator for the prediction of parser
-class Parser::Iterator {
+class MILKCAT_API Parser::Iterator {
  public:
   class Impl;
 
@@ -171,7 +181,7 @@ class Parser::Iterator {
 };
 
 // Get the information of last error
-const char *LastError();
+MILKCAT_API const char *LastError();
 
 }  // namespace milkcat
 
@@ -212,23 +222,24 @@ typedef struct mc_parseropt_t {
   int depparser;
 } mc_parseropt_t;
 
-mc_model_t *mc_model_new(const char *model_path);
-void mc_model_delete(mc_model_t *model);
+MILKCAT_API mc_model_t *mc_model_new(const char *model_path);
+MILKCAT_API void mc_model_delete(mc_model_t *model);
 
-void mc_parseropt_init(mc_parseropt_t *parseropt);
-mc_parser_t *mc_parser_new(mc_parseropt_t *parseropt, mc_model_t *model);
-void mc_parser_delete(mc_parser_t *model);
-void mc_parser_predict(mc_parser_t *parser,
-                       mc_parseriter_t *parseriter,
-                       const char *text);
+MILKCAT_API void mc_parseropt_init(mc_parseropt_t *parseropt);
+MILKCAT_API mc_parser_t *mc_parser_new(mc_parseropt_t *parseropt, mc_model_t *model);
+MILKCAT_API void mc_parser_delete(mc_parser_t *model);
+MILKCAT_API void mc_parser_predict(
+    mc_parser_t *parser,
+    mc_parseriter_t *parseriter,
+    const char *text);
 
-mc_parseriter_t *mc_parseriter_new();
-void mc_parseriter_delete(mc_parseriter_t *parseriter);
-int mc_parseriter_end(mc_parseriter_t *parseriter);
-void mc_parseriter_next(mc_parseriter_t *parseriter);
-int mc_parseriter_isbos(mc_parseriter_t *parseriter);
+MILKCAT_API mc_parseriter_t *mc_parseriter_new();
+MILKCAT_API void mc_parseriter_delete(mc_parseriter_t *parseriter);
+MILKCAT_API int mc_parseriter_end(mc_parseriter_t *parseriter);
+MILKCAT_API void mc_parseriter_next(mc_parseriter_t *parseriter);
+MILKCAT_API int mc_parseriter_isbos(mc_parseriter_t *parseriter);
 
-const char *mc_last_error();
+MILKCAT_API const char *mc_last_error();
 
 #ifdef __cplusplus
 }  // extern "C"

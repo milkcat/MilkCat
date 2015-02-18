@@ -71,14 +71,14 @@ void DependencyParser::State::Initialize(Pool<Node> *node_pool,
 }
 
 void DependencyParser::State::Shift() {
-  ASSERT(!InputEnd(), "Out of bound");
+  MC_ASSERT(!InputEnd(), "out of bound");
   stack_.push_back(input_.back());
   input_.pop_back();
 }
 
 void DependencyParser::State::LeftArc(const char *label) {
-  ASSERT(!StackEmpty(), "Stack empty");
-  ASSERT(!InputEnd(), "Out of bound");
+  MC_ASSERT(!StackEmpty(), "stack empty");
+  MC_ASSERT(!InputEnd(), "out of bound");
 
   Node *stack0 = sentence_[stack_.back()];
   Node *input0 = sentence_[input_.back()];
@@ -91,7 +91,7 @@ void DependencyParser::State::LeftArc(const char *label) {
 }
 
 void DependencyParser::State::RightArc(const char *label) {
-  ASSERT(!InputEnd(), "Out of bound");
+  MC_ASSERT(!InputEnd(), "out of bound");
   Node *stack0 = sentence_[stack_.back()];
   Node *input0 = sentence_[input_.back()];
 

@@ -48,7 +48,7 @@ struct HMMPartOfSpeechTagger::Node {
   double cost;
   const HMMPartOfSpeechTagger::Node *prevoius_node;
 
-  inline void set_value(int tag, int cost, const Node *prevoius_node) {
+  inline void set_value(int tag, double cost, const Node *prevoius_node) {
     this->tag = tag;
     this->cost = cost;
     this->prevoius_node = prevoius_node;
@@ -198,7 +198,7 @@ inline void HMMPartOfSpeechTagger::StoreResult(
   int beam_idx = term_instance_->size() + 1;
 
   // `beams_[beam_idx]` should have only one BOS node
-  ASSERT(beams_[beam_idx]->size() == 1, "Last node in beam should be -BOS-");
+  MC_ASSERT(beams_[beam_idx]->size() == 1, "last node in beam should be -BOS-");
   const Node *node = beams_[beam_idx]->at(0);
 
   int position = term_instance_->size() - 1;
@@ -341,7 +341,7 @@ void HMMPartOfSpeechTagger::Train(
       }
 
       yid = yindex->Get(tag, -1);
-      ASSERT(yid >= 0, "Invalid tag name");
+      MC_ASSERT(yid >= 0, "tag not exist");
       ++emission[xid * yname.size() + yid];
       ++y_count[yid];
       ++y_bigram_count[left_yid * yname.size() + yid];
@@ -360,17 +360,23 @@ void HMMPartOfSpeechTagger::Train(
     hmm_model = new HMMModel(yname);
 
     // Puts the emission data
-    for (int xid = 0; xid < xname.size(); ++xid) {
+    for (int xid = 0;
+         xid < static_cast<int>(xname.size());
+         ++xid) {
       int total_count = 0;
       int size = 0;
-      for (int yid = 0; yid < yname.size(); ++yid) {
+      for (int yid = 0;
+           yid < static_cast<int>(yname.size());
+           ++yid) {
         int count = emission[xid * yname.size() + yid];
         if (count != 0) ++size;
         total_count += count;
       }
       HMMModel::EmissionArray emission_array(size, total_count);
       int emission_idx = 0;
-      for (int yid = 0; yid < yname.size(); ++yid) {
+      for (int yid = 0;
+           yid < static_cast<int>(yname.size());
+           ++yid) {
         int count = emission[xid * yname.size() + yid];
         if (count != 0) {
           emission_array.set_yid_at(emission_idx, yid);
@@ -380,17 +386,24 @@ void HMMPartOfSpeechTagger::Train(
         }
         if (count != 0) ++emission_idx;
       }
-      ASSERT(emission_idx == size, "Invalid size");
+      MC_ASSERT(emission_idx == size, "invalid size");
       hmm_model->AddEmission(xname[xid].c_str(), emission_array);
     }
 
     // Puts the transition data
-    for (int left_yid = 0; left_yid < yname.size(); ++left_yid) {
-      for (int yid = 0; yid < yname.size(); ++yid) {
+    for (int left_yid = 0;
+         left_yid < static_cast<int>(yname.size());
+         ++left_yid) {
+      for (int yid = 0;
+           yid < static_cast<int>(yname.size());
+           ++yid) {
         int joint_count = 1 + y_bigram_count[left_yid * yname.size() + yid];
         int left_count = yname.size() + y_count[left_yid];
         double p_transition = static_cast<float>(joint_count) / left_count;
-        hmm_model->set_cost(left_yid, yid, -log(p_transition));
+        hmm_model->set_cost(
+            left_yid,
+            yid,
+            static_cast<float>(-log(p_transition)));
       }
     }
   }

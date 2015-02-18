@@ -25,6 +25,7 @@
 // crf_segmenter.cc --- Created at 2013-08-17
 //
 
+#include "segmenter/crf_segmenter.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -32,7 +33,6 @@
 #include "libmilkcat.h"
 #include "common/model_impl.h"
 #include "ml/sequence_feature_set.h"
-#include "segmenter/crf_segmenter.h"
 #include "segmenter/term_instance.h"
 #include "tokenizer/token_instance.h"
 #include "util/util.h"
@@ -131,7 +131,7 @@ void CRFSegmenter::SegmentRange(TermInstance *term_instance,
 
   int tag_id;
   int term_count = 0;
-  size_t i = 0;
+  int i = 0;
   int token_count = 0;
   int term_type;
   for (i = 0; i < end - begin; ++i) {

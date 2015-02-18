@@ -98,7 +98,7 @@ CRFModel *CRFModel::OpenText(const char *text_filename,
     self->xindex_ = new ReimuTrie();
     self->y_ = std::vector<std::string>(yname_set.begin(), yname_set.end());
     ysize = self->y_.size();
-    for (int idx = 0; idx < self->y_.size(); ++idx) {
+    for (int idx = 0; idx < static_cast<int>(self->y_.size()); ++idx) {
       yname_idx[self->y_[idx]] = idx;
     }
     fd = ReadableFile::New(text_filename, status);
