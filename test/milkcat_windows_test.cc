@@ -21,51 +21,38 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 //
-// mutex_windows.cc --- Created at 2015-02-18
+// milkcat_windows_test.cc --- Created at 2015-02-20
 //
 
-#include "util/mutex.h"
+#include <milkcat.h>
+#include <stdlib.h>
+#include <stdio.h>
 
-#include <windows.h>
-#include "util/util.h"
+using milkcat::Parser;
+using milkcat::Model;
 
-namespace milkcat {
-
-class Mutex::MutexImpl {
- public:
-  MutexImpl() {
-    mutex_ = CreateMutex(NULL, FALSE, NULL);
-  }
-
-  ~MutexImpl() {
-    CloseHandle(mutex_);
-  }
-
-  void Lock() {
-    DWORD wait_result = WaitForSingleObject(mutex_, INFINITE);
-    MC_ASSERT(wait_result == WAIT_OBJECT_0, "wait for mutex error");
-  }
-
-  void Unlock() {
-    MC_ASSERT(ReleaseMutex(mutex_), "release mutex error");
-  }
-
- private:
-  HANDLE mutex_;
-};
-
-Mutex::Mutex(): impl_(new MutexImpl()) {}
-Mutex::~Mutex() {
-  delete impl_;
-  impl_ = NULL;
+void ErrorOccured() {
+  puts(milkcat::LastError());
+  exit(1);
 }
 
-void Mutex::Lock() {
-  impl_->Lock();
-}
+int main() {
+  Model *model = Model::New("data/");
+  if (model == NULL) ErrorOccured();
 
-void Mutex::Unlock() {
-  impl_->Unlock();
-}
+  Parser *parser = Parser::New(Parser::Options(), model);
+  if (parser == NULL) ErrorOccured();
 
-}  // namespace milkcat
+  Parser::Iterator *it = new Parser::Iterator();
+  parser->Predict(it, "ÎÒµÄÃ¨Ï²»¶ºÈÅ£ÄÌ¡£");
+
+  while (!it->End()) {
+    printf("%s/%s  ", it->word(), it->part_of_speech_tag());
+    it->Next();
+  }
+  puts("");
+
+  delete it;
+  delete parser;
+  return 0;
+}

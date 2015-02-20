@@ -15,255 +15,255 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\src\libmilkcat.cc">
+    <ClCompile Include="..\..\src\libmilkcat.cc">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\libmilkcat_capi.cc">
+    <ClCompile Include="..\..\src\libmilkcat_capi.cc">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\common\instance_data.cc">
+    <ClCompile Include="..\..\src\common\instance_data.cc">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\common\model_impl.cc">
+    <ClCompile Include="..\..\src\common\model_impl.cc">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\common\reimu_trie.cc">
+    <ClCompile Include="..\..\src\common\reimu_trie.cc">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\ml\crf_model.cc">
+    <ClCompile Include="..\..\src\ml\crf_model.cc">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\ml\crf_tagger.cc">
+    <ClCompile Include="..\..\src\ml\crf_tagger.cc">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\ml\feature_set.cc">
+    <ClCompile Include="..\..\src\ml\feature_set.cc">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\ml\hmm_model.cc">
+    <ClCompile Include="..\..\src\ml\hmm_model.cc">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\ml\perceptron.cc">
+    <ClCompile Include="..\..\src\ml\perceptron.cc">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\ml\perceptron_model.cc">
+    <ClCompile Include="..\..\src\ml\perceptron_model.cc">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\parser\beam_yamada_parser.cc">
+    <ClCompile Include="..\..\src\parser\beam_yamada_parser.cc">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\parser\dependency_parser.cc">
+    <ClCompile Include="..\..\src\parser\dependency_parser.cc">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\parser\feature_template.cc">
+    <ClCompile Include="..\..\src\parser\feature_template.cc">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\parser\orcale.cc">
+    <ClCompile Include="..\..\src\parser\orcale.cc">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\parser\state.cc">
+    <ClCompile Include="..\..\src\parser\state.cc">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\parser\tree_instance.cc">
+    <ClCompile Include="..\..\src\parser\tree_instance.cc">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\parser\yamada_parser.cc">
+    <ClCompile Include="..\..\src\parser\yamada_parser.cc">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\segmenter\bigram_segmenter.cc">
+    <ClCompile Include="..\..\src\segmenter\bigram_segmenter.cc">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\segmenter\crf_segmenter.cc">
+    <ClCompile Include="..\..\src\segmenter\crf_segmenter.cc">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\segmenter\mixed_segmenter.cc">
+    <ClCompile Include="..\..\src\segmenter\mixed_segmenter.cc">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\segmenter\out_of_vocabulary_word_recognition.cc">
+    <ClCompile Include="..\..\src\segmenter\out_of_vocabulary_word_recognition.cc">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\segmenter\term_instance.cc">
+    <ClCompile Include="..\..\src\segmenter\term_instance.cc">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\tagger\crf_part_of_speech_tagger.cc">
+    <ClCompile Include="..\..\src\tagger\crf_part_of_speech_tagger.cc">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\tagger\hmm_part_of_speech_tagger.cc">
+    <ClCompile Include="..\..\src\tagger\hmm_part_of_speech_tagger.cc">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\tagger\part_of_speech_tag_instance.cc">
+    <ClCompile Include="..\..\src\tagger\part_of_speech_tag_instance.cc">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\tagger\part_of_speech_tagger.cc">
+    <ClCompile Include="..\..\src\tagger\part_of_speech_tagger.cc">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\tokenizer\token_instance.cc">
+    <ClCompile Include="..\..\src\tokenizer\token_instance.cc">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\tokenizer\token_lex.cc">
+    <ClCompile Include="..\..\src\tokenizer\token_lex.cc">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\tokenizer\tokenizer.cc">
+    <ClCompile Include="..\..\src\tokenizer\tokenizer.cc">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\util\readable_file.cc">
+    <ClCompile Include="..\..\src\util\readable_file.cc">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\util\strlcpy.cc">
+    <ClCompile Include="..\..\src\util\strlcpy.cc">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\util\util.cc">
+    <ClCompile Include="..\..\src\util\util.cc">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\util\writable_file.cc">
+    <ClCompile Include="..\..\src\util\writable_file.cc">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\util\util_windows.cc">
+    <ClCompile Include="..\..\src\util\util_windows.cc">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\util\strtok_r.cc">
+    <ClCompile Include="..\..\src\util\strtok_r.cc">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\util\mutex_windows.cc">
+    <ClCompile Include="..\..\src\util\mutex_windows.cc">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\src\libmilkcat.h">
+    <ClInclude Include="..\..\src\libmilkcat.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\common\instance_data.h">
+    <ClInclude Include="..\..\src\common\instance_data.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\common\milkcat_config.h">
+    <ClInclude Include="..\..\src\common\milkcat_config.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\common\model_impl.h">
+    <ClInclude Include="..\..\src\common\model_impl.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\common\reimu_trie.h">
+    <ClInclude Include="..\..\src\common\reimu_trie.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\common\static_array.h">
+    <ClInclude Include="..\..\src\common\static_array.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\common\static_hashtable.h">
+    <ClInclude Include="..\..\src\common\static_hashtable.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\include\milkcat.h">
+    <ClInclude Include="..\..\src\include\milkcat.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\ml\beam.h">
+    <ClInclude Include="..\..\src\ml\beam.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\ml\crf_model.h">
+    <ClInclude Include="..\..\src\ml\crf_model.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\ml\crf_tagger.h">
+    <ClInclude Include="..\..\src\ml\crf_tagger.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\ml\feature_set.h">
+    <ClInclude Include="..\..\src\ml\feature_set.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\ml\hmm_model.h">
+    <ClInclude Include="..\..\src\ml\hmm_model.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\ml\packed_score.h">
+    <ClInclude Include="..\..\src\ml\packed_score.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\ml\perceptron.h">
+    <ClInclude Include="..\..\src\ml\perceptron.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\ml\perceptron_model.h">
+    <ClInclude Include="..\..\src\ml\perceptron_model.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\ml\sequence_feature_set.h">
+    <ClInclude Include="..\..\src\ml\sequence_feature_set.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\parser\beam_yamada_parser.h">
+    <ClInclude Include="..\..\src\parser\beam_yamada_parser.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\parser\dependency_parser.h">
+    <ClInclude Include="..\..\src\parser\dependency_parser.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\parser\feature_template.h">
+    <ClInclude Include="..\..\src\parser\feature_template.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\parser\feature_template-inl.h">
+    <ClInclude Include="..\..\src\parser\feature_template-inl.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\parser\node.h">
+    <ClInclude Include="..\..\src\parser\node.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\parser\orcale.h">
+    <ClInclude Include="..\..\src\parser\orcale.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\parser\state.h">
+    <ClInclude Include="..\..\src\parser\state.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\parser\tree_instance.h">
+    <ClInclude Include="..\..\src\parser\tree_instance.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\parser\yamada_parser.h">
+    <ClInclude Include="..\..\src\parser\yamada_parser.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\segmenter\bigram_segmenter.h">
+    <ClInclude Include="..\..\src\segmenter\bigram_segmenter.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\segmenter\crf_segmenter.h">
+    <ClInclude Include="..\..\src\segmenter\crf_segmenter.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\segmenter\mixed_segmenter.h">
+    <ClInclude Include="..\..\src\segmenter\mixed_segmenter.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\segmenter\out_of_vocabulary_word_recognition.h">
+    <ClInclude Include="..\..\src\segmenter\out_of_vocabulary_word_recognition.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\segmenter\segmenter.h">
+    <ClInclude Include="..\..\src\segmenter\segmenter.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\segmenter\term_instance.h">
+    <ClInclude Include="..\..\src\segmenter\term_instance.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\tagger\crf_part_of_speech_tagger.h">
+    <ClInclude Include="..\..\src\tagger\crf_part_of_speech_tagger.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\tagger\hmm_part_of_speech_tagger.h">
+    <ClInclude Include="..\..\src\tagger\hmm_part_of_speech_tagger.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\tagger\part_of_speech_tag_instance.h">
+    <ClInclude Include="..\..\src\tagger\part_of_speech_tag_instance.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\tagger\part_of_speech_tagger.h">
+    <ClInclude Include="..\..\src\tagger\part_of_speech_tagger.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\tokenizer\token_instance.h">
+    <ClInclude Include="..\..\src\tokenizer\token_instance.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\tokenizer\token_lex.h">
+    <ClInclude Include="..\..\src\tokenizer\token_lex.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\tokenizer\tokenizer.h">
+    <ClInclude Include="..\..\src\tokenizer\tokenizer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\util\mutex.h">
+    <ClInclude Include="..\..\src\util\mutex.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\util\pool.h">
+    <ClInclude Include="..\..\src\util\pool.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\util\readable_file.h">
+    <ClInclude Include="..\..\src\util\readable_file.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\util\status.h">
+    <ClInclude Include="..\..\src\util\status.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\util\string_builder.h">
+    <ClInclude Include="..\..\src\util\string_builder.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\util\util.h">
+    <ClInclude Include="..\..\src\util\util.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\util\writable_file.h">
+    <ClInclude Include="..\..\src\util\writable_file.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

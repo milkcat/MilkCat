@@ -3,7 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Express 2013 for Windows Desktop
 VisualStudioVersion = 12.0.31101.0
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "milkcat", "vsproject\milkcat.vcxproj", "{FF05ABB3-5681-4591-8C52-C2CA806E72ED}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "milkcat", "vsprojects\milkcat\milkcat.vcxproj", "{FF05ABB3-5681-4591-8C52-C2CA806E72ED}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "milkcat_windows_test", "vsprojects\milkcat_windows_test\milkcat_windows_test.vcxproj", "{D7C92D47-8C3E-49B2-B789-120E8228F459}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -15,6 +17,10 @@ Global
 		{FF05ABB3-5681-4591-8C52-C2CA806E72ED}.Debug|Win32.Build.0 = Debug|Win32
 		{FF05ABB3-5681-4591-8C52-C2CA806E72ED}.Release|Win32.ActiveCfg = Release|Win32
 		{FF05ABB3-5681-4591-8C52-C2CA806E72ED}.Release|Win32.Build.0 = Release|Win32
+		{D7C92D47-8C3E-49B2-B789-120E8228F459}.Debug|Win32.ActiveCfg = Debug|Win32
+		{D7C92D47-8C3E-49B2-B789-120E8228F459}.Debug|Win32.Build.0 = Debug|Win32
+		{D7C92D47-8C3E-49B2-B789-120E8228F459}.Release|Win32.ActiveCfg = Release|Win32
+		{D7C92D47-8C3E-49B2-B789-120E8228F459}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
