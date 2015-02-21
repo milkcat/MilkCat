@@ -126,6 +126,9 @@
     <ClCompile Include="..\..\src\util\mutex_windows.cc">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\util\encoding_windows.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\src\libmilkcat.h">
@@ -264,6 +267,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\util\writable_file.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\util\encoding.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

@@ -52,7 +52,7 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_USRDLL;MILKCAT_EXPORTS;_CRT_SECURE_NO_WARNINGS;YY_NO_UNISTD_H;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\..\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -107,6 +107,7 @@
     <ClCompile Include="..\..\src\tokenizer\tokenizer.cc" />
     <ClCompile Include="..\..\src\tokenizer\token_instance.cc" />
     <ClCompile Include="..\..\src\tokenizer\token_lex.cc" />
+    <ClCompile Include="..\..\src\util\encoding_windows.cc" />
     <ClCompile Include="..\..\src\util\mutex_windows.cc" />
     <ClCompile Include="..\..\src\util\readable_file.cc" />
     <ClCompile Include="..\..\src\util\strlcpy.cc" />
@@ -155,6 +156,7 @@
     <ClInclude Include="..\..\src\tokenizer\tokenizer.h" />
     <ClInclude Include="..\..\src\tokenizer\token_instance.h" />
     <ClInclude Include="..\..\src\tokenizer\token_lex.h" />
+    <ClInclude Include="..\..\src\util\encoding.h" />
     <ClInclude Include="..\..\src\util\mutex.h" />
     <ClInclude Include="..\..\src\util\pool.h" />
     <ClInclude Include="..\..\src\util\readable_file.h" />

@@ -42,6 +42,7 @@
 #include "parser/dependency_parser.h"
 #include "parser/tree_instance.h"
 #include "tokenizer/tokenizer.h"
+#include "util/encoding.h"
 #include "util/mutex.h"
 #include "util/util.h"
 #include "util/status.h"
@@ -74,6 +75,34 @@ PartOfSpeechTagger *PartOfSpeechTaggerFactory(Model::Impl *factory,
                                               Status *status);
 
 
+// This enum represents the type or the algorithm of Parser. It could be
+// kDefault which indicates using the default algorithm for segmentation and
+// part-of-speech tagging. Meanwhile, it could also be
+//   kTextTokenizer | kBigramSegmenter | kHmmTagger
+// which indicates using bigram segmenter for segmentation, using HMM model
+// for part-of-speech tagging.
+enum ParserType {
+  // Tokenizer type
+  kTextTokenizer = 0,
+
+  // Segmenter type
+  kMixedSegmenter = 0x00000000,
+  kCrfSegmenter = 0x00000010,
+  kUnigramSegmenter = 0x00000020,
+  kBigramSegmenter = 0x00000030,
+
+  // Part-of-speech tagger type
+  kMixedTagger = 0x00000000,
+  kHmmTagger = 0x00001000,
+  kCrfTagger = 0x00002000,
+  kNoTagger = 0x000ff000,
+
+  // Depengency parser type
+  kYamadaParser = 0x00100000,
+  kBeamYamadaParser = 0x00200000,
+  kNoParser = 0x00000000
+};
+
 class Parser::Impl {
  public:
   static Impl *New(const Options &options, Model *model);
@@ -100,7 +129,74 @@ class Parser::Impl {
   DependencyParser *dependency_parser_;
   Model::Impl *model_impl_;
   bool own_model_;
-  int iterator_alloced_;
+
+  // These fields are used when using gbk encoding
+  bool use_gbk_;
+  char *utf8_buffer_;
+  int utf8_buffersize_;
+  Encoding *encoding_;
+};
+
+class Parser::Options::Impl {
+ public:
+  Impl();
+
+  void UseGBK() {
+    use_gbk_ = true;
+  }
+  void UseUTF8() {
+    use_gbk_ = false;
+  }
+
+  void UseMixedSegmenter() {
+    segmenter_type_ = kMixedSegmenter;
+  }
+  void UseCrfSegmenter() {
+    segmenter_type_ = kCrfSegmenter;
+  }
+  void UseUnigramSegmenter() {
+    segmenter_type_ = kUnigramSegmenter;
+  }
+  void UseBigramSegmenter() {
+    segmenter_type_ = kBigramSegmenter;
+  }
+
+  void UseMixedPOSTagger() {
+    tagger_type_ = kMixedTagger;
+  }
+  void UseHmmPOSTagger() {
+    tagger_type_ = kHmmTagger;
+  }
+  void UseCrfPOSTagger() {
+    tagger_type_ = kCrfTagger;
+  }
+  void NoPOSTagger() {
+    tagger_type_ = kNoTagger;
+  }
+
+  void UseYamadaParser() {
+    if (tagger_type_ == kNoTagger) tagger_type_ = kMixedTagger;
+    parser_type_ = kBeamYamadaParser;
+  }
+  void UseBeamYamadaParser() {
+    if (tagger_type_ == kNoTagger) tagger_type_ = kMixedTagger;
+    parser_type_ = kYamadaParser;
+  }
+  void NoDependencyParser() {
+    parser_type_ = kNoParser;
+  }
+
+  // Get the type value of current setting
+  int TypeValue() const {
+    return segmenter_type_ | tagger_type_ | parser_type_;
+  }
+  bool use_gbk() const { return use_gbk_; }
+
+private:
+  int segmenter_type_;
+  int tagger_type_;
+  int parser_type_;
+  bool use_gbk_;
 };
 
 // Cursor class save the internal state of the analyzing result, such as
@@ -110,10 +206,8 @@ class Parser::Iterator::Impl {
   Impl();
   ~Impl();
 
-  // Start to scan a text and use this->analyzer_ to analyze it
-  // the result saved in its current state, use MoveToNext() to
-  // iterate.
-  void Scan(const char *text);
+  // Starts to scan a text and use `parser_` to predict
+  void Scan(const char *text, bool use_gbk);
 
   // Move the cursor to next position, if end of text is reached
   // set end() to true
@@ -125,7 +219,11 @@ class Parser::Iterator::Impl {
   // These function return the data of current position
   const char *word() const {
     if (end_) return "";
-    return term_instance_->term_text_at(current_position_);
+    if (use_gbk_) {
+      return gbk_term_instance_->term_text_at(current_position_);
+    } else {
+      return term_instance_->term_text_at(current_position_);
+    }
   }
   const char *part_of_speech_tag() const {
     if (end_) return "";
@@ -175,6 +273,14 @@ class Parser::Iterator::Impl {
   int current_position_;
   bool end_;
   bool is_begin_of_sentence_;
+
+  bool use_gbk_;
+  TermInstance *gbk_term_instance_;
+  Encoding *encoding_;
+
+  // Converts UTF-8 encoded `term_instance` to GBK encoded `gbk_term_instance`
+  void ConvertToGBKTermInstance(TermInstance *term_instance,
+                                TermInstance *gbk_term_instance);
 };
 
 }  // namespace milkcat

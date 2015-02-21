@@ -24,3 +24,29 @@
 // encoding.h --- Created at 2015-02-20
 //
 
+#ifndef SRC_UTIL_ENCODING_H_
+#define SRC_UTIL_ENCODING_H_
+
+namespace milkcat {
+
+// Converts strings between different encodings
+class Encoding {
+ public:
+  class Impl;
+
+  Encoding();
+  ~Encoding();
+
+  // Converts GBK string to UTF-8, returns true if successed.
+  bool GBKToUTF8(const char *input, char *output, int output_size);
+
+  // Converts UTF8 string to GBK, returns true if successed.
+  bool UTF8ToGBK(const char *input, char *output, int output_size);
+
+ private:
+  Impl *impl_;
+};
+
+}
+
+#endif  // SRC_UTIL_ENCODING_H_

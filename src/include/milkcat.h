@@ -104,7 +104,7 @@ class MILKCAT_API Parser {
   void Predict(Iterator *iterator, const char *text);
 
   // Get the instance of the implementation class
-  Impl *impl() { return impl_; }
+  Impl *impl() const { return impl_; }
 
  private:
   Parser();
@@ -114,7 +114,14 @@ class MILKCAT_API Parser {
 // The options for the parser
 class MILKCAT_API Parser::Options {
  public:
+  class Impl;
+
   Options();
+  ~Options();
+
+  // Use GBK or UTF-8 encoding
+  void UseGBK();
+  void UseUTF8();
 
   // The type of segmenter, part-of-speech tagger and dependency parser
   // Default is MixedSegmenter, MixedPOSTagger and NoDependencyParser
@@ -132,13 +139,11 @@ class MILKCAT_API Parser::Options {
   void UseBeamYamadaParser();
   void NoDependencyParser();
 
-  // Get the type value of current setting
-  int TypeValue() const;
+  // Get the instance of the implementation class
+  Impl *impl() const { return impl_; }
 
  private:
-  int segmenter_type_;
-  int tagger_type_;
-  int parser_type_;
+  Impl *impl_;
 };
 
 // Iterator for the prediction of parser

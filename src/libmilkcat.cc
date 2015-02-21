@@ -53,34 +53,6 @@
 
 namespace milkcat {
 
-// This enum represents the type or the algorithm of Parser. It could be
-// kDefault which indicates using the default algorithm for segmentation and
-// part-of-speech tagging. Meanwhile, it could also be
-//   kTextTokenizer | kBigramSegmenter | kHmmTagger
-// which indicates using bigram segmenter for segmentation, using HMM model
-// for part-of-speech tagging.
-enum ParserType {
-  // Tokenizer type
-  kTextTokenizer = 0,
-
-  // Segmenter type
-  kMixedSegmenter = 0x00000000,
-  kCrfSegmenter = 0x00000010,
-  kUnigramSegmenter = 0x00000020,
-  kBigramSegmenter = 0x00000030,
-
-  // Part-of-speech tagger type
-  kMixedTagger = 0x00000000,
-  kHmmTagger = 0x00001000,
-  kCrfTagger = 0x00002000,
-  kNoTagger = 0x000ff000,
-
-  // Depengency parser type
-  kYamadaParser = 0x00100000,
-  kBeamYamadaParser = 0x00200000,
-  kNoParser = 0x00000000
-};
-
 Tokenization *TokenizerFactory(int analyzer_type) {
   int tokenizer_type = analyzer_type & kTokenizerMask;
 
@@ -201,7 +173,10 @@ Parser::Iterator::Impl::Impl():
     sentence_length_(0),
     current_position_(0),
     end_(true),
-    is_begin_of_sentence_(true) {
+    is_begin_of_sentence_(true),
+    use_gbk_(false),
+    gbk_term_instance_(new TermInstance()) {
+  encoding_ = new Encoding();
 }
 
 Parser::Iterator::Impl::~Impl() {
@@ -220,14 +195,40 @@ Parser::Iterator::Impl::~Impl() {
   delete tree_instance_;
   tree_instance_ = NULL;
 
+  delete gbk_term_instance_;
+  gbk_term_instance_ = NULL;
+
+  delete encoding_;
+  encoding_ = NULL;
+
   parser_ = NULL;
 }
 
-void Parser::Iterator::Impl::Scan(const char *text) {
+void Parser::Iterator::Impl::Scan(const char *text, bool use_gbk) {
+  use_gbk_ = use_gbk;
   tokenizer_->Scan(text);
   sentence_length_ = 0;
   current_position_ = 0;
   end_ = false;
+}
+
+void Parser::Iterator::Impl::ConvertToGBKTermInstance(
+    TermInstance *term_instance,
+    TermInstance *gbk_term_instance) {
+  char gbk_string[kTermLengthMax];
+  for (int idx = 0; idx < term_instance->size(); ++idx) {
+    encoding_->UTF8ToGBK(
+        term_instance->term_text_at(idx),
+        gbk_string,
+        kTermLengthMax);
+    gbk_term_instance->set_value_at(
+        idx,
+        gbk_string,
+        term_instance->token_number_at(idx),
+        term_instance->term_type_at(idx),
+        term_instance->term_id_at(idx));
+  }
+  gbk_term_instance->set_size(term_instance->size());
 }
 
 void Parser::Iterator::Impl::Next() {
@@ -240,6 +241,8 @@ void Parser::Iterator::Impl::Next() {
       end_ = true;
     } else {
       parser_->segmenter()->Segment(term_instance_, token_instance_);
+      if (use_gbk_) ConvertToGBKTermInstance(term_instance_,
+                                             gbk_term_instance_);
 
       // If the parser have part-of-speech tagger, tag the term_instance
       if (parser_->part_of_speech_tagger()) {
@@ -306,7 +309,10 @@ Parser::Impl::Impl(): segmenter_(NULL),
                       dependency_parser_(NULL),
                       model_impl_(NULL),
                       own_model_(false),
-                      iterator_alloced_(0) {
+                      use_gbk_(false),
+                      utf8_buffersize_(1024) {
+  utf8_buffer_ = new char[1024];
+  encoding_ = new Encoding();
 }
 
 Parser::Impl::~Impl() {
@@ -321,13 +327,21 @@ Parser::Impl::~Impl() {
 
   if (own_model_) delete model_impl_;
   model_impl_ = NULL;
+
+  delete[] utf8_buffer_;
+  utf8_buffer_ = NULL;
+
+  delete encoding_;
+  encoding_ = NULL;
 }
 
 Parser::Impl *Parser::Impl::New(const Options &options, Model *model) {
   Status status = Status::OK();
   Impl *self = new Parser::Impl();
-  int type = options.TypeValue();
+  int type = options.impl()->TypeValue();
   Model::Impl *model_impl = model? model->impl(): NULL;
+
+  self->use_gbk_ = options.impl()->use_gbk();
 
   if (model_impl == NULL) {
     self->model_impl_ = new Model::Impl(MODEL_DIR);
@@ -366,7 +380,26 @@ Parser::Impl *Parser::Impl::New(const Options &options, Model *model) {
 
 void Parser::Impl::Predict(Parser::Iterator *iterator, const char *text) {
   iterator->impl()->set_parser(this);
-  iterator->impl()->Scan(text);
+
+  if (use_gbk_) {
+    // When using GBK encoding
+    int len = strlen(text);
+
+    // Requires enough space for utf8 string
+    int required = 2 * (len + 1);
+    if (utf8_buffersize_ < required) {
+      delete[] utf8_buffer_;
+      utf8_buffer_ = new char[required];
+      utf8_buffersize_ = required;
+    }
+
+    bool success = encoding_->GBKToUTF8(text, utf8_buffer_, utf8_buffersize_);
+    MC_ASSERT(success, "failed to convert to UTF8 string");
+    iterator->impl()->Scan(utf8_buffer_, use_gbk_);
+  } else {
+    iterator->impl()->Scan(text, use_gbk_);
+  }
+  
   iterator->Next();
 }
 
@@ -402,48 +435,57 @@ void Parser::Predict(Parser::Iterator *iterator, const char *text) {
   return impl_->Predict(iterator, text);
 }
 
-Parser::Options::Options(): segmenter_type_(kMixedSegmenter),
-                            tagger_type_(kMixedTagger),
-                            parser_type_(kNoParser) {
+Parser::Options::Options(): impl_(new Impl()) {
+}
+Parser::Options::~Options() {
+  delete impl_;
+  impl_ = NULL;
 }
 
+Parser::Options::Impl::Impl():
+    segmenter_type_(kMixedSegmenter),
+    tagger_type_(kMixedTagger),
+    parser_type_(kNoParser),
+    use_gbk_(false) {
+}
+void Parser::Options::UseGBK() {
+  impl_->UseGBK();
+}
+void Parser::Options::UseUTF8() {
+  impl_->UseUTF8();
+}
 void Parser::Options::UseMixedSegmenter() {
-  segmenter_type_ = kMixedSegmenter;
+  impl_->UseMixedSegmenter();
 }
 void Parser::Options::UseCrfSegmenter() {
-  segmenter_type_ = kCrfSegmenter;
+  impl_->UseCrfSegmenter();
 }
 void Parser::Options::UseUnigramSegmenter() {
-  segmenter_type_ = kUnigramSegmenter;
+  impl_->UseUnigramSegmenter();
 }
 void Parser::Options::UseBigramSegmenter() {
-  segmenter_type_ = kBigramSegmenter;
+  impl_->UseBigramSegmenter();
 }
 void Parser::Options::UseMixedPOSTagger() {
-  tagger_type_ = kMixedTagger;
+  impl_->UseMixedPOSTagger();
 }
 void Parser::Options::UseHmmPOSTagger() {
-  tagger_type_ = kHmmTagger;
+  impl_->UseHmmPOSTagger();
 }
 void Parser::Options::UseCrfPOSTagger() {
-  tagger_type_ = kCrfTagger;
+  impl_->UseCrfPOSTagger();
 }
 void Parser::Options::NoPOSTagger() {
-  tagger_type_ = kNoTagger;
+  impl_->NoPOSTagger();
 }
 void Parser::Options::UseBeamYamadaParser() {
-  if (tagger_type_ == kNoTagger) tagger_type_ = kMixedTagger;
-  parser_type_ = kBeamYamadaParser;
+  impl_->UseBeamYamadaParser();
 }
 void Parser::Options::UseYamadaParser() {
-  if (tagger_type_ == kNoTagger) tagger_type_ = kMixedTagger;
-  parser_type_ = kYamadaParser;
+  impl_->UseYamadaParser();
 }
 void Parser::Options::NoDependencyParser() {
-  parser_type_ = kNoParser;
-}
-int Parser::Options::TypeValue() const {
-  return segmenter_type_ | tagger_type_ | parser_type_;
+  impl_->NoDependencyParser();
 }
 
 // ------------------------------- Model -------------------------------------

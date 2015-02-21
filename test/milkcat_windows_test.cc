@@ -40,7 +40,10 @@ int main() {
   Model *model = Model::New("data/");
   if (model == NULL) ErrorOccured();
 
-  Parser *parser = Parser::New(Parser::Options(), model);
+  Parser::Options options;
+
+  options.UseGBK();
+  Parser *parser = Parser::New(options, model);
   if (parser == NULL) ErrorOccured();
 
   Parser::Iterator *it = new Parser::Iterator();

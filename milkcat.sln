@@ -6,6 +6,9 @@ MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "milkcat", "vsprojects\milkcat\milkcat.vcxproj", "{FF05ABB3-5681-4591-8C52-C2CA806E72ED}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "milkcat_windows_test", "vsprojects\milkcat_windows_test\milkcat_windows_test.vcxproj", "{D7C92D47-8C3E-49B2-B789-120E8228F459}"
+	ProjectSection(ProjectDependencies) = postProject
+		{FF05ABB3-5681-4591-8C52-C2CA806E72ED} = {FF05ABB3-5681-4591-8C52-C2CA806E72ED}
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
