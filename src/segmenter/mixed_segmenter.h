@@ -32,7 +32,7 @@
 
 namespace milkcat {
 
-class OutOfVocabularyWordRecognition;
+class OutOfVocabularyWordRecognizer;
 class BigramSegmenter;
 class TermInstance;
 class TokenInstance;
@@ -51,7 +51,7 @@ class MixedSegmenter: public Segmenter {
  private:
   TermInstance *bigram_result_;
   BigramSegmenter *bigram_;
-  OutOfVocabularyWordRecognition *oov_recognizer_;
+  OutOfVocabularyWordRecognizer *oov_recognizer_;
 
   MixedSegmenter();
 };

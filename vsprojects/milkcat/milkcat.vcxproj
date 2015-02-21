@@ -98,7 +98,7 @@
     <ClCompile Include="..\..\src\segmenter\bigram_segmenter.cc" />
     <ClCompile Include="..\..\src\segmenter\crf_segmenter.cc" />
     <ClCompile Include="..\..\src\segmenter\mixed_segmenter.cc" />
-    <ClCompile Include="..\..\src\segmenter\out_of_vocabulary_word_recognition.cc" />
+    <ClCompile Include="..\..\src\segmenter\out_of_vocabulary_word_recognizer.cc" />
     <ClCompile Include="..\..\src\segmenter\term_instance.cc" />
     <ClCompile Include="..\..\src\tagger\crf_part_of_speech_tagger.cc" />
     <ClCompile Include="..\..\src\tagger\hmm_part_of_speech_tagger.cc" />
@@ -146,7 +146,7 @@
     <ClInclude Include="..\..\src\segmenter\bigram_segmenter.h" />
     <ClInclude Include="..\..\src\segmenter\crf_segmenter.h" />
     <ClInclude Include="..\..\src\segmenter\mixed_segmenter.h" />
-    <ClInclude Include="..\..\src\segmenter\out_of_vocabulary_word_recognition.h" />
+    <ClInclude Include="..\..\src\segmenter\out_of_vocabulary_word_recognizer.h" />
     <ClInclude Include="..\..\src\segmenter\segmenter.h" />
     <ClInclude Include="..\..\src\segmenter\term_instance.h" />
     <ClInclude Include="..\..\src\tagger\crf_part_of_speech_tagger.h" />

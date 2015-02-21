@@ -26,7 +26,7 @@
 
 #include "segmenter/mixed_segmenter.h"
 #include "segmenter/bigram_segmenter.h"
-#include "segmenter/out_of_vocabulary_word_recognition.h"
+#include "segmenter/out_of_vocabulary_word_recognizer.h"
 #include "segmenter/term_instance.h"
 #include "tokenizer/token_instance.h"
 
@@ -44,8 +44,9 @@ MixedSegmenter *MixedSegmenter::New(Model::Impl *model_factory,
   self->bigram_ = BigramSegmenter::New(model_factory, true, status);
 
   if (status->ok()) {
-    self->oov_recognizer_ = OutOfVocabularyWordRecognition::New(model_factory,
-                                                                status);    
+    self->oov_recognizer_ = OutOfVocabularyWordRecognizer::New(
+        model_factory,
+        status);    
   }
   if (status->ok()) self->bigram_result_ = new TermInstance();
 

@@ -26,8 +26,8 @@
 //
 
 
-#ifndef SRC_SEGMENTER_OUT_OF_VOCABULARY_WORD_RECOGNITION_H_
-#define SRC_SEGMENTER_OUT_OF_VOCABULARY_WORD_RECOGNITION_H_
+#ifndef SRC_SEGMENTER_OUT_OF_VOCABULARY_WORD_RECOGNIZER_H_
+#define SRC_SEGMENTER_OUT_OF_VOCABULARY_WORD_RECOGNIZER_H_
 
 #include <stdint.h>
 #include <stdio.h>
@@ -42,11 +42,11 @@ class CRFSegmenter;
 class TermInstance;
 class TokenInstance;
 
-class OutOfVocabularyWordRecognition {
+class OutOfVocabularyWordRecognizer {
  public:
-  static OutOfVocabularyWordRecognition *New(Model::Impl *model_factory,
+   static OutOfVocabularyWordRecognizer *New(Model::Impl *model_factory,
                                              Status *status);
-  ~OutOfVocabularyWordRecognition();
+   ~OutOfVocabularyWordRecognizer();
   void Recognize(TermInstance *term_instance,
                  TermInstance *in_term_instance,
                  TokenInstance *in_token_instance);
@@ -65,7 +65,7 @@ class OutOfVocabularyWordRecognition {
   const ReimuTrie *oov_property_;
   int8_t oov_properties_[kTokenMax];
 
-  OutOfVocabularyWordRecognition();
+  OutOfVocabularyWordRecognizer();
 
   // Get the oov properties for term_instance, and write the result into
   // oov_properties_
@@ -78,9 +78,9 @@ class OutOfVocabularyWordRecognition {
                      TermInstance *src_term_instance,
                      int src_position);
 
-  DISALLOW_COPY_AND_ASSIGN(OutOfVocabularyWordRecognition);
+  DISALLOW_COPY_AND_ASSIGN(OutOfVocabularyWordRecognizer);
 };
 
 }  // namespace milkcat
 
-#endif  // SRC_SEGMENTER_OUT_OF_VOCABULARY_WORD_RECOGNITION_H_
+#endif  // SRC_SEGMENTER_OUT_OF_VOCABULARY_WORD_RECOGNIZER_H_

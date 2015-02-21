@@ -38,7 +38,7 @@
 #include "segmenter/bigram_segmenter.h"
 #include "segmenter/crf_segmenter.h"
 #include "segmenter/mixed_segmenter.h"
-#include "segmenter/out_of_vocabulary_word_recognition.h"
+#include "segmenter/out_of_vocabulary_word_recognizer.h"
 #include "segmenter/term_instance.h"
 #include "tagger/crf_part_of_speech_tagger.h"
 #include "tagger/hmm_part_of_speech_tagger.h"

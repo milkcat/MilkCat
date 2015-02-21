@@ -23,6 +23,8 @@
 //
 // milkcat_windows_test.cc --- Created at 2015-02-20
 //
+// NOTE: This file is GBK encoded
+//
 
 #include <milkcat.h>
 #include <stdlib.h>

@@ -25,7 +25,7 @@
 // out_of_vocabulary_word_recognitioin.cc --- Created at 2013-09-03
 //
 
-#include "segmenter/out_of_vocabulary_word_recognition.h"
+#include "segmenter/out_of_vocabulary_word_recognizer.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -39,10 +39,10 @@
 
 namespace milkcat {
 
-OutOfVocabularyWordRecognition *OutOfVocabularyWordRecognition::New(
+OutOfVocabularyWordRecognizer *OutOfVocabularyWordRecognizer::New(
     Model::Impl *model_factory,
     Status *status) {
-  OutOfVocabularyWordRecognition *self = new OutOfVocabularyWordRecognition();
+    OutOfVocabularyWordRecognizer *self = new OutOfVocabularyWordRecognizer();
   self->crf_segmenter_ = CRFSegmenter::New(model_factory, status);
 
   if (status->ok()) {
@@ -58,7 +58,7 @@ OutOfVocabularyWordRecognition *OutOfVocabularyWordRecognition::New(
   }
 }
 
-OutOfVocabularyWordRecognition::~OutOfVocabularyWordRecognition() {
+OutOfVocabularyWordRecognizer::~OutOfVocabularyWordRecognizer() {
   delete crf_segmenter_;
   crf_segmenter_ = NULL;
 
@@ -66,13 +66,13 @@ OutOfVocabularyWordRecognition::~OutOfVocabularyWordRecognition() {
   term_instance_ = NULL;
 }
 
-OutOfVocabularyWordRecognition::OutOfVocabularyWordRecognition():
+OutOfVocabularyWordRecognizer::OutOfVocabularyWordRecognizer():
     term_instance_(NULL),
     crf_segmenter_(NULL) {
 }
 
-void OutOfVocabularyWordRecognition::GetOOVProperties(
-    TermInstance *term_instance) {
+void OutOfVocabularyWordRecognizer::GetOOVProperties(
+   TermInstance *term_instance) {
   for (int i = 0; i < term_instance->size(); ++i) 
     oov_properties_[i] = kNoRecognize;
 
@@ -113,7 +113,7 @@ void OutOfVocabularyWordRecognition::GetOOVProperties(
   }
 }
 
-void OutOfVocabularyWordRecognition::Recognize(
+void OutOfVocabularyWordRecognizer::Recognize(
     TermInstance *term_instance,
     TermInstance *in_term_instance,
     TokenInstance *in_token_instance) {
@@ -172,7 +172,7 @@ void OutOfVocabularyWordRecognition::Recognize(
   term_instance->set_size(current_term);
 }
 
-void OutOfVocabularyWordRecognition::CopyTermValue(
+void OutOfVocabularyWordRecognizer::CopyTermValue(
     TermInstance *dest_term_instance,
     int dest_postion,
     TermInstance *src_term_instance,
@@ -186,7 +186,7 @@ void OutOfVocabularyWordRecognition::CopyTermValue(
       src_term_instance->term_id_at(src_position));
 }
 
-void OutOfVocabularyWordRecognition::RecognizeRange(
+void OutOfVocabularyWordRecognizer::RecognizeRange(
     TokenInstance *token_instance,
     int begin,
     int end) {

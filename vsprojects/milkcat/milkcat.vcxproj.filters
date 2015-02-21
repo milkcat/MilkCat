@@ -78,9 +78,6 @@
     <ClCompile Include="..\..\src\segmenter\mixed_segmenter.cc">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\segmenter\out_of_vocabulary_word_recognition.cc">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\src\segmenter\term_instance.cc">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -127,6 +124,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\util\encoding_windows.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\segmenter\out_of_vocabulary_word_recognizer.cc">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -218,9 +218,6 @@
     <ClInclude Include="..\..\src\segmenter\mixed_segmenter.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\segmenter\out_of_vocabulary_word_recognition.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\src\segmenter\segmenter.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -270,6 +267,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\util\encoding.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\segmenter\out_of_vocabulary_word_recognizer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
