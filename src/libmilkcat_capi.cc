@@ -69,7 +69,7 @@ mc_parser_t *mc_parser_new(mc_parseropt_t *parseropt, mc_model_t *model) {
       option.UseBigramSegmenter();
       break;
     case MC_CRF_SEGMENTER:
-      option.UseCrfSegmenter();
+      option.UseCRFSegmenter();
       break;
     case MC_MIXED_SEGMENTER:
       option.UseMixedSegmenter();
@@ -83,10 +83,10 @@ mc_parser_t *mc_parser_new(mc_parseropt_t *parseropt, mc_model_t *model) {
 
   switch (parseropt->postagger) {
     case MC_FASTCRF_POSTAGGER:
-      option.UseCrfPOSTagger();
+      option.UseCRFPOSTagger();
       break;
     case MC_HMM_POSTAGGER:
-      option.UseHmmPOSTagger();
+      option.UseHMMPOSTagger();
       break;
     case MC_NO_POSTAGGER:
       option.NoPOSTagger();

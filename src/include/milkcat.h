@@ -130,13 +130,13 @@ class MILKCAT_API Parser::Options {
   // The type of segmenter, part-of-speech tagger and dependency parser
   // Default is MixedSegmenter, MixedPOSTagger and NoDependencyParser
   void UseMixedSegmenter();
-  void UseCrfSegmenter();
+  void UseCRFSegmenter();
   void UseUnigramSegmenter();
   void UseBigramSegmenter();
 
   void UseMixedPOSTagger();
-  void UseHmmPOSTagger();
-  void UseCrfPOSTagger();
+  void UseHMMPOSTagger();
+  void UseCRFPOSTagger();
   void NoPOSTagger();
 
   void UseYamadaParser();

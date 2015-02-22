@@ -128,7 +128,7 @@ void GetArgs(int argc, char **argv, Options *options) {
 
       case 'm':
         if (strcmp(optarg, "crf_seg") == 0) {
-          options->parser_options.UseCrfSegmenter();
+          options->parser_options.UseCRFSegmenter();
           options->parser_options.NoPOSTagger();
           options->display_tag = false;
         } else if (strcmp(optarg, "unigram_seg") == 0) {
@@ -136,12 +136,12 @@ void GetArgs(int argc, char **argv, Options *options) {
           options->parser_options.NoPOSTagger();
           options->display_tag = false;
         } else if (strcmp(optarg, "crf") == 0) {
-          options->parser_options.UseCrfSegmenter();
-          options->parser_options.UseCrfPOSTagger();
+          options->parser_options.UseCRFSegmenter();
+          options->parser_options.UseCRFPOSTagger();
           options->display_tag = true;
         } else if (strcmp(optarg, "hmm") == 0) {
-          options->parser_options.UseCrfSegmenter();
-          options->parser_options.UseHmmPOSTagger();
+          options->parser_options.UseCRFSegmenter();
+          options->parser_options.UseHMMPOSTagger();
           options->display_tag = true;   
         } else if (strcmp(optarg, "mixed_seg") == 0) {
           options->parser_options.UseMixedSegmenter();

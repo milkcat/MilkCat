@@ -456,8 +456,8 @@ void Parser::Options::UseUTF8() {
 void Parser::Options::UseMixedSegmenter() {
   impl_->UseMixedSegmenter();
 }
-void Parser::Options::UseCrfSegmenter() {
-  impl_->UseCrfSegmenter();
+void Parser::Options::UseCRFSegmenter() {
+  impl_->UseCRFSegmenter();
 }
 void Parser::Options::UseUnigramSegmenter() {
   impl_->UseUnigramSegmenter();
@@ -468,11 +468,11 @@ void Parser::Options::UseBigramSegmenter() {
 void Parser::Options::UseMixedPOSTagger() {
   impl_->UseMixedPOSTagger();
 }
-void Parser::Options::UseHmmPOSTagger() {
-  impl_->UseHmmPOSTagger();
+void Parser::Options::UseHMMPOSTagger() {
+  impl_->UseHMMPOSTagger();
 }
-void Parser::Options::UseCrfPOSTagger() {
-  impl_->UseCrfPOSTagger();
+void Parser::Options::UseCRFPOSTagger() {
+  impl_->UseCRFPOSTagger();
 }
 void Parser::Options::NoPOSTagger() {
   impl_->NoPOSTagger();

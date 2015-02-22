@@ -151,7 +151,7 @@ class Parser::Options::Impl {
   void UseMixedSegmenter() {
     segmenter_type_ = kMixedSegmenter;
   }
-  void UseCrfSegmenter() {
+  void UseCRFSegmenter() {
     segmenter_type_ = kCrfSegmenter;
   }
   void UseUnigramSegmenter() {
@@ -164,10 +164,10 @@ class Parser::Options::Impl {
   void UseMixedPOSTagger() {
     tagger_type_ = kMixedTagger;
   }
-  void UseHmmPOSTagger() {
+  void UseHMMPOSTagger() {
     tagger_type_ = kHmmTagger;
   }
-  void UseCrfPOSTagger() {
+  void UseCRFPOSTagger() {
     tagger_type_ = kCrfTagger;
   }
   void NoPOSTagger() {
