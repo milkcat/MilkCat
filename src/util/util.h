@@ -56,6 +56,21 @@ int64_t ftell64(FILE *fd);
 
 char *strtok_r(char *s, const char *delim, char **last);
 
+template<class T>
+class const_interoperable {}; 
+
+template<class T>
+class const_interoperable<T **> { 
+ public: 
+  const_interoperable(T **t) : t(t) {}
+  const_interoperable(const T **t) : t(const_cast<T **>(t)) {}
+
+  operator T**() const { return t; }
+  operator const T**() const { return const_cast<const T **>(t); }
+ private:
+  T **t;
+};
+
 }  // namespace milkcat
 
 #ifdef DEBUG

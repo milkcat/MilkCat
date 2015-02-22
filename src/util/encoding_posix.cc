@@ -21,60 +21,64 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 //
-// encoding_windows.cc --- Created at 2015-02-20
+// encoding_posix.cc --- Created at 2015-02-21
 //
 
 #include "util/encoding.h"
 
-#include <windows.h>
+#include <iconv.h>
+#include "util/util.h"
 
 namespace milkcat {
 
 class Encoding::Impl {
  public:
   Impl() {
-    buffer_size_ = 1024;
-    wchar_buffer_ = new WCHAR[buffer_size_];
+    iconv_gbk_to_utf8_ = iconv_open("GBK", "UTF-8//IGNORE");
+    MC_ASSERT(iconv_gbk_to_utf8_ >= 0,
+              "unable to open gbk to utf8 converter");
+
+    iconv_utf8_to_gbk_ = iconv_open("UTF-8", "GBK//IGNORE");
+    MC_ASSERT(iconv_utf8_to_gbk_ >= 0,
+              "unable to open utf8 to gbk converter");
   }
 
   ~Impl() {
-    delete[] wchar_buffer_;
-    wchar_buffer_ = NULL;
+    iconv_close(iconv_gbk_to_utf8_);
+    iconv_close(iconv_utf8_to_gbk_);
   }
 
   bool GBKToUTF8(const char *input, char *output, int output_size) {
-    return Convert(936, CP_UTF8, input, output, output_size);
-  }
-
-  bool UTF8ToGBK(const char *input, char *output, int output_size) {
-    return Convert(CP_UTF8, 936, input, output, output_size);
-  }
-
- private:
-  WCHAR *wchar_buffer_;
-  int buffer_size_;
-
-  // Converts string between different code pages 
-  bool Convert(int from_codepage,
-               int to_codepage,
-               const char *input,
-               char *output,
-               int output_size) {
-    int required = MultiByteToWideChar(from_codepage, 0, input, -1, NULL, 0);
-    if (buffer_size_ < required) {
-      delete[] wchar_buffer_;
-      wchar_buffer_ = new WCHAR[required];
-      buffer_size_ = required;
-    }
-    MultiByteToWideChar(from_codepage, 0, input, -1, wchar_buffer_, buffer_size_);
-    int bytes_written = WideCharToMultiByte(
-      to_codepage, 0, wchar_buffer_, -1, output, output_size, NULL, NULL);
-    if (bytes_written == 0) {
+    size_t input_size = strlen(input);
+    size_t u_output_size = output_size;
+    if (iconv(iconv_gbk_to_utf8_,
+              const_interoperable<char **>(&input),
+              &input_size,
+              &output,
+              &u_output_size) < 0) {
       return false;
     } else {
       return true;
     }
   }
+
+  bool UTF8ToGBK(const char *input, char *output, int output_size) {
+    size_t input_size = strlen(input);
+    size_t u_output_size = output_size;
+    if (iconv(iconv_utf8_to_gbk_,
+              const_interoperable<char **>(&input),
+              &input_size,
+              &output,
+              &u_output_size) < 0) {
+      return false;
+    } else {
+      return true;
+    }
+  }
+
+ private:
+  iconv_t iconv_gbk_to_utf8_;
+  iconv_t iconv_utf8_to_gbk_;
 };
 
 Encoding::Encoding(): impl_(new Impl()) {
@@ -94,5 +98,3 @@ bool Encoding::UTF8ToGBK(const char *input, char *output, int output_size) {
 }
 
 }  // namespace milkcat
-
-

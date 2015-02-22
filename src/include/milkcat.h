@@ -38,6 +38,10 @@
 #define MILKCAT_API __declspec(dllimport)
 #endif  // MILKCAT_EXPORTS
 
+#else  // _WIN32
+
+#define MILKCAT_API
+
 #endif  // _WIN32
 
 #ifdef __cplusplus

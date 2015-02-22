@@ -24,18 +24,13 @@
 // utils_posix.cc --- Created at 2014-03-18
 //
 
-#include <unistd.h>
+#include <stdio.h>
 #include "util/util.h"
 
 namespace milkcat {
 
-void Sleep(double seconds) {
-  int usec = static_cast<int>(seconds * 1e6);
-  usleep(usec);
-}
-
-int HardwareConcurrency() {
-  return sysconf(_SC_NPROCESSORS_ONLN);
+int64_t ftell64(FILE *fd) {
+  return ftello(fd);
 }
 
 }  // namespace milkcat

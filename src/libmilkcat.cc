@@ -393,8 +393,7 @@ void Parser::Impl::Predict(Parser::Iterator *iterator, const char *text) {
       utf8_buffersize_ = required;
     }
 
-    bool success = encoding_->GBKToUTF8(text, utf8_buffer_, utf8_buffersize_);
-    MC_ASSERT(success, "failed to convert to UTF8 string");
+    encoding_->GBKToUTF8(text, utf8_buffer_, utf8_buffersize_);
     iterator->impl()->Scan(utf8_buffer_, use_gbk_);
   } else {
     iterator->impl()->Scan(text, use_gbk_);

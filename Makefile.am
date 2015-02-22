@@ -78,8 +78,8 @@ libmilkcat_a_SOURCES = src/libmilkcat.cc \
                        src/segmenter/crf_segmenter.h \
                        src/segmenter/mixed_segmenter.cc \
                        src/segmenter/mixed_segmenter.h \
-                       src/segmenter/out_of_vocabulary_word_recognition.cc \
-                       src/segmenter/out_of_vocabulary_word_recognition.h \
+                       src/segmenter/out_of_vocabulary_word_recognizer.cc \
+                       src/segmenter/out_of_vocabulary_word_recognizer.h \
                        src/segmenter/segmenter.h \
                        src/segmenter/term_instance.h \
                        src/segmenter/term_instance.cc \
@@ -97,6 +97,8 @@ libmilkcat_a_SOURCES = src/libmilkcat.cc \
                        src/tokenizer/token_lex.h \
                        src/tokenizer/tokenizer.cc \
                        src/tokenizer/tokenizer.h \
+                       src/util/encoding.h \
+                       src/util/encoding_posix.cc \
                        src/util/mutex.h \
                        src/util/mutex_posix.cc \
                        src/util/pool.h \
@@ -105,6 +107,8 @@ libmilkcat_a_SOURCES = src/libmilkcat.cc \
                        src/util/status.h \
                        src/util/string_builder.h \
                        src/util/strlcpy.cc \
+                       src/util/strtok_r.cc \
+                       src/util/util_posix.cc \
                        src/util/util.cc \
                        src/util/util.h \
                        src/util/writable_file.cc \
@@ -113,10 +117,10 @@ libmilkcat_a_SOURCES = src/libmilkcat.cc \
 bin_PROGRAMS = milkcat milkcat-tools
 
 milkcat_SOURCES = src/main.cc
-milkcat_LDADD = libmilkcat.a
+milkcat_LDADD = libmilkcat.a -liconv -lm
 
 milkcat_tools_SOURCES = src/milkcat_tools.cc
-milkcat_tools_LDADD = libmilkcat.a
+milkcat_tools_LDADD = libmilkcat.a -liconv -lm
 
 TESTS = milkcat_api_test milkcat_capi_test parser_orcale_test reimu_trie_test
 check_PROGRAMS = milkcat_api_test \
