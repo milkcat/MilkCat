@@ -28,6 +28,7 @@
 #include <stdio.h>
 #include <string.h>
 #include "include/milkcat.h"
+#include "util/encoding.h"
 
 using milkcat::Model;
 using milkcat::Parser;
@@ -55,7 +56,10 @@ const char bigram_test_word[][64] = {
   "博丽灵梦", "是", "与", "雾雨魔理沙", "并列", "的", "第一", "自", "机"
 };
 
-void check_prediction(Parser::Iterator *parseriter) {
+void check_prediction(Parser::Iterator *parseriter, bool use_gbk) {
+  milkcat::Encoding *encoding = new milkcat::Encoding();
+  char gbk_word[256];
+
   for (int i = 0; i < kLength; ++i) {
     assert(parseriter->End() == false);
     if (i == 0) {
@@ -63,12 +67,22 @@ void check_prediction(Parser::Iterator *parseriter) {
     } else {
       assert(parseriter->is_begin_of_sentence() == false);
     }
-    assert(strcmp(parseriter->word(), word[i]) == 0);
+
+    // Compares word (converts to GBK when needed)
+    if (use_gbk) {
+      encoding->UTF8ToGBK(word[i], gbk_word, sizeof(gbk_word));
+      assert(strcmp(parseriter->word(), gbk_word) == 0);
+    } else {
+      assert(strcmp(parseriter->word(), word[i]) == 0);
+    }
+    
     assert(strcmp(parseriter->part_of_speech_tag(), postag[i]) == 0);
     assert(strcmp(parseriter->dependency_label(), label[i]) == 0);
     assert(parseriter->head() == head[i]);
     parseriter->Next();
   }
+
+  delete encoding;
 } 
 
 int parser_test() {
@@ -85,16 +99,16 @@ int parser_test() {
   assert(parser);
   Parser::Iterator *parseriter = new Parser::Iterator();
   parser->Predict(parseriter, "我的猫喜欢喝牛奶");
-  check_prediction(parseriter);
+  check_prediction(parseriter, false);
   assert(parseriter->End() == true);
   delete parser;
 
-  // Testes beam yamada parser
+  // Testes yamada parser
   options.UseYamadaParser();
   parser = Parser::New(options, model);
   assert(parser);
   parser->Predict(parseriter, "我的猫喜欢喝牛奶");
-  check_prediction(parseriter);
+  check_prediction(parseriter, false);
   assert(parseriter->End() == true);
   delete parser;
 
@@ -150,7 +164,6 @@ int bigram_segmenter_test() {
 
   for (int i = 0; i < kBigramTextLength; ++i) {
     assert(parseriter->End() == false);
-    puts(parseriter->word());
     assert(strcmp(parseriter->word(), bigram_test_word[i]) == 0);
     parseriter->Next();
   }
@@ -163,10 +176,39 @@ int bigram_segmenter_test() {
   return 0; 
 }
 
+int gbk_test() {
+  Model *model = Model::New(MODEL_DIR);
+  assert(model);
+
+  Parser::Options options;
+  options.UseMixedSegmenter();
+  options.UseMixedPOSTagger();
+  options.UseBeamYamadaParser();
+  options.UseGBK();
+
+  char gbk_sentence[2048];
+  milkcat::Encoding *encoding = new milkcat::Encoding();
+  encoding->UTF8ToGBK("我的猫喜欢喝牛奶", gbk_sentence, sizeof(gbk_sentence));
+  delete encoding;
+
+  Parser *parser = Parser::New(options, model);
+  assert(parser);
+  Parser::Iterator *parseriter = new Parser::Iterator();
+  parser->Predict(parseriter, gbk_sentence);
+  check_prediction(parseriter, true);
+  assert(parseriter->End() == true);
+  delete parser;
+
+  delete parseriter;
+  delete model;
+  return 0;
+}
+
 int main() {
   parser_test();
   empty_string_test();
   bigram_segmenter_test();
+  gbk_test();
 
   return 0;
 }

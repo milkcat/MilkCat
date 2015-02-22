@@ -34,11 +34,11 @@ namespace milkcat {
 class Encoding::Impl {
  public:
   Impl() {
-    iconv_gbk_to_utf8_ = iconv_open("GBK", "UTF-8//IGNORE");
+    iconv_gbk_to_utf8_ = iconv_open("UTF-8", "GBK//IGNORE");
     MC_ASSERT(iconv_gbk_to_utf8_ >= 0,
               "unable to open gbk to utf8 converter");
 
-    iconv_utf8_to_gbk_ = iconv_open("UTF-8", "GBK//IGNORE");
+    iconv_utf8_to_gbk_ = iconv_open("GBK", "UTF-8//IGNORE");
     MC_ASSERT(iconv_utf8_to_gbk_ >= 0,
               "unable to open utf8 to gbk converter");
   }
@@ -50,12 +50,16 @@ class Encoding::Impl {
 
   bool GBKToUTF8(const char *input, char *output, int output_size) {
     size_t input_size = strlen(input);
-    size_t u_output_size = output_size;
-    if (iconv(iconv_gbk_to_utf8_,
-              const_interoperable<char **>(&input),
-              &input_size,
-              &output,
-              &u_output_size) == static_cast<size_t>(-1)) {
+    size_t u_output_size = output_size - 1;
+    size_t nconv = iconv(
+        iconv_gbk_to_utf8_,
+        const_interoperable<char **>(&input),
+        &input_size,
+        &output,
+        &u_output_size);
+    *output = '\0';
+
+    if (nconv == static_cast<size_t>(-1)) {
       return false;
     } else {
       return true;
@@ -65,11 +69,16 @@ class Encoding::Impl {
   bool UTF8ToGBK(const char *input, char *output, int output_size) {
     size_t input_size = strlen(input);
     size_t u_output_size = output_size;
-    if (iconv(iconv_utf8_to_gbk_,
-              const_interoperable<char **>(&input),
-              &input_size,
-              &output,
-              &u_output_size) == static_cast<size_t>(-1)) {
+
+    size_t nconv = iconv(
+        iconv_utf8_to_gbk_,
+        const_interoperable<char **>(&input),
+        &input_size,
+        &output,
+        &u_output_size);
+    *output = '\0';
+
+    if (nconv == static_cast<size_t>(-1)) {
       return false;
     } else {
       return true;
