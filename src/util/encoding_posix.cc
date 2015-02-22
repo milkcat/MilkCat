@@ -55,7 +55,7 @@ class Encoding::Impl {
               const_interoperable<char **>(&input),
               &input_size,
               &output,
-              &u_output_size) < 0) {
+              &u_output_size) == static_cast<size_t>(-1)) {
       return false;
     } else {
       return true;
@@ -69,7 +69,7 @@ class Encoding::Impl {
               const_interoperable<char **>(&input),
               &input_size,
               &output,
-              &u_output_size) < 0) {
+              &u_output_size) == static_cast<size_t>(-1)) {
       return false;
     } else {
       return true;

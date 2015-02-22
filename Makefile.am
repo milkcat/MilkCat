@@ -1,6 +1,6 @@
 ACLOCAL_AMFLAGS = -I m4
 AUTOMAKE_OPTIONS = gnu subdir-objects foreign
-AM_CXXFLAGS = -I$(top_srcdir)/src -DMODEL_PATH=\"$(pkgdatadir)/\" -fno-rtti \
+AM_CXXFLAGS = -I$(top_srcdir)/src -DMODEL_DIR=\"$(pkgdatadir)/\" -fno-rtti \
               -fno-exceptions -fPIC
 
 dist_pkgdata_DATA = data/bigram.bin \
