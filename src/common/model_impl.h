@@ -89,7 +89,7 @@ class Model::Impl {
   DependencyParser::FeatureTemplate *DependencyTemplate(Status *status);
 
  private:
-  std::string model_dir_path_;
+  std::string model_dir_;
   Mutex mutex;
 
   const ReimuTrie *unigram_index_;

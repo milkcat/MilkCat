@@ -53,8 +53,8 @@ const char *kDependenctTemplateFile = "depparse.tmpl";
 
 // ---------- Model::Impl ----------
 
-Model::Impl::Impl(const char *model_dir_path):
-    model_dir_path_(model_dir_path),
+Model::Impl::Impl(const char *model_dir):
+    model_dir_(model_dir),
     unigram_index_(NULL),
     user_index_(NULL),
     unigram_cost_(NULL),
@@ -66,6 +66,9 @@ Model::Impl::Impl(const char *model_dir_path):
     oov_property_(NULL),
     dependency_(NULL),
     dependency_feature_(NULL) {
+  if (model_dir_.back() != '/' && model_dir_.back() != '\\') {
+    model_dir_.push_back('/');
+  }
 }
 
 Model::Impl::~Impl() {
@@ -106,7 +109,7 @@ Model::Impl::~Impl() {
 const ReimuTrie *Model::Impl::Index(Status *status) {
   mutex.Lock();
   if (unigram_index_ == NULL) {
-    std::string model_path = model_dir_path_ + kUnigramIndexFile;
+    std::string model_path = model_dir_ + kUnigramIndexFile;
     unigram_index_ = ReimuTrie::Open(model_path.c_str());
     if (unigram_index_ == NULL) {
       std::string errmsg = "Unable to open ";
@@ -205,7 +208,7 @@ const StaticArray<float> *Model::Impl::UserCost(Status *status) {
 const StaticArray<float> *Model::Impl::UnigramCost(Status *status) {
   mutex.Lock();
   if (unigram_cost_ == NULL) {
-    std::string model_path = model_dir_path_ + kUnigramDataFile;
+    std::string model_path = model_dir_ + kUnigramDataFile;
     unigram_cost_ = StaticArray<float>::New(model_path.c_str(), status);
   }
   mutex.Unlock();
@@ -216,7 +219,7 @@ const StaticHashTable<int64_t, float> *Model::Impl::BigramCost(
     Status *status) {
   mutex.Lock();
   if (bigram_cost_ == NULL) {
-    std::string model_path = model_dir_path_ + kBigramDataFile;
+    std::string model_path = model_dir_ + kBigramDataFile;
     bigram_cost_ = StaticHashTable<int64_t, float>::New(model_path.c_str(),
                                                         status);
   }
@@ -227,7 +230,7 @@ const StaticHashTable<int64_t, float> *Model::Impl::BigramCost(
 const CRFModel *Model::Impl::CRFSegModel(Status *status) {
   mutex.Lock();
   if (seg_model_ == NULL) {
-    std::string model_path = model_dir_path_ + kCrfSegModelFile;
+    std::string model_path = model_dir_ + kCrfSegModelFile;
     seg_model_ = CRFModel::New(model_path.c_str(), status);
   }
   mutex.Unlock();
@@ -237,7 +240,7 @@ const CRFModel *Model::Impl::CRFSegModel(Status *status) {
 const CRFModel *Model::Impl::CRFPosModel(Status *status) {
   mutex.Lock();
   if (crf_pos_model_ == NULL) {
-    std::string model_path = model_dir_path_ + kCrfPosModelFile;
+    std::string model_path = model_dir_ + kCrfPosModelFile;
     crf_pos_model_ = CRFModel::New(model_path.c_str(), status);
   }
   mutex.Unlock();
@@ -247,7 +250,7 @@ const CRFModel *Model::Impl::CRFPosModel(Status *status) {
 const HMMModel *Model::Impl::HMMPosModel(Status *status) {
   mutex.Lock();
   if (hmm_pos_model_ == NULL) {
-    std::string model_path = model_dir_path_ + kHmmPosModelFile;
+    std::string model_path = model_dir_ + kHmmPosModelFile;
     hmm_pos_model_ = HMMModel::New(model_path.c_str(), status);
   }
   mutex.Unlock();
@@ -257,7 +260,7 @@ const HMMModel *Model::Impl::HMMPosModel(Status *status) {
 const ReimuTrie *Model::Impl::OOVProperty(Status *status) {
   mutex.Lock();
   if (oov_property_ == NULL) {
-    std::string model_path = model_dir_path_ + kOovPropertyFile;
+    std::string model_path = model_dir_ + kOovPropertyFile;
     oov_property_ = ReimuTrie::Open(model_path.c_str());
     if (oov_property_ == NULL) {
       std::string errmsg = "Unable to open out-of-vocabulary property file: ";
@@ -272,7 +275,7 @@ const ReimuTrie *Model::Impl::OOVProperty(Status *status) {
 PerceptronModel *Model::Impl::YamadaModel(Status *status) {
   mutex.Lock();
   if (dependency_ == NULL) {
-    std::string prefix = model_dir_path_ + kYamadaModelPrefix;
+    std::string prefix = model_dir_ + kYamadaModelPrefix;
     dependency_ = PerceptronModel::Open(prefix.c_str(), status);
   }
   mutex.Unlock();
@@ -282,7 +285,7 @@ PerceptronModel *Model::Impl::YamadaModel(Status *status) {
 PerceptronModel *Model::Impl::BeamYamadaModel(Status *status) {
   mutex.Lock();
   if (dependency_ == NULL) {
-    std::string prefix = model_dir_path_ + kBeamYamadaModelPrefix;
+    std::string prefix = model_dir_ + kBeamYamadaModelPrefix;
     dependency_ = PerceptronModel::Open(prefix.c_str(), status);
   }
   mutex.Unlock();
@@ -293,7 +296,7 @@ DependencyParser::FeatureTemplate *
 Model::Impl::DependencyTemplate(Status *status) {
   mutex.Lock();
   if (dependency_feature_ == NULL) {
-    std::string prefix = model_dir_path_ + kDependenctTemplateFile;
+    std::string prefix = model_dir_ + kDependenctTemplateFile;
     dependency_feature_ = DependencyParser::FeatureTemplate::Open(
         prefix.c_str(),
         status);
