@@ -33,27 +33,29 @@
 using milkcat::Model;
 using milkcat::Parser;
 
-const int kLength = 6;
+const int kLength = 9;
 
+const char *kSentence = "我的猫喜欢喝牛奶。猫。";
 const char word[][64] = {
-  "我", "的", "猫", "喜欢", "喝", "牛奶"
+   "我", "的", "猫", "喜欢", "喝", "牛奶", "。", "猫", "。"
 };
-
 const char postag[][64] = {
-  "PN", "DEG", "NN", "VV", "VV", "NN"
+   "PN", "DEG", "NN", "VV", "VV", "NN", "PU", "NN", "PU"
 };
-
 const int head[] = {
-  3, 1, 4, 0, 4, 5
+    3, 1, 4, 0, 4, 5, 4, 0, 1
 };
-
 const char label[][64] = {
-  "NMOD", "DEG", "SBJ", "ROOT", "OBJ", "OBJ"
+   "NMOD", "DEG", "SBJ", "ROOT", "OBJ", "OBJ", "VMOD", "ROOT", "VMOD"
+};
+const char isbos[] = {
+    true, false, false, false, false, false, false,
+    true, false
 };
 
 const int kBigramTextLength = 9;
 const char bigram_test_word[][64] = {
-  "博丽灵梦", "是", "与", "雾雨魔理沙", "并列", "的", "第一", "自", "机"
+   "博丽灵梦", "是", "与", "雾雨魔理沙", "并列", "的", "第一", "自", "机"
 };
 
 void check_prediction(Parser::Iterator *parseriter, bool use_gbk) {
@@ -62,17 +64,14 @@ void check_prediction(Parser::Iterator *parseriter, bool use_gbk) {
 
   for (int i = 0; i < kLength; ++i) {
     assert(parseriter->End() == false);
-    if (i == 0) {
-      assert(parseriter->is_begin_of_sentence() == true);
-    } else {
-      assert(parseriter->is_begin_of_sentence() == false);
-    }
+    assert(parseriter->is_begin_of_sentence() == isbos[i]);
 
     // Compares word (converts to GBK when needed)
     if (use_gbk) {
       encoding->UTF8ToGBK(word[i], gbk_word, sizeof(gbk_word));
       assert(strcmp(parseriter->word(), gbk_word) == 0);
     } else {
+      puts(parseriter->word());
       assert(strcmp(parseriter->word(), word[i]) == 0);
     }
     
@@ -98,7 +97,7 @@ int parser_test() {
   Parser *parser = Parser::New(options, model);
   assert(parser);
   Parser::Iterator *parseriter = new Parser::Iterator();
-  parser->Predict(parseriter, "我的猫喜欢喝牛奶");
+  parser->Predict(parseriter, kSentence);
   check_prediction(parseriter, false);
   assert(parseriter->End() == true);
   delete parser;
@@ -107,7 +106,7 @@ int parser_test() {
   options.UseYamadaParser();
   parser = Parser::New(options, model);
   assert(parser);
-  parser->Predict(parseriter, "我的猫喜欢喝牛奶");
+  parser->Predict(parseriter, kSentence);
   check_prediction(parseriter, false);
   assert(parseriter->End() == true);
   delete parser;
@@ -188,7 +187,7 @@ int gbk_test() {
 
   char gbk_sentence[2048];
   milkcat::Encoding *encoding = new milkcat::Encoding();
-  encoding->UTF8ToGBK("我的猫喜欢喝牛奶", gbk_sentence, sizeof(gbk_sentence));
+  encoding->UTF8ToGBK(kSentence, gbk_sentence, sizeof(gbk_sentence));
   delete encoding;
 
   Parser *parser = Parser::New(options, model);

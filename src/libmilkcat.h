@@ -33,6 +33,7 @@
 #include <stdio.h>
 #include <map>
 #include <string>
+#include <vector>
 #include "common/milkcat_config.h"
 #include "include/milkcat.h"
 #include "segmenter/segmenter.h"
@@ -124,6 +125,10 @@ class Parser::Impl {
  private:
   Impl();
 
+  // Converts term_instance to GBK encoding
+  void ConvertToGBKTermInstance(TermInstance *term_instance);
+
+  Tokenization *tokenizer_;
   Segmenter *segmenter_;
   PartOfSpeechTagger *part_of_speech_tagger_;
   DependencyParser *dependency_parser_;
@@ -199,6 +204,50 @@ private:
   bool use_gbk_;
 };
 
+// Represents the parsing result of a sentence
+class SentenceInstance {
+ public:
+  SentenceInstance() {
+    token_instance_ = new TokenInstance();
+    term_instance_ = new TermInstance();
+    part_of_speech_tag_instance_ = new PartOfSpeechTagInstance();
+    tree_instance_ = new TreeInstance();
+  }
+
+  ~SentenceInstance() {
+    delete token_instance_;
+    token_instance_ = NULL;
+
+    delete term_instance_;
+    term_instance_ = NULL;
+
+    delete part_of_speech_tag_instance_;
+    part_of_speech_tag_instance_ = NULL;
+
+    delete tree_instance_;
+    tree_instance_ = NULL;
+  }
+
+  TokenInstance *token_instance() const {
+    return token_instance_;
+  }
+  TermInstance *term_instance() const {
+    return term_instance_;
+  }
+  PartOfSpeechTagInstance *part_of_speech_tag_instance() const {
+    return part_of_speech_tag_instance_;
+  }
+  TreeInstance *tree_instance() const {
+    return tree_instance_;
+  }
+
+ private:
+  TokenInstance *token_instance_;
+  TermInstance *term_instance_;
+  PartOfSpeechTagInstance *part_of_speech_tag_instance_;
+  TreeInstance *tree_instance_;
+};
+
 // Cursor class save the internal state of the analyzing result, such as
 // the current word and current sentence.
 class Parser::Iterator::Impl {
@@ -206,12 +255,15 @@ class Parser::Iterator::Impl {
   Impl();
   ~Impl();
 
-  // Starts to scan a text and use `parser_` to predict
-  void Scan(const char *text, bool use_gbk);
-
-  // Move the cursor to next position, if end of text is reached
-  // set end() to true
-  void Next();
+  // Resets this iterator
+  void Reset(int sentence_num, bool have_postagger, bool have_parser) {
+    sentence_num_ = sentence_num;
+    end_ = sentence_num_ == 0;
+    have_postagger_ = have_postagger;
+    have_parser_ = have_parser;
+    current_sentence_ = 0;
+    current_idx_ = 0;
+  }
 
   // If reaches the end of text
   bool End() const { return end_; }
@@ -219,68 +271,75 @@ class Parser::Iterator::Impl {
   // These function return the data of current position
   const char *word() const {
     if (end_) return "";
-    if (use_gbk_) {
-      return gbk_term_instance_->term_text_at(current_position_);
-    } else {
-      return term_instance_->term_text_at(current_position_);
-    }
+    return sentence_[current_sentence_]->term_instance()
+                                       ->term_text_at(current_idx_);
   }
   const char *part_of_speech_tag() const {
     if (end_) return "";
-    if (parser_->part_of_speech_tagger() != NULL)
-      return part_of_speech_tag_instance_->part_of_speech_tag_at(
-          current_position_);
-    else
-      return "NONE";
+    if (have_postagger_) {
+      return sentence_[current_sentence_]->part_of_speech_tag_instance()
+                                         ->part_of_speech_tag_at(current_idx_);
+    } else {
+      return "none";
+    }
   }
   int type() const {
     if (end_) return 0;
-    return term_instance_->term_type_at(current_position_);
+    return sentence_[current_sentence_]->term_instance()
+                                       ->term_type_at(current_idx_);
   }
   int head() const {
     if (end_) return 0;
-    if (parser_->dependency_parser() != NULL)
-      return tree_instance_->head_node_at(current_position_);
-    else
+    if (have_parser_) {
+      return sentence_[current_sentence_]->tree_instance()
+                                         ->head_node_at(current_idx_);
+    } else {
       return 0;
+    }
   }
   const char *dependency_label() const {
     if (end_) return "";
-    if (parser_->dependency_parser() != NULL)
-      return tree_instance_->dependency_type_at(current_position_);
-    else
-      return "NONE";
+    if (have_parser_) {
+      return sentence_[current_sentence_]->tree_instance()
+                                         ->dependency_type_at(current_idx_);
+    } else {
+      return "none";
+    }
   }
   bool is_begin_of_sentence() const {
-    return is_begin_of_sentence_;
+    return current_idx_ == 0;
   }
 
-  Parser::Impl *parser() const { return parser_; }
-  void set_parser(Parser::Impl *parser) {
-    parser_ = parser;
+  SentenceInstance *sentence(int idx) {
+    while (idx >= sentence_.size()) {
+      sentence_.push_back(new SentenceInstance());
+    }
+    return sentence_[idx];
+  }
+
+  // Move the cursor to next position, if end of text is reached
+  // set end() to true
+  void Next() {
+    SentenceInstance *cnt_sentence = sentence(current_sentence_);
+    if (current_idx_ >= cnt_sentence->term_instance()->size() - 1) {
+      current_idx_ = 0;
+      ++current_sentence_;
+    } else {
+      ++current_idx_;
+    }
+    if (current_sentence_ >= sentence_num_) end_ = true;
   }
 
  private:
-  Parser::Impl *parser_;
-
-  Tokenization *tokenizer_;
-  TokenInstance *token_instance_;
-  TermInstance *term_instance_;
-  TreeInstance *tree_instance_;
-  PartOfSpeechTagInstance *part_of_speech_tag_instance_;
-
-  int sentence_length_;
-  int current_position_;
+  int sentence_num_;
+  int current_sentence_;
+  int current_idx_;
   bool end_;
-  bool is_begin_of_sentence_;
 
-  bool use_gbk_;
-  TermInstance *gbk_term_instance_;
-  Encoding *encoding_;
+  bool have_postagger_;
+  bool have_parser_;
 
-  // Converts UTF-8 encoded `term_instance` to GBK encoded `gbk_term_instance`
-  void ConvertToGBKTermInstance(TermInstance *term_instance,
-                                TermInstance *gbk_term_instance);
+  std::vector<SentenceInstance *> sentence_;
 };
 
 }  // namespace milkcat
