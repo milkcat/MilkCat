@@ -32,7 +32,6 @@
 #include <algorithm>
 #include <vector>
 #include <string>
-#include "libmilkcat.h"
 #include "common/milkcat_config.h"
 #include "common/model_impl.h"
 #include "common/reimu_trie.h"

@@ -49,7 +49,6 @@
 #include "util/status.h"
 #include "util/readable_file.h"
 
-
 namespace milkcat {
   
 // The global error message

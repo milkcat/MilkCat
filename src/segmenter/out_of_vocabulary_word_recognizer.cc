@@ -29,11 +29,11 @@
 
 #include <stdio.h>
 #include <string.h>
-#include "libmilkcat.h"
 #include "common/model_impl.h"
 #include "common/reimu_trie.h"
 #include "include/milkcat.h"
 #include "segmenter/crf_segmenter.h"
+#include "segmenter/term_instance.h"
 #include "tokenizer/token_instance.h"
 #include "util/util.h"
 

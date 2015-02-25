@@ -25,12 +25,12 @@
 //
 
 #include "tagger/hmm_part_of_speech_tagger.h"
+
 #include <math.h>
 #include <stdio.h>
 #include <stdint.h>
 #include <algorithm>
 #include <string>
-#include "libmilkcat.h"
 #include "common/model_impl.h"
 #include "common/reimu_trie.h"
 #include "ml/beam.h"

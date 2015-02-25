@@ -30,7 +30,6 @@
 #include <stdio.h>
 #include <string.h>
 #include <string>
-#include "libmilkcat.h"
 #include "common/model_impl.h"
 #include "ml/sequence_feature_set.h"
 #include "segmenter/term_instance.h"
