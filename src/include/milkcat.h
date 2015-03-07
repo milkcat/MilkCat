@@ -158,11 +158,8 @@ class MILKCAT_API Parser::Iterator {
   Iterator();
   ~Iterator();
 
-  // Returns true if it reaches the end of text
-  bool End();
-
   // Go to the next element
-  void Next();
+  bool Next();
 
   // Get the string of current word
   const char *word() const;
@@ -244,8 +241,7 @@ MILKCAT_API void mc_parser_predict(
 
 MILKCAT_API mc_parseriter_t *mc_parseriter_new();
 MILKCAT_API void mc_parseriter_delete(mc_parseriter_t *parseriter);
-MILKCAT_API int mc_parseriter_end(mc_parseriter_t *parseriter);
-MILKCAT_API void mc_parseriter_next(mc_parseriter_t *parseriter);
+MILKCAT_API int mc_parseriter_next(mc_parseriter_t *parseriter);
 MILKCAT_API int mc_parseriter_isbos(mc_parseriter_t *parseriter);
 
 MILKCAT_API const char *mc_last_error();

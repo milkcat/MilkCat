@@ -144,21 +144,18 @@ void mc_parseriter_delete(mc_parseriter_t *parseriter) {
   delete parseriter;
 }
 
-int mc_parseriter_end(mc_parseriter_t *parseriter) {
-  return parseriter->it->iterator->End();
-}
-
 int mc_parseriter_isbos(mc_parseriter_t *parseriter) {
   return parseriter->it->iterator->is_begin_of_sentence();
 }
 
-void mc_parseriter_next(mc_parseriter_t *parseriter) {
+int mc_parseriter_next(mc_parseriter_t *parseriter) {
   milkcat::Parser::Iterator *it = parseriter->it->iterator;
-  it->Next();
+  bool has_next = it->Next();
   parseriter->word = it->word();
   parseriter->part_of_speech_tag = it->part_of_speech_tag();
   parseriter->head = it->head();
   parseriter->label = it->dependency_label();
+  return has_next;
 }
 
 void mc_parser_predict(mc_parser_t *parser,

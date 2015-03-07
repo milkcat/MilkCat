@@ -204,12 +204,8 @@ Parser::Iterator::~Iterator() {
   impl_ = NULL;
 }
 
-bool Parser::Iterator::End() {
-  return impl_->End();
-}
-
-void Parser::Iterator::Next() {
-  impl_->Next();
+bool Parser::Iterator::Next() {
+  return impl_->Next();
 }
 
 const char *Parser::Iterator::word() const {

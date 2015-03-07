@@ -63,7 +63,7 @@ void check_prediction(Parser::Iterator *parseriter, bool use_gbk) {
   char gbk_word[256];
 
   for (int i = 0; i < kLength; ++i) {
-    assert(parseriter->End() == false);
+    assert(parseriter->Next());
     assert(parseriter->is_begin_of_sentence() == isbos[i]);
 
     // Compares word (converts to GBK when needed)
@@ -78,8 +78,8 @@ void check_prediction(Parser::Iterator *parseriter, bool use_gbk) {
     assert(strcmp(parseriter->part_of_speech_tag(), postag[i]) == 0);
     assert(strcmp(parseriter->dependency_label(), label[i]) == 0);
     assert(parseriter->head() == head[i]);
-    parseriter->Next();
   }
+  assert(parseriter->Next() == false);
 
   delete encoding;
 } 
@@ -99,7 +99,6 @@ int parser_test() {
   Parser::Iterator *parseriter = new Parser::Iterator();
   parser->Predict(parseriter, kSentence);
   check_prediction(parseriter, false);
-  assert(parseriter->End() == true);
   delete parser;
 
   // Testes yamada parser
@@ -108,7 +107,6 @@ int parser_test() {
   assert(parser);
   parser->Predict(parseriter, kSentence);
   check_prediction(parseriter, false);
-  assert(parseriter->End() == true);
   delete parser;
 
   delete parseriter;
@@ -125,7 +123,8 @@ int empty_string_test() {
   assert(parser);
   Parser::Iterator *parseriter = new Parser::Iterator();
   parser->Predict(parseriter, "");
-  assert(parseriter->End() == true);
+  assert(parseriter->Next() == false);
+  assert(parseriter->Next() == false);
 
   // Checks calling Next function after End() == true 
   parseriter->Next();
@@ -162,12 +161,11 @@ int bigram_segmenter_test() {
   parser->Predict(parseriter, "博丽灵梦是与雾雨魔理沙并列的第一自机");
 
   for (int i = 0; i < kBigramTextLength; ++i) {
-    assert(parseriter->End() == false);
+    assert(parseriter->Next());
     assert(strcmp(parseriter->word(), bigram_test_word[i]) == 0);
-    parseriter->Next();
   }
+  assert(parseriter->Next() == false);
 
-  assert(parseriter->End() == true);
   delete parseriter;
   delete parser;
   delete model;
@@ -195,7 +193,6 @@ int gbk_test() {
   Parser::Iterator *parseriter = new Parser::Iterator();
   parser->Predict(parseriter, gbk_sentence);
   check_prediction(parseriter, true);
-  assert(parseriter->End() == true);
   delete parser;
 
   delete parseriter;

@@ -257,24 +257,22 @@ class Parser::Iterator::Impl {
   // Resets this iterator
   void Reset(int sentence_num, bool have_postagger, bool have_parser) {
     sentence_num_ = sentence_num;
-    end_ = sentence_num_ == 0;
+    end_ = (sentence_num_ == 0);
     have_postagger_ = have_postagger;
     have_parser_ = have_parser;
     current_sentence_ = 0;
     current_idx_ = 0;
+    begin_ = false;
   }
-
-  // If reaches the end of text
-  bool End() const { return end_; }
 
   // These function return the data of current position
   const char *word() const {
-    if (end_) return "";
+    if (end_ || begin_ == false) return "";
     return sentence_[current_sentence_]->term_instance()
                                        ->term_text_at(current_idx_);
   }
   const char *part_of_speech_tag() const {
-    if (end_) return "";
+    if (end_ || begin_ == false) return "";
     if (have_postagger_) {
       return sentence_[current_sentence_]->part_of_speech_tag_instance()
                                          ->part_of_speech_tag_at(current_idx_);
@@ -283,12 +281,12 @@ class Parser::Iterator::Impl {
     }
   }
   int type() const {
-    if (end_) return 0;
+    if (end_ || begin_ == false) return 0;
     return sentence_[current_sentence_]->term_instance()
                                        ->term_type_at(current_idx_);
   }
   int head() const {
-    if (end_) return 0;
+    if (end_ || begin_ == false) return 0;
     if (have_parser_) {
       return sentence_[current_sentence_]->tree_instance()
                                          ->head_node_at(current_idx_);
@@ -297,7 +295,7 @@ class Parser::Iterator::Impl {
     }
   }
   const char *dependency_label() const {
-    if (end_) return "";
+    if (end_ || begin_ == false) return "";
     if (have_parser_) {
       return sentence_[current_sentence_]->tree_instance()
                                          ->dependency_type_at(current_idx_);
@@ -318,7 +316,12 @@ class Parser::Iterator::Impl {
 
   // Move the cursor to next position, if end of text is reached
   // set end() to true
-  void Next() {
+  bool Next() {
+    if (end_) return false;
+    if (begin_ == false) {
+      begin_ = true;
+      return true;
+    }
     SentenceInstance *cnt_sentence = sentence(current_sentence_);
     if (current_idx_ >= cnt_sentence->term_instance()->size() - 1) {
       current_idx_ = 0;
@@ -326,13 +329,19 @@ class Parser::Iterator::Impl {
     } else {
       ++current_idx_;
     }
-    if (current_sentence_ >= sentence_num_) end_ = true;
+    if (current_sentence_ >= sentence_num_) {
+      end_ = true;
+      return false;
+    } else {
+      return true;
+    }
   }
 
  private:
   int sentence_num_;
   int current_sentence_;
   int current_idx_;
+  bool begin_;
   bool end_;
 
   bool have_postagger_;

@@ -249,20 +249,16 @@ int ParserMain(int argc, char **argv) {
   while (NULL != fgets(input_buffer, 1048576, fd)) {
     parser->Predict(it, input_buffer);
     index = 0;
-    while (!it->End()) {
-      index++;
+    while (it->Next()) {
       switch (*it->word()) {
         case '\r':
         case '\n':
         case ' ':
-          // Skip to next word
-          it->Next();
           continue;
       }
 
-      fputs(it->word(), stdout);
-
       if (!options.conll_format) {
+        fputs(it->word(), stdout);
         if (options.display_type) {
           fputs("_", stdout);
           fputs(WordType(it->type()), stdout);
@@ -276,10 +272,18 @@ int ParserMain(int argc, char **argv) {
         fputs("  ", stdout);
       
       } else {
-        // Use malt format to output the dependdency parsing result
-        fputs("\t", stdout);
+        if (it->is_begin_of_sentence() && index != 0) {
+          index = 1;
+          fputs("\n", stdout);
+        } else {
+          ++index;
+        }
+
         sprintf(buffer, "%d", index);
         fputs(buffer, stdout);
+
+        fputs("\t", stdout);
+        fputs(it->word(), stdout);
 
         fputs("\t", stdout);
         fputs(it->part_of_speech_tag(), stdout);
@@ -292,9 +296,7 @@ int ParserMain(int argc, char **argv) {
         fputs(it->dependency_label(), stdout);
 
         fputs("\n", stdout);
-      }
-
-      it->Next();    
+      } 
     }
 
     fputs("\n", stdout);
