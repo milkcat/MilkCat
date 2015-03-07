@@ -25,49 +25,58 @@
 //
 
 #include <assert.h>
+#include <stdio.h>
 #include <string.h>
 #include "include/milkcat.h"
 
 int main() {
-  mc_model_t *model = mc_model_new(MODEL_DIR);
-  assert(model);
+  milkcat_model_t *model = milkcat_model_new(MODEL_DIR);
+  if (model == NULL) {
+    puts(milkcat_last_error());
+    return 1;
+  }
 
-  mc_parseropt_t parseropt;
-  mc_parseropt_init(&parseropt);
-  parseropt.postagger = MC_FASTCRF_POSTAGGER;
+  milkcat_parseropt_t parseropt;
+  milkcat_parseropt_use_default(&parseropt);
+  parseropt.part_of_speech_tagger = MC_POSTAGGER_CRF;
 
-  mc_parser_t *parser = mc_parser_new(&parseropt, model);
-  mc_parseriter_t *it = mc_parseriter_new();
+  milkcat_parser_t *parser = milkcat_parser_new(&parseropt, model);
+  if (parser == NULL) {
+    puts(milkcat_last_error());
+    return 1;
+  }
+
+  milkcat_parseriter_t *it = milkcat_parseriter_new();
   for (int i = 0; i < 5000; ++i) {
-    mc_parser_predict(parser, it, "今天的天气不错。");
+    milkcat_parser_predict(parser, it, "今天的天气不错。");
 
-    assert(mc_parseriter_next(it));
+    assert(milkcat_parseriter_next(it));
     assert(strcmp(it->word, "今天") == 0);
     assert(strcmp(it->part_of_speech_tag, "NT") == 0);
 
-    assert(mc_parseriter_next(it));
+    assert(milkcat_parseriter_next(it));
     assert(strcmp(it->word, "的") == 0);
     assert(strcmp(it->part_of_speech_tag, "DEG") == 0);
 
-    assert(mc_parseriter_next(it));
+    assert(milkcat_parseriter_next(it));
     assert(strcmp(it->word, "天气") == 0);
     assert(strcmp(it->part_of_speech_tag, "NN") == 0);
 
-    assert(mc_parseriter_next(it));
+    assert(milkcat_parseriter_next(it));
     assert(strcmp(it->word, "不错") == 0);
     assert(strcmp(it->part_of_speech_tag, "VA") == 0);
 
-    assert(mc_parseriter_next(it));
+    assert(milkcat_parseriter_next(it));
     assert(strcmp(it->word, "。") == 0);
     assert(strcmp(it->part_of_speech_tag, "PU") == 0);
 
-    assert(!mc_parseriter_next(it));
-    assert(!mc_parseriter_next(it));
+    assert(!milkcat_parseriter_next(it));
+    assert(!milkcat_parseriter_next(it));
   }
 
-  mc_parseriter_delete(it);
-  mc_parser_delete(parser);
-  mc_model_delete(model);
+  milkcat_parseriter_destroy(it);
+  milkcat_parser_destroy(parser);
+  milkcat_model_destroy(model);
   return 0;
 }
 

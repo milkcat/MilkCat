@@ -27,6 +27,7 @@
 #ifndef MILKCAT_H_
 #define MILKCAT_H_
 
+#include <stdbool.h>
 #include <stdint.h>
 #include <stdlib.h>
 
@@ -197,54 +198,54 @@ MILKCAT_API const char *LastError();
 extern "C" {
 #endif  // __cplusplus
 
-typedef struct mc_model_t mc_model_t;
-typedef struct mc_parser_t mc_parser_t;
+typedef struct milkcat_model_t milkcat_model_t;
+typedef struct milkcat_parser_t milkcat_parser_t;
 
-typedef struct mc_parseriter_internal_t mc_parseriter_internal_t;
-typedef struct mc_parseriter_t {
+typedef struct milkcat_parseriter_internal_t milkcat_parseriter_internal_t;
+typedef struct milkcat_parseriter_t {
   const char *word;
   const char *part_of_speech_tag;
   int head;
-  const char *label;
-  mc_parseriter_internal_t *it;
-} mc_parseriter_t;
+  const char *dependency_label;
+  bool is_begin_of_sentence;
+  milkcat_parseriter_internal_t *it;
+} milkcat_parseriter_t;
 
-#define MC_BIGRAM_SEGMENTER 0
-#define MC_CRF_SEGMENTER 1
-#define MC_MIXED_SEGMENTER 2
+#define MC_SEGMENTER_BIGRAM 0
+#define MC_SEGMENTER_CRF 1
+#define MC_SEGMENTER_MIXED 2
 
-#define MC_FASTCRF_POSTAGGER 0
-#define MC_CRF_POSTAGGER 1
-#define MC_HMM_POSTAGGER 2
-#define MC_NO_POSTAGGER 3
+#define MC_POSTAGGER_MIXED 0
+#define MC_POSTAGGER_CRF 1
+#define MC_POSTAGGER_HMM 2
+#define MC_POSTAGGER_NONE 3
 
-#define MC_NO_DEPPARSER 0
-#define MC_YAMADA_DEPPARSER 1
-#define MC_BEAMYAMADA_DEPPARSER 2
+#define MC_DEPPARSER_YAMADA 0
+#define MC_DEPPARSER_BEAMYAMADA 1
+#define MC_DEPPARSER_NONE 2
 
-typedef struct mc_parseropt_t {
-  int segmenter;
-  int postagger;
-  int depparser;
-} mc_parseropt_t;
+typedef struct milkcat_parseropt_t {
+  int word_segmenter;
+  int part_of_speech_tagger;
+  int dependency_parser;
+} milkcat_parseropt_t;
 
-MILKCAT_API mc_model_t *mc_model_new(const char *model_path);
-MILKCAT_API void mc_model_delete(mc_model_t *model);
+MILKCAT_API milkcat_model_t *milkcat_model_new(const char *model_path);
+MILKCAT_API void milkcat_model_destroy(milkcat_model_t *model);
 
-MILKCAT_API void mc_parseropt_init(mc_parseropt_t *parseropt);
-MILKCAT_API mc_parser_t *mc_parser_new(mc_parseropt_t *parseropt, mc_model_t *model);
-MILKCAT_API void mc_parser_delete(mc_parser_t *model);
-MILKCAT_API void mc_parser_predict(
-    mc_parser_t *parser,
-    mc_parseriter_t *parseriter,
+MILKCAT_API void milkcat_parseropt_use_default(milkcat_parseropt_t *parseropt);
+MILKCAT_API milkcat_parser_t *milkcat_parser_new(milkcat_parseropt_t *parseropt, milkcat_model_t *model);
+MILKCAT_API void milkcat_parser_destroy(milkcat_parser_t *model);
+MILKCAT_API void milkcat_parser_predict(
+    milkcat_parser_t *parser,
+    milkcat_parseriter_t *parseriter,
     const char *text);
 
-MILKCAT_API mc_parseriter_t *mc_parseriter_new();
-MILKCAT_API void mc_parseriter_delete(mc_parseriter_t *parseriter);
-MILKCAT_API int mc_parseriter_next(mc_parseriter_t *parseriter);
-MILKCAT_API int mc_parseriter_isbos(mc_parseriter_t *parseriter);
+MILKCAT_API milkcat_parseriter_t *milkcat_parseriter_new();
+MILKCAT_API void milkcat_parseriter_destroy(milkcat_parseriter_t *parseriter);
+MILKCAT_API bool milkcat_parseriter_next(milkcat_parseriter_t *parseriter);
 
-MILKCAT_API const char *mc_last_error();
+MILKCAT_API const char *milkcat_last_error();
 
 #ifdef __cplusplus
 }  // extern "C"

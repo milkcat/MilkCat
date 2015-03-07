@@ -29,88 +29,93 @@
 
 #include "util/util.h"
 
-typedef struct mc_model_t {
+typedef struct milkcat_model_t {
   milkcat::Model *model;
-} mc_model_t;
+} milkcat_model_t;
 
-typedef struct mc_parser_t {
+typedef struct milkcat_parser_t {
   milkcat::Parser *parser;
-} mc_parser_t;
+} milkcat_parser_t;
 
-typedef struct mc_parseriter_internal_t {
+typedef struct milkcat_parseriter_internal_t {
   milkcat::Parser::Iterator *iterator;
-} mc_parseriter_internal_t;
+} milkcat_parseriter_internal_t;
 
-mc_model_t *mc_model_new(const char *model_path) {
-  milkcat::Model *model = milkcat::Model::New(model_path);
+milkcat_model_t *milkcat_model_new(const char *model_dir) {
+  milkcat::Model *model = milkcat::Model::New(model_dir);
   if (model == NULL) return NULL;
   
-  mc_model_t *model_wrapper = new mc_model_t;
+  milkcat_model_t *model_wrapper = new milkcat_model_t;
   model_wrapper->model = model;
   return model_wrapper;
 }
 
-void mc_model_delete(mc_model_t *model) {
+void milkcat_model_destroy(milkcat_model_t *model) {
   if (model == NULL) return ;
   delete model->model;
   delete model;
 }
 
-void mc_parseropt_init(mc_parseropt_t *parseropt) {
-  parseropt->segmenter = MC_MIXED_SEGMENTER;
-  parseropt->postagger = MC_HMM_POSTAGGER;
-  parseropt->postagger = MC_NO_DEPPARSER;
+void milkcat_parseropt_use_default(milkcat_parseropt_t *parseropt) {
+  parseropt->word_segmenter = MC_SEGMENTER_MIXED;
+  parseropt->part_of_speech_tagger = MC_POSTAGGER_HMM;
+  parseropt->dependency_parser = MC_DEPPARSER_NONE;
 }
 
-mc_parser_t *mc_parser_new(mc_parseropt_t *parseropt, mc_model_t *model) {
+milkcat_parser_t *milkcat_parser_new(
+    milkcat_parseropt_t *parseropt,
+    milkcat_model_t *model) {
   milkcat::Parser::Options option;
-  switch (parseropt->segmenter) {
-    case MC_BIGRAM_SEGMENTER:
+  switch (parseropt->word_segmenter) {
+    case MC_SEGMENTER_BIGRAM:
       option.UseBigramSegmenter();
       break;
-    case MC_CRF_SEGMENTER:
+    case MC_SEGMENTER_CRF:
       option.UseCRFSegmenter();
       break;
-    case MC_MIXED_SEGMENTER:
+    case MC_SEGMENTER_MIXED:
       option.UseMixedSegmenter();
       break;
     default:
       milkcat::strlcpy(milkcat::gLastErrorMessage,
-                       "Illegal segmenter type",
+                       "Invalid type of segmenter",
                        sizeof(milkcat::gLastErrorMessage));
       return NULL;
   }
 
-  switch (parseropt->postagger) {
-    case MC_FASTCRF_POSTAGGER:
+  switch (parseropt->part_of_speech_tagger) {
+    case MC_POSTAGGER_MIXED:
+      option.UseMixedPOSTagger();
+      break;
+    case MC_POSTAGGER_CRF:
       option.UseCRFPOSTagger();
       break;
-    case MC_HMM_POSTAGGER:
+    case MC_POSTAGGER_HMM:
       option.UseHMMPOSTagger();
       break;
-    case MC_NO_POSTAGGER:
+    case MC_POSTAGGER_NONE:
       option.NoPOSTagger();
       break;
     default:
       milkcat::strlcpy(milkcat::gLastErrorMessage,
-                       "Illegal part-of-speech tagger type",
+                       "Invalid type of part-of-speech tagger",
                        sizeof(milkcat::gLastErrorMessage));
       return NULL;
   }
 
-  switch (parseropt->depparser) {
-    case MC_NO_DEPPARSER:
+  switch (parseropt->dependency_parser) {
+    case MC_DEPPARSER_NONE:
       option.NoDependencyParser();
       break;
-    case MC_YAMADA_DEPPARSER:
+    case MC_DEPPARSER_YAMADA:
       option.UseYamadaParser();
       break;
-    case MC_BEAMYAMADA_DEPPARSER:
+    case MC_DEPPARSER_BEAMYAMADA:
       option.UseBeamYamadaParser();
       break;
     default:
       milkcat::strlcpy(milkcat::gLastErrorMessage,
-                       "Illegal dependency parser type",
+                       "Illegal type of dependency parser",
                        sizeof(milkcat::gLastErrorMessage));
       return NULL;
   }
@@ -118,57 +123,57 @@ mc_parser_t *mc_parser_new(mc_parseropt_t *parseropt, mc_model_t *model) {
   milkcat::Parser *parser = milkcat::Parser::New(option, model->model);
   if (parser == NULL) return NULL;
 
-  mc_parser_t *parser_wrapper = new mc_parser_t;
+  milkcat_parser_t *parser_wrapper = new milkcat_parser_t;
   parser_wrapper->parser = parser;
   return parser_wrapper;
 }
 
-void mc_parser_delete(mc_parser_t *parser) {
+void milkcat_parser_destroy(milkcat_parser_t *parser) {
   if (parser == NULL) return ;
   delete parser->parser;
   delete parser;
 }
 
-mc_parseriter_t *mc_parseriter_new() {
-  mc_parseriter_t *parseriter = new mc_parseriter_t;
+milkcat_parseriter_t *milkcat_parseriter_new() {
+  milkcat_parseriter_t *parseriter = new milkcat_parseriter_t;
   parseriter->word = "";
   parseriter->part_of_speech_tag = "";
-  parseriter->it = new mc_parseriter_internal_t;
+  parseriter->it = new milkcat_parseriter_internal_t;
   parseriter->it->iterator = new milkcat::Parser::Iterator();
   return parseriter;
 }
 
-void mc_parseriter_delete(mc_parseriter_t *parseriter) {
+void milkcat_parseriter_destroy(milkcat_parseriter_t *parseriter) {
   delete parseriter->it->iterator;
   delete parseriter->it;
   delete parseriter;
 }
 
-int mc_parseriter_isbos(mc_parseriter_t *parseriter) {
-  return parseriter->it->iterator->is_begin_of_sentence();
-}
 
-int mc_parseriter_next(mc_parseriter_t *parseriter) {
+bool milkcat_parseriter_next(milkcat_parseriter_t *parseriter) {
   milkcat::Parser::Iterator *it = parseriter->it->iterator;
   bool has_next = it->Next();
   parseriter->word = it->word();
   parseriter->part_of_speech_tag = it->part_of_speech_tag();
   parseriter->head = it->head();
-  parseriter->label = it->dependency_label();
+  parseriter->dependency_label = it->dependency_label();
+  parseriter->is_begin_of_sentence = it->is_begin_of_sentence();
   return has_next;
 }
 
-void mc_parser_predict(mc_parser_t *parser,
-                       mc_parseriter_t *parseriter,
-                       const char *text) {
+void milkcat_parser_predict(
+    milkcat_parser_t *parser,
+    milkcat_parseriter_t *parseriter,
+    const char *text) {
   milkcat::Parser::Iterator *it = parseriter->it->iterator;
   parser->parser->Predict(it, text);
-  parseriter->word = it->word();
-  parseriter->part_of_speech_tag = it->part_of_speech_tag();
-  parseriter->head = it->head();
-  parseriter->label = it->dependency_label();
+  parseriter->word = "";
+  parseriter->part_of_speech_tag = "";
+  parseriter->head = 0;
+  parseriter->dependency_label = "";
+  parseriter->is_begin_of_sentence = false;
 }
 
-const char *mc_last_error() {
+const char *milkcat_last_error() {
   return milkcat::LastError();
 }
