@@ -49,13 +49,22 @@
 
 namespace milkcat {
 
+class noncopyable {
+ protected:
+  noncopyable() {}
+  ~noncopyable() {}
+ private:
+  noncopyable(const noncopyable &);
+  const noncopyable &operator=(const noncopyable &);
+};
+
 // ---------------------------- Parser ---------------------------------------
 
 // Parser is the word segmenter and part-of-speech tagger class. Use 'Parse' to
 // parse the text and it returns an Parser::Iterator to iterate each word and
 // its part-of-speech tag. After iterating, you should use Parser::Release to
 // release the iterator
-class MILKCAT_API Parser {
+class MILKCAT_API Parser: public noncopyable {
  public:
   class Impl;
   class Iterator;
@@ -72,6 +81,7 @@ class MILKCAT_API Parser {
     kOther = 5
   };
 
+  Parser();
   ~Parser();
 
   // Creates the parser with options spcified by `options`.
@@ -132,7 +142,7 @@ class MILKCAT_API Parser::Options {
 };
 
 // Iterator for the prediction of parser
-class MILKCAT_API Parser::Iterator {
+class MILKCAT_API Parser::Iterator: public noncopyable {
  public:
   class Impl;
 

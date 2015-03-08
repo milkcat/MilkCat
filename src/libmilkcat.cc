@@ -370,6 +370,8 @@ Parser::~Parser() {
   impl_ = NULL;
 }
 
+Parser::Parser(): impl_(Impl::New(Options())) {
+}
 Parser::Parser(const Options &options): impl_(Impl::New(options)) {
 }
 
