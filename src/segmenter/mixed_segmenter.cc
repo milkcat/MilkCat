@@ -38,7 +38,7 @@ MixedSegmenter::MixedSegmenter():
     oov_recognizer_(NULL) {
 }
 
-MixedSegmenter *MixedSegmenter::New(Model::Impl *model_factory, 
+MixedSegmenter *MixedSegmenter::New(Model *model_factory, 
                                     Status *status) {
   MixedSegmenter *self = new MixedSegmenter();
   self->bigram_ = BigramSegmenter::New(model_factory, true, status);

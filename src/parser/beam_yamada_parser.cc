@@ -88,7 +88,7 @@ BeamYamadaParser::~BeamYamadaParser() {
 }
 
 BeamYamadaParser *
-BeamYamadaParser::New(Model::Impl *model, Status *status) {
+BeamYamadaParser::New(Model *model, Status *status) {
   PerceptronModel *perceptron_model = model->BeamYamadaModel(status);
 
   FeatureTemplate *feature_template = NULL;

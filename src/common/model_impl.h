@@ -26,11 +26,10 @@
 // model_factory.h --- Created at 2014-04-02
 // model_impl.h --- Created at 2014-09-02
 //
-#include "include/milkcat.h"
 
 #include <string>
 #include <vector>
-#include "parser/feature_template.h"
+#include "parser/dependency_parser.h"
 #include "util/mutex.h"
 #include "util/util.h"
 
@@ -48,10 +47,10 @@ class ReimuTrie;
 
 // A factory class that can obtain any model data class needed by MilkCat
 // in singleton mode. All the GetXX fucnctions are thread safe
-class Model::Impl {
+class Model {
  public:
-  explicit Impl(const char *model_dir_path);
-  ~Impl();
+  explicit Model(const char *model_dir_path);
+  ~Model();
 
   // Get the index for word which were used in unigram cost, bigram cost
   // hmm pos model and oov property
@@ -88,6 +87,9 @@ class Model::Impl {
   // Get the feature template for dependency parsing
   DependencyParser::FeatureTemplate *DependencyTemplate(Status *status);
 
+  // Reads user dictionary `userdict_path` for word segmenter
+  void ReadUserDictionary(const char *userdict_path, Status *status);
+
  private:
   std::string model_dir_;
   Mutex mutex;
@@ -103,9 +105,6 @@ class Model::Impl {
   const ReimuTrie *oov_property_;
   PerceptronModel *dependency_;
   DependencyParser::FeatureTemplate *dependency_feature_;
-
-  // Load and set the user dictionary data specified by path
-  void ReadUserDictionary(const char *userdict_path, Status *status);
 };
 
 }  // namespace milkcat

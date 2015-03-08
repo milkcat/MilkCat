@@ -65,7 +65,7 @@ Tokenization *TokenizerFactory(int analyzer_type) {
   }
 }
 
-Segmenter *SegmenterFactory(Model::Impl *factory,
+Segmenter *SegmenterFactory(Model *factory,
                             int analyzer_type,
                             Status *status) {
   int segmenter_type = analyzer_type & kSegmenterMask;
@@ -89,7 +89,7 @@ Segmenter *SegmenterFactory(Model::Impl *factory,
   }
 }
 
-PartOfSpeechTagger *PartOfSpeechTaggerFactory(Model::Impl *factory,
+PartOfSpeechTagger *PartOfSpeechTaggerFactory(Model *factory,
                                               int analyzer_type,
                                               Status *status) {
   const CRFModel *crf_pos_model = NULL;
@@ -131,7 +131,7 @@ PartOfSpeechTagger *PartOfSpeechTaggerFactory(Model::Impl *factory,
   }
 }
 
-DependencyParser *DependencyParserFactory(Model::Impl *factory,
+DependencyParser *DependencyParserFactory(Model *factory,
                                           int parser_type,
                                           Status *status) {
   parser_type = kParserMask & parser_type;
@@ -232,8 +232,7 @@ bool Parser::Iterator::is_begin_of_sentence() const {
 Parser::Impl::Impl(): segmenter_(NULL),
                       part_of_speech_tagger_(NULL),
                       dependency_parser_(NULL),
-                      model_impl_(NULL),
-                      own_model_(false),
+                      model_(NULL),
                       use_gbk_(false),
                       utf8_buffersize_(1024) {
   utf8_buffer_ = new char[1024];
@@ -251,8 +250,8 @@ Parser::Impl::~Impl() {
   delete dependency_parser_;
   dependency_parser_ = NULL;
 
-  if (own_model_) delete model_impl_;
-  model_impl_ = NULL;
+  delete model_;
+  model_ = NULL;
 
   delete[] utf8_buffer_;
   utf8_buffer_ = NULL;
@@ -264,37 +263,39 @@ Parser::Impl::~Impl() {
   tokenizer_ = NULL;
 }
 
-Parser::Impl *Parser::Impl::New(const Options &options, Model *model) {
+Parser::Impl *Parser::Impl::New(const Options &options) {
   Status status = Status::OK();
   Impl *self = new Parser::Impl();
   int type = options.impl()->TypeValue();
-  Model::Impl *model_impl = model? model->impl(): NULL;
 
   self->use_gbk_ = options.impl()->use_gbk();
 
-  if (model_impl == NULL) {
-    self->model_impl_ = new Model::Impl(MODEL_DIR);
-    self->own_model_ = true;
+  if (strcmp(options.impl()->model_path(), "") == 0) {
+    self->model_ = new Model(MODEL_DIR);
   } else {
-    self->model_impl_ = model_impl;
-    self->own_model_ = false;
+    self->model_ = new Model(options.impl()->model_path());
+  }
+
+  if (status.ok() && strcmp(options.impl()->user_dictionary(), "") != 0) {
+    self->model_->ReadUserDictionary(options.impl()->user_dictionary(),
+                                     &status);
   }
 
   if (status.ok())
     self->segmenter_ = SegmenterFactory(
-        self->model_impl_,
+        self->model_,
         type,
         &status);
 
   if (status.ok())
     self->part_of_speech_tagger_ = PartOfSpeechTaggerFactory(
-        self->model_impl_,
+        self->model_,
         type,
         &status);
 
   if (status.ok())
     self->dependency_parser_ = DependencyParserFactory(
-        self->model_impl_,
+        self->model_,
         type,
         &status);
 
@@ -364,32 +365,12 @@ void Parser::Impl::Predict(Parser::Iterator *iterator, const char *text) {
       dependency_parser_ != NULL);
 }
 
-Parser::Parser(): impl_(NULL) {
-}
-
 Parser::~Parser() {
   delete impl_;
   impl_ = NULL;
 }
 
-Parser *Parser::New() {
-  return New(Options(), NULL);
-}
-
-Parser *Parser::New(const Options &options) {
-  return New(options, NULL);
-}
-
-Parser *Parser::New(const Options &options, Model *model) {
-  Parser *self = new Parser();
-  self->impl_ = Impl::New(options, model);
-
-  if (self->impl_) {
-    return self;
-  } else {
-    delete self;
-    return NULL;
-  }
+Parser::Parser(const Options &options): impl_(Impl::New(options)) {
 }
 
 void Parser::Predict(Parser::Iterator *iterator, const char *text) {
@@ -448,26 +429,11 @@ void Parser::Options::UseYamadaParser() {
 void Parser::Options::NoDependencyParser() {
   impl_->NoDependencyParser();
 }
-
-// ------------------------------- Model -------------------------------------
-
-Model::Model(): impl_(NULL) {
+void Parser::Options::SetModelPath(const char *model_path) {
+  impl_->SetModelPath(model_path);
 }
-
-Model::~Model() {
-  delete impl_;
-  impl_ = NULL;
-}
-
-Model *Model::New(const char *model_dir) {
-  Model *self = new Model();
-  self->impl_ = new Model::Impl(model_dir? model_dir: MODEL_DIR);
-
-  return self;
-}
-
-bool Model::SetUserDictionary(const char *userdict_path) {
-  return impl_->SetUserDictionary(userdict_path);
+void Parser::Options::SetUserDictionary(const char *userdict_path) {
+  impl_->SetUserDictionary(userdict_path);
 }
 
 const char *LastError() {

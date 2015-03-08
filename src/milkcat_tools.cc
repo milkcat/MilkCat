@@ -46,6 +46,7 @@
 #include "include/milkcat.h"
 #include "parser/beam_yamada_parser.h"
 #include "parser/dependency_parser.h"
+#include "parser/feature_template.h"
 #include "parser/yamada_parser.h"
 #include "tagger/crf_part_of_speech_tagger.h"
 #include "tagger/hmm_part_of_speech_tagger.h"

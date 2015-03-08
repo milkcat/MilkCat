@@ -49,32 +49,6 @@
 
 namespace milkcat {
 
-class Parser;
-
-// ---------------------------- Model ----------------------------------------
-
-class MILKCAT_API Model {
- public:
-  class Impl;
-
-  ~Model();
-  
-  // Create the model for further use. model_dir is the path of the model data
-  // dir, NULL is to use the default data dir.
-  static Model *New(const char *model_dir = NULL);
-
-  // Set the user dictionary for segmenter. On success, return true. On failed,
-  // return false;
-  bool SetUserDictionary(const char *userdict_path);
-
-  // Get the instance of the implementation class
-  Impl *impl() { return impl_; }
-
- private:
-  Model();
-  Impl *impl_;
-};
-
 // ---------------------------- Parser ---------------------------------------
 
 // Parser is the word segmenter and part-of-speech tagger class. Use 'Parse' to
@@ -100,10 +74,10 @@ class MILKCAT_API Parser {
 
   ~Parser();
 
-  // Create the parser. 
-  static Parser *New();
-  static Parser *New(const Options &options);
-  static Parser *New(const Options &options, Model *model);
+  // Creates the parser with options spcified by `options`.
+  explicit Parser(const Options &options);
+
+  bool ok() { return impl_ != NULL; }
 
   // Parses the text and stores the result into the iterator
   void Predict(Iterator *iterator, const char *text);
@@ -112,7 +86,6 @@ class MILKCAT_API Parser {
   Impl *impl() const { return impl_; }
 
  private:
-  Parser();
   Impl *impl_;
 };
 
@@ -143,6 +116,13 @@ class MILKCAT_API Parser::Options {
   void UseYamadaParser();
   void UseBeamYamadaParser();
   void NoDependencyParser();
+
+  // Sets the path of model data, the `model_path` corresponds a directory
+  // in filesystem
+  void SetModelPath(const char *model_path);
+
+  // Sets the user directory for word segmenter.
+  void SetUserDictionary(const char *userdict_path);
 
   // Get the instance of the implementation class
   Impl *impl() const { return impl_; }
@@ -198,7 +178,6 @@ MILKCAT_API const char *LastError();
 extern "C" {
 #endif  // __cplusplus
 
-typedef struct milkcat_model_t milkcat_model_t;
 typedef struct milkcat_parser_t milkcat_parser_t;
 
 typedef struct milkcat_parseriter_internal_t milkcat_parseriter_internal_t;
@@ -230,11 +209,9 @@ typedef struct milkcat_parseropt_t {
   int dependency_parser;
 } milkcat_parseropt_t;
 
-MILKCAT_API milkcat_model_t *milkcat_model_new(const char *model_path);
-MILKCAT_API void milkcat_model_destroy(milkcat_model_t *model);
 
 MILKCAT_API void milkcat_parseropt_use_default(milkcat_parseropt_t *parseropt);
-MILKCAT_API milkcat_parser_t *milkcat_parser_new(milkcat_parseropt_t *parseropt, milkcat_model_t *model);
+MILKCAT_API milkcat_parser_t *milkcat_parser_new(milkcat_parseropt_t *parseropt);
 MILKCAT_API void milkcat_parser_destroy(milkcat_parser_t *model);
 MILKCAT_API void milkcat_parser_predict(
     milkcat_parser_t *parser,

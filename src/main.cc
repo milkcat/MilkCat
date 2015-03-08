@@ -34,7 +34,6 @@
 #include "util/readable_file.h"
 
 using milkcat::Parser;
-using milkcat::Model;
 using milkcat::Status;
 using milkcat::ReadableFile;
 
@@ -43,8 +42,6 @@ struct Options {
   bool display_tag;
   bool display_type;
   bool use_stdin;
-  bool has_userdict;
-  bool use_default_model_dir;
   bool conll_format;
   std::string model_dir;
   std::string userdict_path;
@@ -56,8 +53,6 @@ struct Options {
 Options::Options(): display_tag(true),
                     display_type(false),
                     use_stdin(false),
-                    has_userdict(false),
-                    use_default_model_dir(true),
                     conll_format(false) {
 }
 
@@ -114,16 +109,11 @@ void GetArgs(int argc, char **argv, Options *options) {
         break;
 
       case 'd':
-        options->use_default_model_dir = false;
-        model_dir = optarg;
-        last_char = model_dir[model_dir.size() - 1];
-        if (last_char != '/') model_dir.push_back('/');
-        options->model_dir = model_dir;
+        options->parser_options.SetModelPath(optarg);
         break;
 
       case 'u':
-        options->userdict_path = optarg;
-        options->has_userdict = true;
+        options->parser_options.SetUserDictionary(optarg);
         break;
 
       case 'm':
@@ -215,32 +205,11 @@ int ParserMain(int argc, char **argv) {
   }
 
   char *input_buffer = new char[1048576];
-  Model *model = NULL;
-  if (options.use_default_model_dir) {
-    model = Model::New();
-  } else {
-    model = Model::New(options.model_dir.c_str());
-  }
-
-  if (model == NULL) {
-    fputs(milkcat::LastError(), stderr);
-    fputs("\n", stderr);
-    exit(1);
-  }
-
-  if (options.has_userdict) {
-    if (false == model->SetUserDictionary(options.userdict_path.c_str())) {
-      fprintf(stderr,
-              "Unable to load user dictionary file %s\n",
-              options.userdict_path.c_str());
-      exit(1);
-    }
-  }
   
-  Parser *parser = Parser::New(options.parser_options, model);
+  Parser *parser = new Parser(options.parser_options);
   Parser::Iterator *it = new Parser::Iterator();
 
-  if (parser == NULL) {
+  if (!parser->ok()) {
     fputs(milkcat::LastError(), stderr);
     fputs("\n", stderr);
     exit(1);
@@ -304,7 +273,6 @@ int ParserMain(int argc, char **argv) {
 
   delete parser;
   delete it;
-  delete model;
   delete[] input_buffer;
   if (!options.use_stdin) fclose(fd);
 

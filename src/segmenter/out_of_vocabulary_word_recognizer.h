@@ -32,7 +32,6 @@
 #include <stdint.h>
 #include <stdio.h>
 #include "common/milkcat_config.h"
-#include "common/model_impl.h"
 #include "util/util.h"
 
 namespace milkcat {
@@ -41,10 +40,11 @@ class ReimuTrie;
 class CRFSegmenter;
 class TermInstance;
 class TokenInstance;
+class Model;
 
 class OutOfVocabularyWordRecognizer {
  public:
-   static OutOfVocabularyWordRecognizer *New(Model::Impl *model_factory,
+   static OutOfVocabularyWordRecognizer *New(Model *model_factory,
                                              Status *status);
    ~OutOfVocabularyWordRecognizer();
   void Recognize(TermInstance *term_instance,

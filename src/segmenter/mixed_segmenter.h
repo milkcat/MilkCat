@@ -27,7 +27,6 @@
 #ifndef SRC_SEGMENTER_MIXED_SEGMENTER_H_
 #define SRC_SEGMENTER_MIXED_SEGMENTER_H_
 
-#include "include/milkcat.h"
 #include "segmenter/segmenter.h"
 
 namespace milkcat {
@@ -37,13 +36,14 @@ class BigramSegmenter;
 class TermInstance;
 class TokenInstance;
 class Status;
+class Model;
 
 // Mixed Bigram segmenter and CRF Segmenter of OOV recognition
 class MixedSegmenter: public Segmenter {
  public:
   ~MixedSegmenter();
 
-  static MixedSegmenter *New(Model::Impl *model_factory, Status *status);
+  static MixedSegmenter *New(Model *model_factory, Status *status);
 
   // Segment a token instance into term instance
   void Segment(TermInstance *term_instance, TokenInstance *token_instance);

@@ -38,7 +38,7 @@
 
 namespace milkcat {
 
-CRFSegmenter *CRFSegmenter::New(Model::Impl *model_factory, Status *status) {
+CRFSegmenter *CRFSegmenter::New(Model *model_factory, Status *status) {
   CRFSegmenter *self = new CRFSegmenter();
   const CRFModel *model = model_factory->CRFSegModel(status);
   

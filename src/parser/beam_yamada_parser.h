@@ -31,7 +31,6 @@
 #include <stdint.h>
 #include <vector>
 #include <string>
-#include "common/model_impl.h"
 #include "ml/beam.h"
 #include "parser/dependency_parser.h"
 
@@ -46,6 +45,7 @@ class ReimuTrie;
 class FeatureSet;
 template<class T> class Pool;
 template<class T> class StaticArray;
+class Model;
 
 class BeamYamadaParser: public DependencyParser {
  public:
@@ -66,7 +66,7 @@ class BeamYamadaParser: public DependencyParser {
       int beam_size,
       Status *status);
 
-  static BeamYamadaParser *New(Model::Impl *model, Status *status);
+  static BeamYamadaParser *New(Model *model, Status *status);
 
   // Overrides DependencyParser::Parse
   void Parse(

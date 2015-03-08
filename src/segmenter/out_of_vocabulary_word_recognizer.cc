@@ -40,7 +40,7 @@
 namespace milkcat {
 
 OutOfVocabularyWordRecognizer *OutOfVocabularyWordRecognizer::New(
-    Model::Impl *model_factory,
+    Model *model_factory,
     Status *status) {
     OutOfVocabularyWordRecognizer *self = new OutOfVocabularyWordRecognizer();
   self->crf_segmenter_ = CRFSegmenter::New(model_factory, status);

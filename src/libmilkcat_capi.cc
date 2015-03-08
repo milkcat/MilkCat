@@ -41,21 +41,6 @@ typedef struct milkcat_parseriter_internal_t {
   milkcat::Parser::Iterator *iterator;
 } milkcat_parseriter_internal_t;
 
-milkcat_model_t *milkcat_model_new(const char *model_dir) {
-  milkcat::Model *model = milkcat::Model::New(model_dir);
-  if (model == NULL) return NULL;
-  
-  milkcat_model_t *model_wrapper = new milkcat_model_t;
-  model_wrapper->model = model;
-  return model_wrapper;
-}
-
-void milkcat_model_destroy(milkcat_model_t *model) {
-  if (model == NULL) return ;
-  delete model->model;
-  delete model;
-}
-
 void milkcat_parseropt_use_default(milkcat_parseropt_t *parseropt) {
   parseropt->word_segmenter = MC_SEGMENTER_MIXED;
   parseropt->part_of_speech_tagger = MC_POSTAGGER_HMM;
@@ -63,8 +48,7 @@ void milkcat_parseropt_use_default(milkcat_parseropt_t *parseropt) {
 }
 
 milkcat_parser_t *milkcat_parser_new(
-    milkcat_parseropt_t *parseropt,
-    milkcat_model_t *model) {
+    milkcat_parseropt_t *parseropt) {
   milkcat::Parser::Options option;
   switch (parseropt->word_segmenter) {
     case MC_SEGMENTER_BIGRAM:
@@ -120,7 +104,7 @@ milkcat_parser_t *milkcat_parser_new(
       return NULL;
   }
 
-  milkcat::Parser *parser = milkcat::Parser::New(option, model->model);
+  milkcat::Parser *parser = new milkcat::Parser(option);
   if (parser == NULL) return NULL;
 
   milkcat_parser_t *parser_wrapper = new milkcat_parser_t;

@@ -30,7 +30,6 @@
 #include "include/milkcat.h"
 #include "util/encoding.h"
 
-using milkcat::Model;
 using milkcat::Parser;
 
 const int kLength = 9;
@@ -85,17 +84,14 @@ void check_prediction(Parser::Iterator *parseriter, bool use_gbk) {
 } 
 
 int parser_test() {
-  Model *model = Model::New(MODEL_DIR);
-  assert(model);
-
   Parser::Options options;
   options.UseMixedSegmenter();
   options.UseMixedPOSTagger();
   options.UseBeamYamadaParser();
+  options.SetModelPath(MODEL_DIR);
 
-  // Testes beam yamada parser
-  Parser *parser = Parser::New(options, model);
-  assert(parser);
+  Parser *parser = new Parser(options);
+  assert(parser->ok());
   Parser::Iterator *parseriter = new Parser::Iterator();
   parser->Predict(parseriter, kSentence);
   check_prediction(parseriter, false);
@@ -103,24 +99,21 @@ int parser_test() {
 
   // Testes yamada parser
   options.UseYamadaParser();
-  parser = Parser::New(options, model);
+  parser = new Parser(options);
   assert(parser);
   parser->Predict(parseriter, kSentence);
   check_prediction(parseriter, false);
   delete parser;
 
   delete parseriter;
-  delete model;
   return 0;
 }
 
 int empty_string_test() {
-  Model *model = Model::New(MODEL_DIR);
-  assert(model);
-
   Parser::Options options;
-  Parser *parser = Parser::New(options, model);
-  assert(parser);
+  options.SetModelPath(MODEL_DIR);
+  Parser *parser = new Parser(options);
+  assert(parser->ok());
   Parser::Iterator *parseriter = new Parser::Iterator();
   parser->Predict(parseriter, "");
   assert(parseriter->Next() == false);
@@ -131,7 +124,6 @@ int empty_string_test() {
   parseriter->Next();
   delete parseriter;
   delete parser;
-  delete model;
   
   return 0;
 }
@@ -147,16 +139,13 @@ int bigram_segmenter_test() {
   fputs("\n", fd);
   fclose(fd);
 
-  Model *model = Model::New(MODEL_DIR);
-  assert(model->SetUserDictionary("NOT_EXIST.txt") == false);
-  assert(model->SetUserDictionary("user.txt") == true);
-  assert(model);
-
   Parser::Options options;
+  options.SetUserDictionary("user.txt");
   options.UseBigramSegmenter();
   options.NoPOSTagger();
-  Parser *parser = Parser::New(options, model);
-  assert(parser);
+  options.SetModelPath(MODEL_DIR);
+  Parser *parser = new Parser(options);
+  assert(parser->ok());
   Parser::Iterator *parseriter = new Parser::Iterator();
   parser->Predict(parseriter, "博丽灵梦是与雾雨魔理沙并列的第一自机");
 
@@ -168,27 +157,24 @@ int bigram_segmenter_test() {
 
   delete parseriter;
   delete parser;
-  delete model;
   
   return 0; 
 }
 
 int gbk_test() {
-  Model *model = Model::New(MODEL_DIR);
-  assert(model);
-
   Parser::Options options;
   options.UseMixedSegmenter();
   options.UseMixedPOSTagger();
   options.UseBeamYamadaParser();
   options.UseGBK();
+  options.SetModelPath(MODEL_DIR);
 
   char gbk_sentence[2048];
   milkcat::Encoding *encoding = new milkcat::Encoding();
   encoding->UTF8ToGBK(kSentence, gbk_sentence, sizeof(gbk_sentence));
   delete encoding;
 
-  Parser *parser = Parser::New(options, model);
+  Parser *parser = new Parser(options);
   assert(parser);
   Parser::Iterator *parseriter = new Parser::Iterator();
   parser->Predict(parseriter, gbk_sentence);
@@ -196,7 +182,6 @@ int gbk_test() {
   delete parser;
 
   delete parseriter;
-  delete model;
   return 0;
 }
 

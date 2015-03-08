@@ -27,7 +27,6 @@
 #ifndef SRC_SEGMENTER_CRF_SEGMENTER_H_
 #define SRC_SEGMENTER_CRF_SEGMENTER_H_
 
-#include "include/milkcat.h"
 #include "ml/crf_tagger.h"
 #include "segmenter/segmenter.h"
 #include "tokenizer/token_instance.h"
@@ -37,10 +36,11 @@ namespace milkcat {
 
 class SequenceFeatureSet;
 class TermInstance;
+class Model;
 
 class CRFSegmenter: public Segmenter {
  public:
-  static CRFSegmenter *New(Model::Impl *model_factory, Status *status);
+  static CRFSegmenter *New(Model *model_factory, Status *status);
   ~CRFSegmenter();
 
   // Segment a range [begin, end) of token

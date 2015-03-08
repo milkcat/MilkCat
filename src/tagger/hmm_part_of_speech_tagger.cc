@@ -132,7 +132,7 @@ HMMModel::EmissionArray *NewEmission(
 
 }  // namespace
 
-HMMPartOfSpeechTagger *HMMPartOfSpeechTagger::New(Model::Impl *model_factory,
+HMMPartOfSpeechTagger *HMMPartOfSpeechTagger::New(Model *model_factory,
                                                   Status *status) {
   const HMMModel *model = model_factory->HMMPosModel(status);
   if (status->ok()) {

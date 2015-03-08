@@ -28,15 +28,17 @@
 #define SRC_TAGGER_HMM_PART_OF_SPEECH_TAGGER_H_
 
 #include "common/milkcat_config.h"
-#include "common/model_impl.h"
 #include "ml/hmm_model.h"
 #include "tagger/part_of_speech_tagger.h"
+#include "util/util.h"
 
 namespace milkcat {
 
 class PartOfSpeechTagInstance;
 class TermInstance;
 template<class T, class Comparator> class Beam;
+class Model;
+template<class T> class Pool;
 
 // HMMPartOfSpeechTagger uses Hidden Markov Model to predict the part-of-speech
 // tag of given TermInstance
@@ -52,7 +54,7 @@ class HMMPartOfSpeechTagger: public PartOfSpeechTagger {
   void Tag(PartOfSpeechTagInstance *part_of_speech_tag_instance,
            TermInstance *term_instance);
 
-  static HMMPartOfSpeechTagger *New(Model::Impl *model_factory, Status *status);
+  static HMMPartOfSpeechTagger *New(Model *model_factory, Status *status);
   static HMMPartOfSpeechTagger *New(const HMMModel *model, Status *status);
 
   // Trains the tagger from `training_corpus` and save this model into

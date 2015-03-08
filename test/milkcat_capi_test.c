@@ -30,17 +30,11 @@
 #include "include/milkcat.h"
 
 int main() {
-  milkcat_model_t *model = milkcat_model_new(MODEL_DIR);
-  if (model == NULL) {
-    puts(milkcat_last_error());
-    return 1;
-  }
-
   milkcat_parseropt_t parseropt;
   milkcat_parseropt_use_default(&parseropt);
   parseropt.part_of_speech_tagger = MC_POSTAGGER_CRF;
 
-  milkcat_parser_t *parser = milkcat_parser_new(&parseropt, model);
+  milkcat_parser_t *parser = milkcat_parser_new(&parseropt);
   if (parser == NULL) {
     puts(milkcat_last_error());
     return 1;
@@ -76,7 +70,6 @@ int main() {
 
   milkcat_parseriter_destroy(it);
   milkcat_parser_destroy(parser);
-  milkcat_model_destroy(model);
   return 0;
 }
 

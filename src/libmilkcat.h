@@ -51,6 +51,8 @@
 
 namespace milkcat {
   
+class Model;
+
 // The global error message
 extern char gLastErrorMessage[kLastErrorStringMax];
 
@@ -64,13 +66,13 @@ Tokenization *TokenizerFactory(int tokenizer_id);
 
 // A factory function to create segmenters. On success, return the instance of
 // Segmenter, on failed, set status != Status::OK()
-Segmenter *SegmenterFactory(Model::Impl *factory,
+Segmenter *SegmenterFactory(Model *factory,
                             int segmenter_id,
                             Status *status);
 
 // A factory function to create part-of-speech taggers. On success, return the
 // instance of part-of-speech tagger, on failed, set status != Status::OK()
-PartOfSpeechTagger *PartOfSpeechTaggerFactory(Model::Impl *factory,
+PartOfSpeechTagger *PartOfSpeechTaggerFactory(Model *factory,
                                               int part_of_speech_tagger_id,
                                               Status *status);
 
@@ -105,7 +107,7 @@ enum ParserType {
 
 class Parser::Impl {
  public:
-  static Impl *New(const Options &options, Model *model);
+  static Impl *New(const Options &options);
   ~Impl();
 
   void Predict(Iterator *iterator, const char *text);
@@ -118,9 +120,6 @@ class Parser::Impl {
     return dependency_parser_;
   }
 
-  // Get the segmenter for the parser
-  Segmenter *segmenter() { return segmenter_; }
-
  private:
   Impl();
 
@@ -131,8 +130,7 @@ class Parser::Impl {
   Segmenter *segmenter_;
   PartOfSpeechTagger *part_of_speech_tagger_;
   DependencyParser *dependency_parser_;
-  Model::Impl *model_impl_;
-  bool own_model_;
+  Model *model_;
 
   // These fields are used when using gbk encoding
   bool use_gbk_;
@@ -190,17 +188,29 @@ class Parser::Options::Impl {
     parser_type_ = kNoParser;
   }
 
+  void SetUserDictionary(const char *userdict_path) {
+    user_dictionary_ = userdict_path;
+  }
+
+  void SetModelPath(const char *model_path) {
+    model_path_ = model_path;
+  }
+
   // Get the type value of current setting
   int TypeValue() const {
     return segmenter_type_ | tagger_type_ | parser_type_;
   }
   bool use_gbk() const { return use_gbk_; }
+  const char *user_dictionary() const { return user_dictionary_.c_str(); }
+  const char *model_path() const { return model_path_.c_str(); }
 
 private:
   int segmenter_type_;
   int tagger_type_;
   int parser_type_;
   bool use_gbk_;
+  std::string user_dictionary_;
+  std::string model_path_;
 };
 
 // Represents the parsing result of a sentence

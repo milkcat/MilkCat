@@ -30,7 +30,6 @@
 
 #include <vector>
 #include <string>
-#include "common/model_impl.h"
 #include "parser/dependency_parser.h"
 
 namespace milkcat {
@@ -42,6 +41,7 @@ class TermInstance;
 class PartOfSpeechTagInstance;
 class FeatureSet;
 template<class T> class Pool;
+class Model;
 
 // This class implemented the original Yamada (arc-standard) dependency parser.
 // Introduced by Nivre, Joakim. 
@@ -54,7 +54,7 @@ class YamadaParser: public DependencyParser {
       FeatureTemplate *feature);
   ~YamadaParser();
 
-  static YamadaParser *New(Model::Impl *model, Status *status);
+  static YamadaParser *New(Model *model, Status *status);
   // Overrides DependencyParser::Parse
   void Parse(
       TreeInstance *tree_instance,

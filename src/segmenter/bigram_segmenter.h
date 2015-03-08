@@ -33,7 +33,6 @@
 #include "common/milkcat_config.h"
 #include "common/static_array.h"
 #include "common/static_hashtable.h"
-#include "include/milkcat.h"
 #include "ml/beam.h"
 #include "segmenter/segmenter.h"
 #include "util/pool.h"
@@ -44,6 +43,7 @@ class ReimuTrie;
 class TokenInstance;
 class TermInstance;
 class Status;
+class Model;
 
 class BigramSegmenter: public Segmenter {
  private:
@@ -57,7 +57,7 @@ class BigramSegmenter: public Segmenter {
   // Create the bigram segmenter from a model factory. On success, return an
   // instance of BigramSegmenter. On failed, return NULL and set status
   // a failed value
-  static BigramSegmenter *New(Model::Impl *model_factory,
+  static BigramSegmenter *New(Model *model_factory,
                               bool use_bigram,
                               Status *status);
 

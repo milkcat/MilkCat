@@ -35,6 +35,7 @@
 #include "common/static_hashtable.h"
 #include "ml/crf_model.h"
 #include "ml/hmm_model.h"
+#include "parser/feature_template.h"
 
 namespace milkcat {
 
@@ -53,7 +54,7 @@ const char *kDependenctTemplateFile = "depparse.tmpl";
 
 // ---------- Model::Impl ----------
 
-Model::Impl::Impl(const char *model_dir):
+Model::Model(const char *model_dir):
     model_dir_(model_dir),
     unigram_index_(NULL),
     user_index_(NULL),
@@ -71,7 +72,7 @@ Model::Impl::Impl(const char *model_dir):
   }
 }
 
-Model::Impl::~Impl() {
+Model::~Model() {
   delete user_index_;
   user_index_ = NULL;
 
@@ -106,7 +107,7 @@ Model::Impl::~Impl() {
   dependency_feature_ = NULL;
 }
 
-const ReimuTrie *Model::Impl::Index(Status *status) {
+const ReimuTrie *Model::Index(Status *status) {
   mutex.Lock();
   if (unigram_index_ == NULL) {
     std::string model_path = model_dir_ + kUnigramIndexFile;
@@ -121,7 +122,7 @@ const ReimuTrie *Model::Impl::Index(Status *status) {
   return unigram_index_;
 }
 
-void Model::Impl::ReadUserDictionary(const char *path, Status *status) {
+void Model::ReadUserDictionary(const char *path, Status *status) {
   char line[1024], word[1024], cost_string[1024];
   std::string errmsg;
   ReadableFile *fd = NULL;
@@ -173,21 +174,7 @@ void Model::Impl::ReadUserDictionary(const char *path, Status *status) {
   delete fd;
 }
 
-bool Model::Impl::SetUserDictionary(const char *path) {
-  Status status;
-  mutex.Lock();
-  ReadUserDictionary(path, &status);
-  mutex.Unlock();
-
-  if (status.ok()) {
-    return true;
-  } else {
-    strlcpy(gLastErrorMessage, status.what(), sizeof(gLastErrorMessage));
-    return false;
-  }
-}
-
-const ReimuTrie *Model::Impl::UserIndex(Status *status) {
+const ReimuTrie *Model::UserIndex(Status *status) {
   if (user_index_) {
     return user_index_;
   } else {
@@ -196,7 +183,7 @@ const ReimuTrie *Model::Impl::UserIndex(Status *status) {
   }
 }
 
-const StaticArray<float> *Model::Impl::UserCost(Status *status) {
+const StaticArray<float> *Model::UserCost(Status *status) {
   if (user_cost_) {
     return user_cost_;
   } else {
@@ -205,7 +192,7 @@ const StaticArray<float> *Model::Impl::UserCost(Status *status) {
   }
 }
 
-const StaticArray<float> *Model::Impl::UnigramCost(Status *status) {
+const StaticArray<float> *Model::UnigramCost(Status *status) {
   mutex.Lock();
   if (unigram_cost_ == NULL) {
     std::string model_path = model_dir_ + kUnigramDataFile;
@@ -215,7 +202,7 @@ const StaticArray<float> *Model::Impl::UnigramCost(Status *status) {
   return unigram_cost_;
 }
 
-const StaticHashTable<int64_t, float> *Model::Impl::BigramCost(
+const StaticHashTable<int64_t, float> *Model::BigramCost(
     Status *status) {
   mutex.Lock();
   if (bigram_cost_ == NULL) {
@@ -227,7 +214,7 @@ const StaticHashTable<int64_t, float> *Model::Impl::BigramCost(
   return bigram_cost_;
 }
 
-const CRFModel *Model::Impl::CRFSegModel(Status *status) {
+const CRFModel *Model::CRFSegModel(Status *status) {
   mutex.Lock();
   if (seg_model_ == NULL) {
     std::string model_path = model_dir_ + kCrfSegModelFile;
@@ -237,7 +224,7 @@ const CRFModel *Model::Impl::CRFSegModel(Status *status) {
   return seg_model_;
 }
 
-const CRFModel *Model::Impl::CRFPosModel(Status *status) {
+const CRFModel *Model::CRFPosModel(Status *status) {
   mutex.Lock();
   if (crf_pos_model_ == NULL) {
     std::string model_path = model_dir_ + kCrfPosModelFile;
@@ -247,7 +234,7 @@ const CRFModel *Model::Impl::CRFPosModel(Status *status) {
   return crf_pos_model_;
 }
 
-const HMMModel *Model::Impl::HMMPosModel(Status *status) {
+const HMMModel *Model::HMMPosModel(Status *status) {
   mutex.Lock();
   if (hmm_pos_model_ == NULL) {
     std::string model_path = model_dir_ + kHmmPosModelFile;
@@ -257,7 +244,7 @@ const HMMModel *Model::Impl::HMMPosModel(Status *status) {
   return hmm_pos_model_;
 }
 
-const ReimuTrie *Model::Impl::OOVProperty(Status *status) {
+const ReimuTrie *Model::OOVProperty(Status *status) {
   mutex.Lock();
   if (oov_property_ == NULL) {
     std::string model_path = model_dir_ + kOovPropertyFile;
@@ -272,7 +259,7 @@ const ReimuTrie *Model::Impl::OOVProperty(Status *status) {
   return oov_property_;
 }
 
-PerceptronModel *Model::Impl::YamadaModel(Status *status) {
+PerceptronModel *Model::YamadaModel(Status *status) {
   mutex.Lock();
   if (dependency_ == NULL) {
     std::string prefix = model_dir_ + kYamadaModelPrefix;
@@ -282,7 +269,7 @@ PerceptronModel *Model::Impl::YamadaModel(Status *status) {
   return dependency_;  
 }
 
-PerceptronModel *Model::Impl::BeamYamadaModel(Status *status) {
+PerceptronModel *Model::BeamYamadaModel(Status *status) {
   mutex.Lock();
   if (dependency_ == NULL) {
     std::string prefix = model_dir_ + kBeamYamadaModelPrefix;
@@ -293,7 +280,7 @@ PerceptronModel *Model::Impl::BeamYamadaModel(Status *status) {
 }
 
 DependencyParser::FeatureTemplate *
-Model::Impl::DependencyTemplate(Status *status) {
+Model::DependencyTemplate(Status *status) {
   mutex.Lock();
   if (dependency_feature_ == NULL) {
     std::string prefix = model_dir_ + kDependenctTemplateFile;

@@ -107,7 +107,7 @@ BigramSegmenter::~BigramSegmenter() {
   }
 }
 
-BigramSegmenter *BigramSegmenter::New(Model::Impl *model_factory,
+BigramSegmenter *BigramSegmenter::New(Model *model_factory,
                                       bool use_bigram,
                                       Status *status) {
   BigramSegmenter *self = new BigramSegmenter();

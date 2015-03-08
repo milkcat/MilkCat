@@ -34,6 +34,7 @@
 #include <algorithm>
 #include <set>
 #include <vector>
+#include "common/model_impl.h"
 #include "ml/feature_set.h"
 #include "ml/perceptron.h"
 #include "ml/perceptron_model.h"
@@ -62,7 +63,7 @@ YamadaParser::~YamadaParser() {
   state_ = NULL;
 }
 
-YamadaParser *YamadaParser::New(Model::Impl *model_impl, Status *status) {
+YamadaParser *YamadaParser::New(Model *model_impl, Status *status) {
   PerceptronModel *perceptron_model = model_impl->YamadaModel(status);
 
   FeatureTemplate *feature_template = NULL;
