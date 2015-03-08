@@ -101,8 +101,6 @@ libmilkcat_la_SOURCES = src/libmilkcat.cc \
                         src/tokenizer/tokenizer.h \
                         src/util/encoding.h \
                         src/util/encoding_posix.cc \
-                        src/util/mutex.h \
-                        src/util/mutex_posix.cc \
                         src/util/pool.h \
                         src/util/readable_file.cc \
                         src/util/readable_file.h \

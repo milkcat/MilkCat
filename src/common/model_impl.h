@@ -30,7 +30,6 @@
 #include <string>
 #include <vector>
 #include "parser/dependency_parser.h"
-#include "util/mutex.h"
 #include "util/util.h"
 
 #ifndef SRC_COMMON_MODEL_FACTORY_H_
@@ -92,7 +91,6 @@ class Model {
 
  private:
   std::string model_dir_;
-  Mutex mutex;
 
   const ReimuTrie *unigram_index_;
   const ReimuTrie *user_index_;

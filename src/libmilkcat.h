@@ -44,7 +44,6 @@
 #include "parser/tree_instance.h"
 #include "tokenizer/tokenizer.h"
 #include "util/encoding.h"
-#include "util/mutex.h"
 #include "util/util.h"
 #include "util/status.h"
 #include "util/readable_file.h"

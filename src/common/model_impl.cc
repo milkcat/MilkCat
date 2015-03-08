@@ -108,7 +108,6 @@ Model::~Model() {
 }
 
 const ReimuTrie *Model::Index(Status *status) {
-  mutex.Lock();
   if (unigram_index_ == NULL) {
     std::string model_path = model_dir_ + kUnigramIndexFile;
     unigram_index_ = ReimuTrie::Open(model_path.c_str());
@@ -118,7 +117,6 @@ const ReimuTrie *Model::Index(Status *status) {
       *status = Status::IOError(errmsg.c_str());
     }
   }
-  mutex.Unlock();
   return unigram_index_;
 }
 
@@ -193,59 +191,47 @@ const StaticArray<float> *Model::UserCost(Status *status) {
 }
 
 const StaticArray<float> *Model::UnigramCost(Status *status) {
-  mutex.Lock();
   if (unigram_cost_ == NULL) {
     std::string model_path = model_dir_ + kUnigramDataFile;
     unigram_cost_ = StaticArray<float>::New(model_path.c_str(), status);
   }
-  mutex.Unlock();
   return unigram_cost_;
 }
 
-const StaticHashTable<int64_t, float> *Model::BigramCost(
-    Status *status) {
-  mutex.Lock();
+const StaticHashTable<int64_t, float> *Model::BigramCost(Status *status) {
   if (bigram_cost_ == NULL) {
     std::string model_path = model_dir_ + kBigramDataFile;
     bigram_cost_ = StaticHashTable<int64_t, float>::New(model_path.c_str(),
                                                         status);
   }
-  mutex.Unlock();
   return bigram_cost_;
 }
 
 const CRFModel *Model::CRFSegModel(Status *status) {
-  mutex.Lock();
   if (seg_model_ == NULL) {
     std::string model_path = model_dir_ + kCrfSegModelFile;
     seg_model_ = CRFModel::New(model_path.c_str(), status);
   }
-  mutex.Unlock();
   return seg_model_;
 }
 
 const CRFModel *Model::CRFPosModel(Status *status) {
-  mutex.Lock();
   if (crf_pos_model_ == NULL) {
     std::string model_path = model_dir_ + kCrfPosModelFile;
     crf_pos_model_ = CRFModel::New(model_path.c_str(), status);
   }
-  mutex.Unlock();
   return crf_pos_model_;
 }
 
 const HMMModel *Model::HMMPosModel(Status *status) {
-  mutex.Lock();
   if (hmm_pos_model_ == NULL) {
     std::string model_path = model_dir_ + kHmmPosModelFile;
     hmm_pos_model_ = HMMModel::New(model_path.c_str(), status);
   }
-  mutex.Unlock();
   return hmm_pos_model_;
 }
 
 const ReimuTrie *Model::OOVProperty(Status *status) {
-  mutex.Lock();
   if (oov_property_ == NULL) {
     std::string model_path = model_dir_ + kOovPropertyFile;
     oov_property_ = ReimuTrie::Open(model_path.c_str());
@@ -255,40 +241,33 @@ const ReimuTrie *Model::OOVProperty(Status *status) {
       *status = Status::IOError(errmsg.c_str());
     }
   }
-  mutex.Unlock();
   return oov_property_;
 }
 
 PerceptronModel *Model::YamadaModel(Status *status) {
-  mutex.Lock();
   if (dependency_ == NULL) {
     std::string prefix = model_dir_ + kYamadaModelPrefix;
     dependency_ = PerceptronModel::Open(prefix.c_str(), status);
   }
-  mutex.Unlock();
   return dependency_;  
 }
 
 PerceptronModel *Model::BeamYamadaModel(Status *status) {
-  mutex.Lock();
   if (dependency_ == NULL) {
     std::string prefix = model_dir_ + kBeamYamadaModelPrefix;
     dependency_ = PerceptronModel::Open(prefix.c_str(), status);
   }
-  mutex.Unlock();
   return dependency_;  
 }
 
 DependencyParser::FeatureTemplate *
 Model::DependencyTemplate(Status *status) {
-  mutex.Lock();
   if (dependency_feature_ == NULL) {
     std::string prefix = model_dir_ + kDependenctTemplateFile;
     dependency_feature_ = DependencyParser::FeatureTemplate::Open(
         prefix.c_str(),
         status);
   }
-  mutex.Unlock();
   return dependency_feature_;  
 }
 
