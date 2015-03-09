@@ -376,6 +376,7 @@ Parser::Parser(const Options &options): impl_(Impl::New(options)) {
 }
 
 void Parser::Predict(Parser::Iterator *iterator, const char *text) {
+  if (impl_ == NULL) return ;
   return impl_->Predict(iterator, text);
 }
 
