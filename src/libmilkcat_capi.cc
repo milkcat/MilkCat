@@ -41,14 +41,14 @@ typedef struct milkcat_parseriter_internal_t {
   milkcat::Parser::Iterator *iterator;
 } milkcat_parseriter_internal_t;
 
-void milkcat_parseropt_use_default(milkcat_parseropt_t *parseropt) {
+void milkcat_parseroptions_init(milkcat_parseroptions_t *parseropt) {
   parseropt->word_segmenter = MC_SEGMENTER_MIXED;
   parseropt->part_of_speech_tagger = MC_POSTAGGER_HMM;
   parseropt->dependency_parser = MC_DEPPARSER_NONE;
 }
 
 milkcat_parser_t *milkcat_parser_new(
-    milkcat_parseropt_t *parseropt) {
+    milkcat_parseroptions_t *parseropt) {
   milkcat::Parser::Options option;
   switch (parseropt->word_segmenter) {
     case MC_SEGMENTER_BIGRAM:
@@ -104,6 +104,14 @@ milkcat_parser_t *milkcat_parser_new(
       return NULL;
   }
 
+  // Sets model path and user dictionary
+  if (parseropt->model_path) {
+    option.SetModelPath(parseropt->model_path);
+  }
+  if (parseropt->user_dictionary_path) {
+    option.SetUserDictionary(parseropt->user_dictionary_path);
+  }
+
   milkcat::Parser *parser = new milkcat::Parser(option);
   if (parser == NULL) return NULL;
 
@@ -118,36 +126,9 @@ void milkcat_parser_destroy(milkcat_parser_t *parser) {
   delete parser;
 }
 
-milkcat_parseriter_t *milkcat_parseriter_new() {
-  milkcat_parseriter_t *parseriter = new milkcat_parseriter_t;
-  parseriter->word = "";
-  parseriter->part_of_speech_tag = "";
-  parseriter->it = new milkcat_parseriter_internal_t;
-  parseriter->it->iterator = new milkcat::Parser::Iterator();
-  return parseriter;
-}
-
-void milkcat_parseriter_destroy(milkcat_parseriter_t *parseriter) {
-  delete parseriter->it->iterator;
-  delete parseriter->it;
-  delete parseriter;
-}
-
-
-bool milkcat_parseriter_next(milkcat_parseriter_t *parseriter) {
-  milkcat::Parser::Iterator *it = parseriter->it->iterator;
-  bool has_next = it->Next();
-  parseriter->word = it->word();
-  parseriter->part_of_speech_tag = it->part_of_speech_tag();
-  parseriter->head = it->head();
-  parseriter->dependency_label = it->dependency_label();
-  parseriter->is_begin_of_sentence = it->is_begin_of_sentence();
-  return has_next;
-}
-
 void milkcat_parser_predict(
     milkcat_parser_t *parser,
-    milkcat_parseriter_t *parseriter,
+    milkcat_parseriterator_t *parseriter,
     const char *text) {
   milkcat::Parser::Iterator *it = parseriter->it->iterator;
   parser->parser->Predict(it, text);
@@ -156,6 +137,33 @@ void milkcat_parser_predict(
   parseriter->head = 0;
   parseriter->dependency_label = "";
   parseriter->is_begin_of_sentence = false;
+}
+
+milkcat_parseriterator_t *milkcat_parseriterator_new() {
+  milkcat_parseriterator_t *parseriter = new milkcat_parseriterator_t;
+  parseriter->word = "";
+  parseriter->part_of_speech_tag = "";
+  parseriter->it = new milkcat_parseriter_internal_t;
+  parseriter->it->iterator = new milkcat::Parser::Iterator();
+  return parseriter;
+}
+
+void milkcat_parseriterator_destroy(milkcat_parseriterator_t *parseriter) {
+  delete parseriter->it->iterator;
+  delete parseriter->it;
+  delete parseriter;
+}
+
+
+bool milkcat_parseriterator_next(milkcat_parseriterator_t *parseriter) {
+  milkcat::Parser::Iterator *it = parseriter->it->iterator;
+  bool has_next = it->Next();
+  parseriter->word = it->word();
+  parseriter->part_of_speech_tag = it->part_of_speech_tag();
+  parseriter->head = it->head();
+  parseriter->dependency_label = it->dependency_label();
+  parseriter->is_begin_of_sentence = it->is_begin_of_sentence();
+  return has_next;
 }
 
 const char *milkcat_last_error() {

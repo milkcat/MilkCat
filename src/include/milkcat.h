@@ -191,14 +191,14 @@ extern "C" {
 typedef struct milkcat_parser_t milkcat_parser_t;
 
 typedef struct milkcat_parseriter_internal_t milkcat_parseriter_internal_t;
-typedef struct milkcat_parseriter_t {
+typedef struct milkcat_parseriterator_t {
   const char *word;
   const char *part_of_speech_tag;
   int head;
   const char *dependency_label;
   bool is_begin_of_sentence;
   milkcat_parseriter_internal_t *it;
-} milkcat_parseriter_t;
+} milkcat_parseriterator_t;
 
 #define MC_SEGMENTER_BIGRAM 0
 #define MC_SEGMENTER_CRF 1
@@ -213,24 +213,29 @@ typedef struct milkcat_parseriter_t {
 #define MC_DEPPARSER_BEAMYAMADA 1
 #define MC_DEPPARSER_NONE 2
 
-typedef struct milkcat_parseropt_t {
+typedef struct milkcat_parseroptions_t {
   int word_segmenter;
   int part_of_speech_tagger;
   int dependency_parser;
-} milkcat_parseropt_t;
+  const char *user_dictionary_path;
+  const char *model_path;
+} milkcat_parseroptions_t;
 
-
-MILKCAT_API void milkcat_parseropt_use_default(milkcat_parseropt_t *parseropt);
-MILKCAT_API milkcat_parser_t *milkcat_parser_new(milkcat_parseropt_t *parseropt);
+MILKCAT_API void milkcat_parseroptions_init(
+    milkcat_parseroptions_t *parseropt);
+MILKCAT_API milkcat_parser_t *milkcat_parser_new(
+    milkcat_parseroptions_t *parseropt);
 MILKCAT_API void milkcat_parser_destroy(milkcat_parser_t *model);
 MILKCAT_API void milkcat_parser_predict(
     milkcat_parser_t *parser,
-    milkcat_parseriter_t *parseriter,
+    milkcat_parseriterator_t *parseriter,
     const char *text);
 
-MILKCAT_API milkcat_parseriter_t *milkcat_parseriter_new();
-MILKCAT_API void milkcat_parseriter_destroy(milkcat_parseriter_t *parseriter);
-MILKCAT_API bool milkcat_parseriter_next(milkcat_parseriter_t *parseriter);
+MILKCAT_API milkcat_parseriterator_t *milkcat_parseriterator_new(void);
+MILKCAT_API void milkcat_parseriterator_destroy(
+    milkcat_parseriterator_t *parseriter);
+MILKCAT_API bool milkcat_parseriterator_next(
+    milkcat_parseriterator_t *parseriter);
 
 MILKCAT_API const char *milkcat_last_error();
 
