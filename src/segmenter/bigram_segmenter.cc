@@ -33,7 +33,7 @@
 #include <vector>
 #include <string>
 #include "common/milkcat_config.h"
-#include "common/model_impl.h"
+#include "common/model.h"
 #include "common/reimu_trie.h"
 #include "include/milkcat.h"
 #include "segmenter/term_instance.h"

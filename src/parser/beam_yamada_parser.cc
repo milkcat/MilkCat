@@ -32,7 +32,7 @@
 #include <algorithm>
 #include <map>
 #include <set>
-#include "common/model_impl.h"
+#include "common/model.h"
 #include "common/reimu_trie.h"
 #include "common/static_array.h"
 #include "ml/feature_set.h"

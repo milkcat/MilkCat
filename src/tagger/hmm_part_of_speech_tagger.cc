@@ -31,7 +31,7 @@
 #include <stdint.h>
 #include <algorithm>
 #include <string>
-#include "common/model_impl.h"
+#include "common/model.h"
 #include "common/reimu_trie.h"
 #include "ml/beam.h"
 #include "ml/hmm_model.h"

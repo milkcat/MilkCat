@@ -25,7 +25,7 @@
 // model_impl.cc --- Created at 2014-09-02
 //
 
-#include "common/model_impl.h"
+#include "common/model.h"
 
 #include "libmilkcat.h"
 #include "ml/perceptron_model.h"

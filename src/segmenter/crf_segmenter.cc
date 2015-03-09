@@ -30,7 +30,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <string>
-#include "common/model_impl.h"
+#include "common/model.h"
 #include "ml/sequence_feature_set.h"
 #include "segmenter/term_instance.h"
 #include "tokenizer/token_instance.h"

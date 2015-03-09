@@ -33,7 +33,7 @@
 #include <string>
 #include <utility>
 #include <vector>
-#include "common/model_impl.h"
+#include "common/model.h"
 #include "ml/crf_tagger.h"
 #include "segmenter/bigram_segmenter.h"
 #include "segmenter/crf_segmenter.h"

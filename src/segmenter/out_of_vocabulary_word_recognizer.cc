@@ -29,7 +29,7 @@
 
 #include <stdio.h>
 #include <string.h>
-#include "common/model_impl.h"
+#include "common/model.h"
 #include "common/reimu_trie.h"
 #include "include/milkcat.h"
 #include "segmenter/crf_segmenter.h"

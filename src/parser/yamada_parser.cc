@@ -34,7 +34,7 @@
 #include <algorithm>
 #include <set>
 #include <vector>
-#include "common/model_impl.h"
+#include "common/model.h"
 #include "ml/feature_set.h"
 #include "ml/perceptron.h"
 #include "ml/perceptron_model.h"

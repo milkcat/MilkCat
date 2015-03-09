@@ -25,6 +25,7 @@
 // libmilkcat.h --- Created at 2014-02-06
 // model_factory.h --- Created at 2014-04-02
 // model_impl.h --- Created at 2014-09-02
+// model.h --- Created at 2015-03-09
 //
 
 #include <string>
@@ -32,8 +33,8 @@
 #include "parser/dependency_parser.h"
 #include "util/util.h"
 
-#ifndef SRC_COMMON_MODEL_FACTORY_H_
-#define SRC_COMMON_MODEL_FACTORY_H_
+#ifndef SRC_COMMON_MODEL_H_
+#define SRC_COMMON_MODEL_H_
 
 namespace milkcat {
 
@@ -107,4 +108,4 @@ class Model {
 
 }  // namespace milkcat
 
-#endif  // SRC_COMMON_MODEL_FACTORY_H_
+#endif  // SRC_COMMON_MODEL_H_

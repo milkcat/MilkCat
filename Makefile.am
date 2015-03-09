@@ -36,8 +36,8 @@ libmilkcat_la_SOURCES = src/libmilkcat.cc \
                         src/common/instance_data.cc \
                         src/common/instance_data.h \
                         src/common/milkcat_config.h \
-                        src/common/model_impl.cc \
-                        src/common/model_impl.h \
+                        src/common/model.cc \
+                        src/common/model.h \
                         src/common/reimu_trie.cc \
                         src/common/reimu_trie.h \
                         src/common/static_array.h \
