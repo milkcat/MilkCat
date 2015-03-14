@@ -116,7 +116,8 @@ class StaticHashTable {
       K key;
       V value;
       for (int i = 0; i < data_size; ++i) {
-        self->Desericalize(&position, &key, &value, p, p_end - p);
+        self->Desericalize(
+            &position, &key, &value, p, static_cast<int>(p_end - p));
         self->buckets_[position].key = key;
         self->buckets_[position].value = value;
         self->buckets_[position].empty = false;

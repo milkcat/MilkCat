@@ -97,7 +97,7 @@ CRFModel *CRFModel::OpenText(const char *text_filename,
     self = new CRFModel();
     self->xindex_ = new ReimuTrie();
     self->y_ = std::vector<std::string>(yname_set.begin(), yname_set.end());
-    ysize = self->y_.size();
+    ysize = static_cast<int>(self->y_.size());
     for (int idx = 0; idx < static_cast<int>(self->y_.size()); ++idx) {
       yname_idx[self->y_[idx]] = idx;
     }
@@ -140,9 +140,9 @@ CRFModel *CRFModel::OpenText(const char *text_filename,
   }
   if (status->ok()) {
     self->unigram_cost_ = StaticArray<float>::NewFromArray(
-        &unigram_cost[0], unigram_cost.size());
+        &unigram_cost[0], static_cast<int>(unigram_cost.size()));
     self->bigram_cost_ = StaticArray<float>::NewFromArray(
-        &bigram_cost[0], bigram_cost.size());
+        &bigram_cost[0], static_cast<int>(bigram_cost.size()));
   }
   delete fd;
   fd = NULL;
@@ -199,10 +199,13 @@ void CRFModel::Save(const char *model_prefix, Status *status) {
   
   char buffer[kFeatureLengthMax];
   if (status->ok()) fd->WriteValue<int32_t>(kCrfModelMagicNumber, status);
-  if (status->ok()) fd->WriteValue<int32_t>(y_.size(), status);
+  if (status->ok()) fd->WriteValue<int32_t>(
+      static_cast<int>(y_.size()),
+      status);
   if (status->ok()) {
-    fd->WriteValue<int32_t>(unigram_tmpl_.size() + bigram_tmpl_.size(),
-                            status);
+    fd->WriteValue<int32_t>(
+        static_cast<int>(unigram_tmpl_.size() + bigram_tmpl_.size()),
+        status);
   }
   if (status->ok()) fd->WriteValue<int32_t>(unigram_xsize_, status);
   if (status->ok()) fd->WriteValue<int32_t>(bigram_xsize_, status);

@@ -158,7 +158,9 @@ void Model::ReadUserDictionary(const char *path, Status *status) {
         trim(word);
         cost = default_cost;
       }
-      user_index->Put(word, kUserTermIdStart + user_cost.size());
+      user_index->Put(
+          word,
+          static_cast<int>(kUserTermIdStart + user_cost.size()));
       user_cost.push_back(cost);
     }
   }
@@ -166,8 +168,9 @@ void Model::ReadUserDictionary(const char *path, Status *status) {
   if (status->ok()) {
     delete user_cost_;
     user_index_ = user_index;
-    user_cost_ = StaticArray<float>::NewFromArray(user_cost.data(),
-                                                  user_cost.size());
+    user_cost_ = StaticArray<float>::NewFromArray(
+        user_cost.data(),
+        static_cast<int>(user_cost.size()));
   } else {
     delete user_index;
   }

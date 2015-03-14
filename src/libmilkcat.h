@@ -317,7 +317,7 @@ class Parser::Iterator::Impl {
   }
 
   SentenceInstance *sentence(int idx) {
-    while (idx >= sentence_.size()) {
+    while (idx >= static_cast<int>(sentence_.size())) {
       sentence_.push_back(new SentenceInstance());
     }
     return sentence_[idx];

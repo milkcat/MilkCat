@@ -49,7 +49,7 @@
 
 namespace milkcat {
 
-class noncopyable {
+class MILKCAT_API noncopyable {
  protected:
   noncopyable() {}
   ~noncopyable() {}

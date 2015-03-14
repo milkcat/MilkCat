@@ -203,9 +203,15 @@ void PerceptronModel::Save(const char *filename_prefix, Status *status) {
     fd->WriteValue<int32_t>(magic_number, status);
   }
 
-  if (status->ok()) fd->WriteValue<int32_t>(score_.size(), status);
-  if (status->ok()) fd->WriteValue<int32_t>(ysize(), status);
-  if (status->ok()) fd->WriteValue<int32_t>(xindex_->size(), status);
+  if (status->ok()) {
+    fd->WriteValue<int32_t>(static_cast<int32_t>(score_.size()), status);
+  }
+  if (status->ok()) {
+    fd->WriteValue<int32_t>(static_cast<int32_t>(ysize()), status);
+  }
+  if (status->ok()) {
+    fd->WriteValue<int32_t>(static_cast<int32_t>(xindex_->size()), status);
+  }
   if (status->ok()) {
     // Converts std::vector<std::string> into char (*)[kLabelSizeMax] and writes
     // to `fd`
@@ -255,9 +261,9 @@ PerceptronModel::~PerceptronModel() {
 int PerceptronModel::GetOrInsertXId(const char *xname) {
   int val = xindex_->Get(xname, -1);
   if (val < 0) {
-    xindex_->Put(xname, score_.size());
+    xindex_->Put(xname, static_cast<int32_t>(score_.size()));
     score_.push_back(new PackedScore<float>());
-    return score_.size() - 1;
+    return static_cast<int>(score_.size() - 1);
   } else {
     return val;
   }

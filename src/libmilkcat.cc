@@ -315,7 +315,7 @@ void Parser::Impl::Predict(Parser::Iterator *iterator, const char *text) {
   // Tokenization
   if (use_gbk_) {
     // When using GBK encoding
-    int len = strlen(text);
+    int len = static_cast<int>(strlen(text));
 
     // Requires enough space for utf8 string
     int required = 2 * (len + 1);

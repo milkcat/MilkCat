@@ -105,7 +105,9 @@ void HMMModel::Save(const char *model_filename, Status *status) {
   char label[kLabelSizeMax];
 
   if (status->ok()) fd->WriteValue<int32_t>(kHmmModelMagicNumber, status);
-  if (status->ok()) fd->WriteValue<int32_t>(yname_.size(), status);
+  if (status->ok()) {
+    fd->WriteValue<int32_t>(static_cast<int>(yname_.size()), status);
+  }
   if (status->ok()) fd->WriteValue<int32_t>(xsize_, status);
 
   if (status->ok()) {
@@ -119,7 +121,7 @@ void HMMModel::Save(const char *model_filename, Status *status) {
   }
   if (status->ok()) {
     fd->Write(transition_cost_,
-              sizeof(float) * yname_.size() * yname_.size(),
+              static_cast<int>(sizeof(float) * yname_.size() * yname_.size()),
               status);
   }
 

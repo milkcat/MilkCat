@@ -323,7 +323,7 @@ bool CRFTagger::ApplyRule(std::string *output_str,
         switch (*++p) {
           case 'x':
             ++p;
-            index_str = GetIndex(&p, position);
+            index_str = GetIndex(&p, static_cast<int>(position));
             if (!index_str) {
               return false;
             }

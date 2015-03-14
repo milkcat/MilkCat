@@ -35,7 +35,7 @@ namespace milkcat {
 
 char *trim(char *s) {
   char *p = s;
-  int l = strlen(p);
+  int l = static_cast<int>(strlen(p));
 
   while (isspace(p[l - 1])) p[--l] = 0;
   while (*p && isspace(*p)) ++p, --l;
@@ -45,7 +45,7 @@ char *trim(char *s) {
 }
 
 const char *_filename(const char *path) {
-  int len = strlen(path);
+  int len = static_cast<int>(strlen(path));
   const char *p = path + len;
 
   while (*(p - 1) != '/' && *(p - 1) != '\\' && p != path) p--;

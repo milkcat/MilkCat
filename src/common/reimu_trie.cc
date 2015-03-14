@@ -297,7 +297,7 @@ bool ReimuTrie::Impl::Save(const char *filename) {
   FILE *fd = fopen(filename, "wb");
   if (fd == NULL) return false;
 
-  int write_size = fwrite(array_, sizeof(Node), size_, fd);
+  int write_size = static_cast<int>(fwrite(array_, sizeof(Node), size_, fd));
   fclose(fd);
 
   if (write_size == size_) {
@@ -319,7 +319,8 @@ ReimuTrie::Impl *ReimuTrie::Impl::Open(const char *filename) {
   impl->array_ = reinterpret_cast<Node *>(malloc(impl->size_ * sizeof(Node)));
   fseek(fd, 0, SEEK_SET);
 
-  int read_size = fread(impl->array_, sizeof(Node), impl->size_, fd);
+  int read_size = static_cast<int>(
+      fread(impl->array_, sizeof(Node), impl->size_, fd));
   fclose(fd);
   if (read_size == impl->size_) {
     return impl;

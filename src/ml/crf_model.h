@@ -66,7 +66,7 @@ class CRFModel {
   int yid(const char *yname) const  {
     for (std::vector<std::string>::const_iterator
          it = y_.begin(); it != y_.end(); ++it) {
-      if (*it == yname) return it - y_.begin();
+      if (*it == yname) return static_cast<int>(it - y_.begin());
     }
 
     return -1;
@@ -79,11 +79,17 @@ class CRFModel {
   const char *bigram_template(int index) const {
     return bigram_tmpl_[index].c_str();
   }
-  int unigram_template_num() const { return unigram_tmpl_.size(); }
-  int bigram_template_num() const { return bigram_tmpl_.size(); }
+  int unigram_template_num() const {
+    return static_cast<int>(unigram_tmpl_.size());
+  }
+  int bigram_template_num() const {
+    return static_cast<int>(bigram_tmpl_.size());
+  }
 
   // Get the number of tag
-  int ysize() const { return y_.size(); }
+  int ysize() const {
+    return static_cast<int>(y_.size());
+  }
 
   // Get the cost for feature with current tag
   double unigram_cost(int xid, int yid) const {

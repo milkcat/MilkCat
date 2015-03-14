@@ -27,37 +27,26 @@
 //
 
 #include <milkcat.h>
-#include <stdlib.h>
 #include <stdio.h>
 
 using milkcat::Parser;
-using milkcat::Model;
-
-void ErrorOccured() {
-  puts(milkcat::LastError());
-  exit(1);
-}
 
 int main() {
-  Model *model = Model::New("data/");
-  if (model == NULL) ErrorOccured();
-
   Parser::Options options;
-
+  options.SetModelPath("data");
   options.UseGBK();
-  Parser *parser = Parser::New(options, model);
-  if (parser == NULL) ErrorOccured();
 
-  Parser::Iterator *it = new Parser::Iterator();
-  parser->Predict(it, "ÎÒµÄÃ¨Ï²»¶ºÈÅ£ÄÌ¡£");
-
-  while (!it->End()) {
-    printf("%s/%s  ", it->word(), it->part_of_speech_tag());
-    it->Next();
-  }
-  puts("");
-
-  delete it;
-  delete parser;
-  return 0;
+	Parser parser(options);
+	Parser::Iterator it;
+	if (parser.ok()) {
+		parser.Predict(&it, "ÎÒµÄÃ¨Ï²»¶ºÈÅ£ÄÌ¡£");
+		while (it.Next()) {
+			printf("%s/%s  ", it.word(), it.part_of_speech_tag());
+		}
+		putchar('\n');
+	}
+	else {
+		printf("error: %s\n", milkcat::LastError());
+	}
+	return 0;
 }

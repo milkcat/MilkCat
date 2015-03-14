@@ -54,7 +54,9 @@ class HMMModel {
   void Save(const char *model_path, Status *status);
 
   // Label number in this model
-  int ysize() const { return yname_.size(); }
+  int ysize() const {
+    return static_cast<int>(yname_.size());
+  }
 
   // Get label name by its id
   const char *yname(int yid) const { return yname_[yid].c_str(); }

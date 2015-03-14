@@ -24,9 +24,6 @@
     <ClCompile Include="..\..\src\common\instance_data.cc">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\common\model_impl.cc">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\src\common\reimu_trie.cc">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -120,13 +117,13 @@
     <ClCompile Include="..\..\src\util\strtok_r.cc">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\util\mutex_windows.cc">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\src\util\encoding_windows.cc">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\segmenter\out_of_vocabulary_word_recognizer.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\common\model.cc">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -138,9 +135,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\common\milkcat_config.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\common\model_impl.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\common\reimu_trie.h">
@@ -245,9 +239,6 @@
     <ClInclude Include="..\..\src\tokenizer\tokenizer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\util\mutex.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\src\util\pool.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -270,6 +261,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\segmenter\out_of_vocabulary_word_recognizer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\common\model.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

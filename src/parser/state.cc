@@ -131,7 +131,7 @@ bool DependencyParser::State::AllowRightArc(bool is_root) const {
 }
 
 const DependencyParser::Node *DependencyParser::State::Stack(int idx) const {
-  int stack_idx = stack_.size() - idx - 1;
+  int stack_idx = static_cast<int>(stack_.size() - idx - 1);
   if (stack_idx >= 0) {
     return sentence_[stack_[stack_idx]];
   } else {
@@ -140,7 +140,7 @@ const DependencyParser::Node *DependencyParser::State::Stack(int idx) const {
 }
 
 const DependencyParser::Node *DependencyParser::State::Input(int idx) const {
-  int input_idx = input_.size() - idx - 1;
+  int input_idx = static_cast<int>(input_.size() - idx - 1);
   if (input_idx >= 0) 
     return sentence_[input_[input_idx]];
   else

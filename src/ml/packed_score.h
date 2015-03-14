@@ -167,7 +167,7 @@ class PackedScore {
   int BinarySearch(int index) {
     IndexData *p = std::lower_bound(
         data_, data_ + size_, IndexData(index, T()));
-    return p - data_;
+    return static_cast<int>(p - data_);
   }
 
   T *GetOrInsertByIndex(int index) {

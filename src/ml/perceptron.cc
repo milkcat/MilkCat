@@ -83,7 +83,7 @@ int Perceptron::Classify(const FeatureSet *feature_set) {
 
   // To find the maximum cost of y
   float *maximum_y = std::max_element(ycost_, ycost_ + ysize());
-  int maximum_yid = maximum_y - ycost_;
+  int maximum_yid = static_cast<int>(maximum_y - ycost_);
   return maximum_yid;  
 }
 void Perceptron::Update(const FeatureSet *feature_set, int yid, float value) {

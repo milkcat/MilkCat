@@ -304,7 +304,7 @@ void HMMPartOfSpeechTagger::Train(
       const char *tag = tag_instance->part_of_speech_tag_at(idx);
       if (yindex->Get(tag, -1) == -1) {
         // If `tag` not in `yindex`
-        yindex->Put(tag, yname.size());
+        yindex->Put(tag, static_cast<int>(yname.size()));
         yname.push_back(tag);
       }
     }
@@ -334,8 +334,8 @@ void HMMPartOfSpeechTagger::Train(
       int xid = xindex->Get(word, -1);
       if (xid == -1) {
         // If `word` not in `xindex`
-        xindex->Put(word, xname.size());
-        xid = xname.size();
+        xindex->Put(word, static_cast<int>(xname.size()));
+        xid = static_cast<int>(xname.size());
         xname.push_back(word);
         emission.resize(yname.size() * xname.size());
       }
@@ -398,7 +398,7 @@ void HMMPartOfSpeechTagger::Train(
            yid < static_cast<int>(yname.size());
            ++yid) {
         int joint_count = 1 + y_bigram_count[left_yid * yname.size() + yid];
-        int left_count = yname.size() + y_count[left_yid];
+        int left_count = static_cast<int>(yname.size() + y_count[left_yid]);
         double p_transition = static_cast<float>(joint_count) / left_count;
         hmm_model->set_cost(
             left_yid,

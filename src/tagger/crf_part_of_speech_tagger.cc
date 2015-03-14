@@ -109,7 +109,7 @@ void CRFPartOfSpeechTagger::TagRange(
   for (int idx = 0; idx < term_instance->size(); ++idx) {
     int type = term_instance->term_type_at(idx);
     const char *word = term_instance->term_text_at(idx);
-    int length = strlen(word);  
+    int length = static_cast<int>(strlen(word));  
 
     FeatureSet *feature_set = sequence_feature_set_->at_index(idx);
     feature_set->Clear();

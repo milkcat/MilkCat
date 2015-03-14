@@ -125,7 +125,7 @@ void DependencyParser::FeatureTemplate::CompileTemplate(
           }
           ++q;
         }
-        int len = q - p - 1;
+        int len = static_cast<int>(q - p - 1);
         strlcpy(feature_name, p + 1, len + 1);
         int fid = feature_index->Get(feature_name, -1);
 

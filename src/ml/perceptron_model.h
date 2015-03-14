@@ -58,8 +58,8 @@ class PerceptronModel {
   };
 
   // Get the number of labels(y) in the model
-  int ysize() const { return yname_.size(); }
-  int xsize() const { return score_.size(); }
+  int ysize() const { return static_cast<int>(yname_.size()); }
+  int xsize() const { return static_cast<int>(score_.size()); }
 
   // Gets label name by id or gets label id by name
   // If the name is not in the model, `GetOrInsertYId` inserts the label into

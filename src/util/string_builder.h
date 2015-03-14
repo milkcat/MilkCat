@@ -43,7 +43,8 @@ class StringBuilder {
   // Append functions
   StringBuilder &operator <<(const char *str) {
     // LOG("Append string: " << str);
-    int len = strlcpy(buffer_ + size_, str, capability_ - size_);
+    int len = static_cast<int>(
+        strlcpy(buffer_ + size_, str, capability_ - size_));
     size_ += len;
     return *this;
   }
