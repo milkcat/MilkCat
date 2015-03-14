@@ -49,6 +49,7 @@ ReadableFile *ReadableFile::New(const char *file_path, Status *status) {
     std::string msg("failed to open ");
     msg += file_path;
     *status = Status::IOError(msg.c_str());
+    delete self;
     return NULL;
   }
 }

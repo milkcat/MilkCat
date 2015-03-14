@@ -67,8 +67,9 @@ Model::Model(const char *model_dir):
     oov_property_(NULL),
     dependency_(NULL),
     dependency_feature_(NULL) {
-  if (model_dir_.back() != '/' && model_dir_.back() != '\\') {
-    model_dir_.push_back('/');
+  char last_char = *model_dir_.rbegin();
+  if (last_char != '/' && last_char != '\\') {
+    model_dir_ += '/';
   }
 }
 
@@ -167,6 +168,8 @@ void Model::ReadUserDictionary(const char *path, Status *status) {
     user_index_ = user_index;
     user_cost_ = StaticArray<float>::NewFromArray(user_cost.data(),
                                                   user_cost.size());
+  } else {
+    delete user_index;
   }
 
   delete fd;

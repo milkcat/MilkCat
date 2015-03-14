@@ -15,6 +15,10 @@ LT_INIT
 # Set the model dir
 pkgdatadir=${datadir}/${PACKAGE}
 
+AC_CHECK_HEADER(iconv.h, [], AC_MSG_ERROR([the iconv header is missing!]))
+AC_CHECK_LIB(iconv, iconv, [LIBICONV="-liconv"])
+AC_SUBST([LIBICONV])
+
 AC_CONFIG_HEADERS([src/config.h])
 AC_CONFIG_FILES([Makefile])
 AC_OUTPUT

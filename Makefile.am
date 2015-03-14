@@ -28,7 +28,7 @@ dist_pkgdata_DATA = data/bigram.bin \
 include_HEADERS = src/include/milkcat.h
 
 lib_LTLIBRARIES = libmilkcat.la
-libmilkcat_la_LIBADD = -lpthread -liconv -lm
+libmilkcat_la_LIBADD = -lpthread -lm $(LIBICONV)
 libmilkcat_la_LDFLAGS = -version-info 0:4:0
 libmilkcat_la_SOURCES = src/libmilkcat.cc \
                         src/libmilkcat_capi.cc \
@@ -118,9 +118,11 @@ bin_PROGRAMS = milkcat milkcat-tools
 
 milkcat_SOURCES = src/main.cc
 milkcat_LDADD = libmilkcat.la
+milkcat_LDFLAGS = -static
 
 milkcat_tools_SOURCES = src/milkcat_tools.cc
 milkcat_tools_LDADD = libmilkcat.la 
+milkcat_tools_LDFLAGS = -static
 
 TESTS = milkcat_api_test milkcat_capi_test parser_orcale_test reimu_trie_test
 check_PROGRAMS = milkcat_api_test \
