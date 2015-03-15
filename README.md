@@ -23,7 +23,7 @@ Beam Yamada: 8.4k word/s, UAS=84.9 (CTB5)
 
 # 在线演示
 
-[演示地址](http://milk.cat)
+[演示地址](http://milkcat.io)
 
 # MilkCat/C++使用简介
 
@@ -66,7 +66,7 @@ wget https://github.com/milkcat/MilkCat/releases/download/v0.4.1-beta.2/milkcat-
 MilkCat除了依赖于标准C++库外并未以来其他额外的库，因此只需确保计算机中安装有C++的编译环境即可编译安装
 
 ```sh
-tar xzvf milkcat-0.4.tar.gz && cd milkcat-0.4
+tar xzvf milkcat-0.4.1.tar.gz && cd milkcat-0.4.1
 ./configure
 make && sudo make install
 ```
