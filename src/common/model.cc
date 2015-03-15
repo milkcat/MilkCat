@@ -67,9 +67,11 @@ Model::Model(const char *model_dir):
     oov_property_(NULL),
     dependency_(NULL),
     dependency_feature_(NULL) {
-  char last_char = *model_dir_.rbegin();
-  if (last_char != '/' && last_char != '\\') {
-    model_dir_ += '/';
+  if (model_dir_.size() != 0) {
+    char last_char = *model_dir_.rbegin();
+    if (last_char != '/' && last_char != '\\') {
+      model_dir_ += '/';
+    }
   }
 }
 
@@ -132,7 +134,7 @@ void Model::ReadUserDictionary(const char *path, Status *status) {
   if (status->ok()) fd = ReadableFile::New(path, status);
   while (status->ok() && !fd->Eof()) {
     fd->ReadLine(line, sizeof(line), status);
-    
+
     if (status->ok()) {
       // Ignore empty line
       trim(line);
@@ -255,7 +257,7 @@ PerceptronModel *Model::YamadaModel(Status *status) {
     std::string prefix = model_dir_ + kYamadaModelPrefix;
     dependency_ = PerceptronModel::Open(prefix.c_str(), status);
   }
-  return dependency_;  
+  return dependency_;
 }
 
 PerceptronModel *Model::BeamYamadaModel(Status *status) {
@@ -263,7 +265,7 @@ PerceptronModel *Model::BeamYamadaModel(Status *status) {
     std::string prefix = model_dir_ + kBeamYamadaModelPrefix;
     dependency_ = PerceptronModel::Open(prefix.c_str(), status);
   }
-  return dependency_;  
+  return dependency_;
 }
 
 DependencyParser::FeatureTemplate *
@@ -274,7 +276,7 @@ Model::DependencyTemplate(Status *status) {
         prefix.c_str(),
         status);
   }
-  return dependency_feature_;  
+  return dependency_feature_;
 }
 
 }  // namespace milkcat

@@ -9,7 +9,7 @@ MilkCat是由C++实现的开源依存句法分析库，自带中文分词以及�
 ### 分词
 
 BIGRAM: 3.5MB/s, F=94.6% (bakeoff2005 MSRA)  
-CRF: 1.5MB/s, F=96.6%   
+CRF: 1.5MB/s, F=96.6%
 BIGRAM+CRF未登录词识别: 2.0MB/s
 
 ### 词性标注
@@ -35,7 +35,7 @@ Beam Yamada: 8.4k word/s, UAS=84.9 (CTB5)
     3. [配置用户词典](#options-userdict)
     4. [Parser::Options的成员函数](#options-member-functions)
 5. [问题反馈](#bugs)
-    
+
 
 # 下载和安装 <a id="download-and-install"></a>
 
@@ -48,11 +48,11 @@ Beam Yamada: 8.4k word/s, UAS=84.9 (CTB5)
 目前可以从三个地方进行下载：
 
 ```sh
-wget http://milkcat.qiniudn.com/milkcat-0.4.tar.gz
+wget http://milkcat.qiniudn.com/milkcat-0.4.1.tar.gz
 OR
-wget http://milk.cat/milkcat-0.4.tar.gz
+wget http://milk.cat/milkcat-0.4.1.tar.gz
 OR
-wget https://github.com/milkcat/MilkCat/releases/download/v0.4-beta.1/milkcat-0.4.tar.gz
+wget https://github.com/milkcat/MilkCat/releases/download/v0.4.1-beta.2/milkcat-0.4.1.tar.gz
 ```
 
 ### 历史版本
@@ -157,7 +157,7 @@ while (it.Next()) {
 
 Iterator的成员函数包括:
 
-| 函数名 |描述| 
+| 函数名 |描述|
 |:----------|:--|
 | bool Next() | Iterator::Next()是切换到下一个词语，存在下一个词语时返回true，不存在返回false |
 | const char *word() const | 得到当前词语 |
@@ -231,7 +231,7 @@ int main() {
   options.UseCRFSegmenter();
   options.UseCRFPOSTagger();
   options.UseBeamYamadaParser();
-  
+
   Parser parser(options);
   Parser::Iterator it;
   if (parser.ok()) {

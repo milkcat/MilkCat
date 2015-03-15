@@ -112,7 +112,7 @@ libmilkcat_la_SOURCES = src/libmilkcat.cc \
                         src/util/util.cc \
                         src/util/util.h \
                         src/util/writable_file.cc \
-                        src/util/writable_file.h 
+                        src/util/writable_file.h
 
 bin_PROGRAMS = milkcat milkcat-tools
 
@@ -121,7 +121,7 @@ milkcat_LDADD = libmilkcat.la
 milkcat_LDFLAGS = -static
 
 milkcat_tools_SOURCES = src/milkcat_tools.cc
-milkcat_tools_LDADD = libmilkcat.la 
+milkcat_tools_LDADD = libmilkcat.la
 milkcat_tools_LDFLAGS = -static
 
 TESTS = milkcat_api_test milkcat_capi_test parser_orcale_test reimu_trie_test

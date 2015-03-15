@@ -35,7 +35,7 @@
 
 #ifdef MILKCAT_EXPORTS
 #define MILKCAT_API __declspec(dllexport)
-#else 
+#else
 #define MILKCAT_API __declspec(dllimport)
 #endif  // MILKCAT_EXPORTS
 
@@ -60,10 +60,8 @@ class MILKCAT_API noncopyable {
 
 // ---------------------------- Parser ---------------------------------------
 
-// Parser is the word segmenter and part-of-speech tagger class. Use 'Parse' to
-// parse the text and it returns an Parser::Iterator to iterate each word and
-// its part-of-speech tag. After iterating, you should use Parser::Release to
-// release the iterator
+// Parser is the main class in MilkCat. Use `Predict` to predict the structure
+// (including words, part-of-speech tags and dependency tree) of input text.
 class MILKCAT_API Parser: public noncopyable {
  public:
   class Impl;
@@ -84,9 +82,10 @@ class MILKCAT_API Parser: public noncopyable {
   Parser();
   ~Parser();
 
-  // Creates the parser with options spcified by `options`.
+  // Creates the parser with `options`.
   explicit Parser(const Options &options);
 
+  // Returns true when successfully initialized.
   bool ok() { return impl_ != NULL; }
 
   // Parses the text and stores the result into the iterator
@@ -141,7 +140,7 @@ class MILKCAT_API Parser::Options {
   Impl *impl_;
 };
 
-// Iterator for the prediction of parser
+// Iterator for the prediction of text from Parser
 class MILKCAT_API Parser::Iterator: public noncopyable {
  public:
   class Impl;
@@ -149,7 +148,8 @@ class MILKCAT_API Parser::Iterator: public noncopyable {
   Iterator();
   ~Iterator();
 
-  // Go to the next element
+  // Go to the next element, returns true when have next word, returns false
+  // when reaches the end of text.
   bool Next();
 
   // Get the string of current word
