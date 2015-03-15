@@ -155,7 +155,7 @@ DependencyParser *DependencyParserFactory(Model *factory,
 
     default:
       *status = Status::NotImplemented("Invalid parser type");
-      return NULL;    
+      return NULL;
   }
 }
 

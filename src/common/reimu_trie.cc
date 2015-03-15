@@ -32,7 +32,7 @@
 #include <stdlib.h>
 #include <vector>
 
-#define _assert(x) assert(x)
+#define _assert(x)
 #define XOR(a, b) ((a) ^ (b))
 #define CALC_BASE_FROM_TO_AND_LABEL(to, label) ((to) ^ (label))
 #define CALC_LABEL_FROM_BASE_AND_TO(base, to) ((base) ^ (to))
@@ -107,7 +107,7 @@ class ReimuTrie::Impl {
   int EnumerateChild(int from_idx, int base_idx, uint8 *child);
 
   // Moves each child (in `child`) of `base` into `new_base`
-  void MoveSubTree(int from, int base, int new_base, uint8 *child, 
+  void MoveSubTree(int from, int base, int new_base, uint8 *child,
                    int child_count);
 
   // Dumps the values in block, just for debugging
@@ -170,7 +170,7 @@ class ReimuTrie::Impl::Node {
     return -base_;
   }
   void set_value(int32 value) { base_ = value; }
-  int32 value() const { 
+  int32 value() const {
     _assert(check_ >= 0);
     return base_;
   }
@@ -178,9 +178,9 @@ class ReimuTrie::Impl::Node {
   void set_check(int32 check) { check_ = check; }
   int32 check() const { return check_; }
   void set_next(int32 next) { check_ = -next; }
-  int32 next() const { 
+  int32 next() const {
     _assert(check_ < 0);
-    return -check_; 
+    return -check_;
   }
   // Returns true if current node is empty
   bool empty() const { return check_ < 0; }
@@ -349,7 +349,7 @@ bool ReimuTrie::Impl::Traverse(
   } else {
     *value = array_[to].value();
   }
-  return true;  
+  return true;
 }
 
 ReimuTrie::int32
@@ -495,7 +495,7 @@ void ReimuTrie::Impl::PopEmptyNode(int node_idx) {
     array_[node->previous()].set_next(node->next());
     _assert(array_[node->next()].empty());
     array_[node->next()].set_previous(node->previous());
-    
+
     // Change empty head
     if (block_[block_idx].empty_head() == node_idx) {
       block_[block_idx].set_empty_head(node->next());
@@ -688,7 +688,7 @@ bool ReimuTrie::Impl::CheckList(int head, std::vector<bool> *block_bitmap) {
       // Checks the `previous` and `next` link between blocks
       assert(block_[block_[block_idx].next()].previous() == block_idx);
       block_idx = block_[block_idx].next();
-    } while (block_idx != head);  
+    } while (block_idx != head);
   }
   return true;
 }
@@ -761,7 +761,7 @@ void ReimuTrie::Impl::DumpBlock(int block_idx) {
            array_[node_idx].base_,
            array_[node_idx].check_);
   }
-  printf("-------\n"); 
+  printf("-------\n");
 }
 
 }  // namespace milkcat

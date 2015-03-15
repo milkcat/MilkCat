@@ -49,7 +49,7 @@
 #include "util/readable_file.h"
 
 namespace milkcat {
-  
+
 class Model;
 
 // The global error message

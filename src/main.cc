@@ -132,25 +132,25 @@ void GetArgs(int argc, char **argv, Options *options) {
         } else if (strcmp(optarg, "hmm") == 0) {
           options->parser_options.UseCRFSegmenter();
           options->parser_options.UseHMMPOSTagger();
-          options->display_tag = true;   
+          options->display_tag = true;
         } else if (strcmp(optarg, "mixed_seg") == 0) {
           options->parser_options.UseMixedSegmenter();
           options->parser_options.NoPOSTagger();
-          options->display_tag = false;   
+          options->display_tag = false;
         } else if (strcmp(optarg, "mixed") == 0) {
           options->parser_options.UseMixedSegmenter();
           options->parser_options.UseMixedPOSTagger();
-          options->display_tag = true;   
+          options->display_tag = true;
         } else if (strcmp(optarg, "bigram_seg") == 0) {
           options->parser_options.UseBigramSegmenter();
           options->parser_options.NoPOSTagger();
-          options->display_tag = false;   
+          options->display_tag = false;
         } else if (strcmp(optarg, "dep") == 0) {
           options->parser_options.UseYamadaParser();
           options->conll_format = true;
         } else if (strcmp(optarg, "beam_dep") == 0) {
           options->parser_options.UseBeamYamadaParser();
-          options->conll_format = true;  
+          options->conll_format = true;
         } else {
           PrintUsage();
           exit(1);
@@ -193,7 +193,7 @@ int ParserMain(int argc, char **argv) {
   int index = 0;
 
   GetArgs(argc, argv, &options);
-  
+
   if (!options.use_stdin) {
     fd = fopen(options.filename.c_str(), "r");
     if (fd == NULL) {
@@ -205,7 +205,7 @@ int ParserMain(int argc, char **argv) {
   }
 
   char *input_buffer = new char[1048576];
-  
+
   Parser *parser = new Parser(options.parser_options);
   Parser::Iterator *it = new Parser::Iterator();
 
@@ -239,7 +239,7 @@ int ParserMain(int argc, char **argv) {
         }
 
         fputs("  ", stdout);
-      
+
       } else {
         if (it->is_begin_of_sentence() && index != 0) {
           index = 1;
@@ -265,7 +265,7 @@ int ParserMain(int argc, char **argv) {
         fputs(it->dependency_label(), stdout);
 
         fputs("\n", stdout);
-      } 
+      }
     }
 
     fputs("\n", stdout);
