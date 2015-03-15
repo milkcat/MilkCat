@@ -337,8 +337,8 @@ void Parser::Impl::Predict(Parser::Iterator *iterator, const char *text) {
   while (tokenizer_->GetSentence(token_instance)) {
     SentenceInstance *senetnce = iterator_impl->sentence(sentence_num);
     TermInstance *term_instance = senetnce->term_instance();
-    segmenter_->Segment(term_instance, token_instance);
 
+    segmenter_->Segment(term_instance, token_instance);
     PartOfSpeechTagInstance *
     postag_instance = senetnce->part_of_speech_tag_instance();
     if (part_of_speech_tagger_ != NULL) {

@@ -218,6 +218,7 @@ int ParserMain(int argc, char **argv) {
   while (NULL != fgets(input_buffer, 1048576, fd)) {
     parser->Predict(it, input_buffer);
     index = 0;
+
     while (it->Next()) {
       switch (*it->word()) {
         case '\r':
@@ -267,7 +268,6 @@ int ParserMain(int argc, char **argv) {
         fputs("\n", stdout);
       }
     }
-
     fputs("\n", stdout);
   }
 
