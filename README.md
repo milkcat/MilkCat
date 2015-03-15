@@ -50,7 +50,7 @@ Beam Yamada: 8.4k word/s, UAS=84.9 (CTB5)
 ```sh
 wget http://milkcat.qiniudn.com/milkcat-0.4.1.tar.gz
 OR
-wget http://milk.cat/milkcat-0.4.1.tar.gz
+wget http://milkcat.io/milkcat-0.4.1.tar.gz
 OR
 wget https://github.com/milkcat/MilkCat/releases/download/v0.4.1-beta.2/milkcat-0.4.1.tar.gz
 ```
