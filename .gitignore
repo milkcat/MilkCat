@@ -2,6 +2,9 @@ build
 output
 autom4te.cache
 
+swig/*
+!swig/milkcat_capi.i
+
 configure
 scripts
 m4/*
