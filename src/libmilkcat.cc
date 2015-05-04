@@ -53,12 +53,12 @@
 
 namespace milkcat {
 
-Tokenization *TokenizerFactory(int analyzer_type) {
+Tokenizer *TokenizerFactory(int analyzer_type) {
   int tokenizer_type = analyzer_type & kTokenizerMask;
 
   switch (tokenizer_type) {
     case kTextTokenizer:
-      return new Tokenization();
+      return new Tokenizer();
 
     default:
       return NULL;
@@ -164,22 +164,94 @@ char gLastErrorMessage[kLastErrorStringMax] = "";
 // ----------------------------- Parser::Iterator -----------------------------
 
 Parser::Iterator::Impl::Impl():
-    sentence_num_(0),
-    current_sentence_(0),
+    sentence_size_(0),
     current_idx_(0),
     end_(true),
-    have_postagger_(false),
-    have_parser_(false) {
+    use_gbk_(false),
+    segmenter_(NULL),
+    postagger_(NULL),
+    dependency_parser_(NULL) {
+  sentence_ = new SentenceInstance();
+  tokenizer_ = new Tokenizer();
+  encoding_ = new Encoding();
 }
 
 Parser::Iterator::Impl::~Impl() {
-  for (std::vector<SentenceInstance *>::iterator
-       it = sentence_.begin(); it != sentence_.end(); ++it) {
-    delete *it;
-  }
+  delete sentence_;
+  sentence_ = NULL;
+
+  delete tokenizer_;
+  tokenizer_ = NULL;
+
+  delete encoding_;
+  encoding_ = NULL;
 }
 
-void Parser::Impl::ConvertToGBKTermInstance(TermInstance *term_instance) {
+void Parser::Iterator::Impl::Reset(
+    Segmenter *segmenter,
+    PartOfSpeechTagger *postagger,
+    DependencyParser *dependency_parser,
+    bool use_gbk,
+    const char *text) {
+  segmenter_ = segmenter;
+  postagger_ = postagger;
+  dependency_parser_ = dependency_parser;
+
+  sentence_size_ = 0;
+  current_idx_ = -1;
+  end_ = false;
+  use_gbk_ = use_gbk;
+
+  tokenizer_->Scan(text);
+}
+
+bool Parser::Iterator::Impl::Next() {
+  if (end_) return false;
+
+  assert(sentence_size_ > current_idx_);
+  if (sentence_size_ == current_idx_ + 1) {
+    // Tokenization
+    TokenInstance *token_instance = sentence_->token_instance();
+    bool has_next = tokenizer_->GetSentence(token_instance);
+    if (has_next == false) {
+      end_ = true;
+      return false;
+    }
+
+    // Word breaking
+    TermInstance *term_instance = sentence_->term_instance();
+    segmenter_->Segment(term_instance, token_instance);
+
+    // Part-of-speech tagging
+    PartOfSpeechTagInstance *postag_instance;
+    if (postagger_ != NULL) {
+      postag_instance = sentence_->part_of_speech_tag_instance();
+      postagger_->Tag(postag_instance, term_instance);
+    }
+
+    // Dependency parsing
+    if (dependency_parser_ != NULL) {
+      TreeInstance *tree_instance = sentence_->tree_instance();
+      dependency_parser_->Parse(tree_instance,
+                                term_instance,
+                                postag_instance);
+    }
+
+    // Converts to GBK when needed
+    if (use_gbk_) ConvertToGBKTermInstance(term_instance);
+
+    // Reset cursor
+    sentence_size_ = term_instance->size();
+    current_idx_ = 0;
+  } else {
+    ++current_idx_;
+  }
+
+  return true;
+}
+
+void Parser::Iterator::Impl::ConvertToGBKTermInstance(
+    TermInstance *term_instance) {
   char gbk_string[kTermLengthMax * 2];
   for (int idx = 0; idx < term_instance->size(); ++idx) {
     encoding_->UTF8ToGBK(
@@ -236,8 +308,6 @@ Parser::Impl::Impl(): segmenter_(NULL),
                       use_gbk_(false),
                       utf8_buffersize_(1024) {
   utf8_buffer_ = new char[1024];
-  encoding_ = new Encoding();
-  tokenizer_ = new Tokenization();
 }
 
 Parser::Impl::~Impl() {
@@ -255,12 +325,6 @@ Parser::Impl::~Impl() {
 
   delete[] utf8_buffer_;
   utf8_buffer_ = NULL;
-
-  delete encoding_;
-  encoding_ = NULL;
-
-  delete tokenizer_;
-  tokenizer_ = NULL;
 }
 
 Parser::Impl *Parser::Impl::New(const Options &options) {
@@ -309,6 +373,10 @@ Parser::Impl *Parser::Impl::New(const Options &options) {
 }
 
 void Parser::Impl::Predict(Parser::Iterator *iterator, const char *text) {
+  // Ensures when dependency_parser_ exists part_of_speech_tagger_ should be
+  // exist
+  assert(dependency_parser_ != NULL? part_of_speech_tagger_ != NULL: true);
+
   if (iterator == NULL) return ;
   Iterator::Impl *iterator_impl = iterator->impl();
 
@@ -325,44 +393,16 @@ void Parser::Impl::Predict(Parser::Iterator *iterator, const char *text) {
       utf8_buffersize_ = required;
     }
 
-    encoding_->GBKToUTF8(text, utf8_buffer_, utf8_buffersize_);
-    tokenizer_->Scan(utf8_buffer_);
-  } else {
-    tokenizer_->Scan(text);
-  }
-
-  // Segmentation, Part-of-speech tagging and dependency parsing
-  int sentence_num = 0;
-  TokenInstance *token_instance = iterator_impl->sentence(0)->token_instance();
-  while (tokenizer_->GetSentence(token_instance)) {
-    SentenceInstance *senetnce = iterator_impl->sentence(sentence_num);
-    TermInstance *term_instance = senetnce->term_instance();
-
-    segmenter_->Segment(term_instance, token_instance);
-    PartOfSpeechTagInstance *
-    postag_instance = senetnce->part_of_speech_tag_instance();
-    if (part_of_speech_tagger_ != NULL) {
-      part_of_speech_tagger_->Tag(postag_instance, term_instance);
-    }
-
-    if (dependency_parser_ != NULL) {
-      TreeInstance *tree_instance = senetnce->tree_instance();
-      dependency_parser_->Parse(tree_instance,
-                                term_instance,
-                                postag_instance);
-    }
-
-    // Converts to GBK when needed
-    if (use_gbk_) ConvertToGBKTermInstance(term_instance);
-
-    ++sentence_num;
-    token_instance = iterator_impl->sentence(sentence_num)->token_instance();
+    iterator_impl->encoding()->GBKToUTF8(text, utf8_buffer_, utf8_buffersize_);
+    text = utf8_buffer_;
   }
 
   iterator_impl->Reset(
-      sentence_num,
-      part_of_speech_tagger_ != NULL,
-      dependency_parser_ != NULL);
+      segmenter_,
+      part_of_speech_tagger_,
+      dependency_parser_,
+      use_gbk_,
+      text);
 }
 
 Parser::~Parser() {

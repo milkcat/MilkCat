@@ -34,11 +34,11 @@
 
 namespace milkcat {
 
-Tokenization::Tokenization(): buffer_alloced_(false) {
+Tokenizer::Tokenizer(): buffer_alloced_(false) {
   milkcat_yylex_init(&yyscanner);
 }
 
-Tokenization::~Tokenization() {
+Tokenizer::~Tokenizer() {
   if (buffer_alloced_ == true) {
     milkcat_yy_delete_buffer(yy_buffer_state_, yyscanner);
   }
@@ -46,7 +46,7 @@ Tokenization::~Tokenization() {
   milkcat_yylex_destroy(yyscanner);
 }
 
-void Tokenization::Scan(const char *buffer_string) {
+void Tokenizer::Scan(const char *buffer_string) {
   if (buffer_alloced_ == true) {
     milkcat_yy_delete_buffer(yy_buffer_state_, yyscanner);
   }
@@ -54,7 +54,7 @@ void Tokenization::Scan(const char *buffer_string) {
   yy_buffer_state_ = milkcat_yy_scan_string(buffer_string, yyscanner);
 }
 
-bool Tokenization::GetSentence(TokenInstance *token_instance) {
+bool Tokenizer::GetSentence(TokenInstance *token_instance) {
   int token_type;
   int token_count = 0;
 

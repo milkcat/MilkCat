@@ -61,7 +61,7 @@ const int kPartOfSpeechTaggerMask = 0x000ff000;
 const int kParserMask = 0x00f00000;
 
 // A factory function to create tokenizers
-Tokenization *TokenizerFactory(int tokenizer_id);
+Tokenizer *TokenizerFactory(int tokenizer_id);
 
 // A factory function to create segmenters. On success, return the instance of
 // Segmenter, on failed, set status != Status::OK()
@@ -122,10 +122,6 @@ class Parser::Impl {
  private:
   Impl();
 
-  // Converts term_instance to GBK encoding
-  void ConvertToGBKTermInstance(TermInstance *term_instance);
-
-  Tokenization *tokenizer_;
   Segmenter *segmenter_;
   PartOfSpeechTagger *part_of_speech_tagger_;
   DependencyParser *dependency_parser_;
@@ -135,7 +131,6 @@ class Parser::Impl {
   bool use_gbk_;
   char *utf8_buffer_;
   int utf8_buffersize_;
-  Encoding *encoding_;
 };
 
 class Parser::Options::Impl {
@@ -264,99 +259,71 @@ class Parser::Iterator::Impl {
   ~Impl();
 
   // Resets this iterator
-  void Reset(int sentence_num, bool have_postagger, bool have_parser) {
-    sentence_num_ = sentence_num;
-    end_ = (sentence_num_ == 0);
-    have_postagger_ = have_postagger;
-    have_parser_ = have_parser;
-    current_sentence_ = 0;
-    current_idx_ = 0;
-    begin_ = false;
-  }
+  void Reset(Segmenter *segmenter,
+             PartOfSpeechTagger *postagger,
+             DependencyParser *dependency_parser,
+             bool use_gbk,
+             const char *text);
 
   // These function return the data of current position
   const char *word() const {
-    if (end_ || begin_ == false) return "";
-    return sentence_[current_sentence_]->term_instance()
-                                       ->term_text_at(current_idx_);
+    if (end_ || current_idx_ < 0) return "";
+    return sentence_->term_instance()->term_text_at(current_idx_);
   }
   const char *part_of_speech_tag() const {
-    if (end_ || begin_ == false) return "";
-    if (have_postagger_) {
-      return sentence_[current_sentence_]->part_of_speech_tag_instance()
-                                         ->part_of_speech_tag_at(current_idx_);
+    if (end_ || current_idx_ < 0) return "";
+    if (postagger_) {
+      return sentence_->part_of_speech_tag_instance()
+                      ->part_of_speech_tag_at(current_idx_);
     } else {
       return "none";
     }
   }
   int type() const {
-    if (end_ || begin_ == false) return 0;
-    return sentence_[current_sentence_]->term_instance()
-                                       ->term_type_at(current_idx_);
+    if (end_ || current_idx_ < 0) return 0;
+    return sentence_->term_instance()->term_type_at(current_idx_);
   }
   int head() const {
-    if (end_ || begin_ == false) return 0;
-    if (have_parser_) {
-      return sentence_[current_sentence_]->tree_instance()
-                                         ->head_node_at(current_idx_);
+    if (end_ || current_idx_ < 0) return 0;
+    if (dependency_parser_) {
+      return sentence_->tree_instance()->head_node_at(current_idx_);
     } else {
       return 0;
     }
   }
   const char *dependency_label() const {
-    if (end_ || begin_ == false) return "";
-    if (have_parser_) {
-      return sentence_[current_sentence_]->tree_instance()
-                                         ->dependency_type_at(current_idx_);
+    if (end_ || current_idx_ < 0) return "";
+    if (dependency_parser_) {
+      return sentence_->tree_instance()->dependency_type_at(current_idx_);
     } else {
       return "none";
     }
   }
-  bool is_begin_of_sentence() const {
-    return current_idx_ == 0;
-  }
+  bool is_begin_of_sentence() const { return current_idx_ == 0; }
 
-  SentenceInstance *sentence(int idx) {
-    while (idx >= static_cast<int>(sentence_.size())) {
-      sentence_.push_back(new SentenceInstance());
-    }
-    return sentence_[idx];
-  }
+  Tokenizer *tokenizer() { return tokenizer_; }
+  Encoding *encoding() { return encoding_; }
 
   // Move the cursor to next position, if end of text is reached
   // set end() to true
-  bool Next() {
-    if (end_) return false;
-    if (begin_ == false) {
-      begin_ = true;
-      return true;
-    }
-    SentenceInstance *cnt_sentence = sentence(current_sentence_);
-    if (current_idx_ >= cnt_sentence->term_instance()->size() - 1) {
-      current_idx_ = 0;
-      ++current_sentence_;
-    } else {
-      ++current_idx_;
-    }
-    if (current_sentence_ >= sentence_num_) {
-      end_ = true;
-      return false;
-    } else {
-      return true;
-    }
-  }
+  bool Next();
 
  private:
-  int sentence_num_;
-  int current_sentence_;
+  int sentence_size_;
   int current_idx_;
-  bool begin_;
+  bool use_gbk_;
   bool end_;
 
-  bool have_postagger_;
-  bool have_parser_;
+  Tokenizer *tokenizer_;
+  Segmenter *segmenter_;
+  PartOfSpeechTagger *postagger_;
+  DependencyParser *dependency_parser_;
 
-  std::vector<SentenceInstance *> sentence_;
+  SentenceInstance *sentence_;
+  Encoding *encoding_;
+
+  // Converts term_instance to GBK encoding
+  void ConvertToGBKTermInstance(TermInstance *term_instance);
 };
 
 }  // namespace milkcat

@@ -34,10 +34,10 @@ namespace milkcat {
 
 class TokenInstance;
 
-class Tokenization {
+class Tokenizer {
  public:
-  Tokenization();
-  ~Tokenization();
+  Tokenizer();
+  ~Tokenizer();
 
   // Scan an string to get tokens
   void Scan(const char *buffer_string);
