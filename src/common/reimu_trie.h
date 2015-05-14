@@ -28,6 +28,11 @@
 #ifndef REIMU_TRIE_H_
 #define REIMU_TRIE_H_
 
+#include <stdbool.h>
+#include <stdint.h>
+
+#ifdef __cplusplus
+
 namespace milkcat {
 
 // RemmuTrie is a reimplementation of the double-array trie algorithm of
@@ -36,11 +41,6 @@ class ReimuTrie {
  public:
   typedef int int32;
   typedef unsigned char uint8;
-
-  enum {
-    kNoValue = -1,
-    kNoPath = -2
-  };
 
   ReimuTrie();
   ~ReimuTrie();
@@ -53,13 +53,14 @@ class ReimuTrie {
   // `default_value`
   int32 Get(const char *key, int32 default_value) const;
 
-  // Traverse ReimuTrie from `*from` and gets the value of `key`, then sets
-  // `from` to the latest position in the trie. If the path didn't exist,
+  // Traverse ReimuTrie from `*from` and gets the value of `key` or `ch`, then
+  // sets `from` to the latest position in the trie. If the path didn't exist,
   // just returns false. If the path exists but the value didn't exist,
   // returns true and set `value` to `default_value`. Else, returns true and
   // sets `value`.
   bool Traverse(
       int *from, const char *key, int32 *value, int32 default_value) const;
+  bool Traverse(int *from, char ch, int32 *value, int32 default_value) const;
 
   // Put `key` and `value` pair into trie.
   void Put(const char *key, int32 value);
@@ -86,5 +87,51 @@ class ReimuTrie {
 };
 
 }  // namespace milkcat
+
+#endif  // __cplusplus
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+typedef struct reimu_trie_t reimu_trie_t;
+
+// Open a ReimuTrie saved file. On success, returns an instance of reimu_trie_t.
+// On failed, returns NULL
+reimu_trie_t *reimutrie_open(const char *filename);
+
+// Create the instance of reimu_trie_t
+reimu_trie_t *reimutrie_new();
+
+// Delete the reimu_trie_t instance
+void reimutrie_delete(reimu_trie_t *trie);
+
+// Put `key` and `value` pair into trie.
+void reimutrie_put(reimu_trie_t *trie, const char *key, int32_t value);
+
+// Gets the corresponded value for `key`, if `key` does not exist, returns
+// `default_value`
+int32_t reimutrie_get(reimu_trie_t *trie,
+                      const char *key,
+                      int32_t default_value);
+
+// Traverse ReimuTrie from `*from` and gets the value of `ch`, then
+// sets `from` to the latest position in the trie. If the path didn't exist,
+// just returns false. If the path exists but the value didn't exist,
+// returns true and set `value` to `default_value`. Else, returns true and
+// sets `value`.
+bool reimutrie_traverse(reimu_trie_t *trie,
+                        int32_t *from,
+                        char ch,
+                        int32_t *value,
+                        int32_t default_value);
+
+// Saves the data into file. On success, returns true. Otherwise, returns
+// false
+bool reimutrie_save(reimu_trie_t *trie, const char *filename);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif  // REIMU_TRIE_H_

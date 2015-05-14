@@ -253,6 +253,7 @@ void set_array_test() {
 void traverse_test() {
   ReimuTrie *trie = new ReimuTrie();
   trie->Put("Bad Apple~!!", 233);
+  trie->Put("Bad Ax", 234);
   int from = 0;
   ReimuTrie::int32 value;
   assert(trie->Traverse(&from, "Bad ", &value, -1));
@@ -262,6 +263,14 @@ void traverse_test() {
   assert(trie->Traverse(&from2, "Alice", &value, -1) == false);
   assert(trie->Traverse(&from, "Apple~!!", &value, -1));
   assert(value == 233);
+
+  from = 0;
+  trie->Traverse(&from, "Bad ", &value, -1);
+  assert(trie->Traverse(&from, 'B', &value, -1) == false);
+  assert(trie->Traverse(&from, 'A', &value, -1));
+  assert(value == -1);
+  assert(trie->Traverse(&from, 'x', &value, -1));
+  assert(value == 234);
 
   delete trie;
   puts("traverse_test OK");

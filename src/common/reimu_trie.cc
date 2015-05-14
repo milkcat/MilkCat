@@ -58,6 +58,7 @@ class ReimuTrie::Impl {
   void *array() const { return reinterpret_cast<void *>(array_); }
   bool Traverse(
       int *from, const char *key, int32 *value, int32 default_value) const;
+  bool Traverse(int *from, char ch, int32 *value, int32 default_value) const;
  private:
   class Node;
   class Block;
@@ -214,6 +215,10 @@ bool ReimuTrie::Traverse(
       int *from, const char *key, int32 *value, int32 default_value) const {
   return impl_->Traverse(from, key, value, default_value);
 }
+bool ReimuTrie::Traverse(
+      int *from, char ch, int32 *value, int32 default_value) const {
+  return impl_->Traverse(from, ch, value, default_value);
+}
 void *ReimuTrie::array() const { return impl_->array(); }
 
 ReimuTrie::Impl::Block::Block(): previous_(0),
@@ -343,6 +348,25 @@ bool ReimuTrie::Impl::Traverse(
     *from = to;
     ++p;
   }
+  to = XOR(array_[*from].base(), 0);
+  if (array_[to].check() != *from) {
+    *value = default_value;
+  } else {
+    *value = array_[to].value();
+  }
+  return true;
+}
+
+bool ReimuTrie::Impl::Traverse(
+    int *from, char ch, int32 *value, int32 default_value) const {
+  if (array_ == NULL) return false;
+  uint8 ch_u8 = static_cast<uint8>(ch);
+
+  int base = array_[*from].base();
+  int to = XOR(base, ch_u8);
+  if (array_[to].check() != *from) return false;
+  *from = to;
+
   to = XOR(array_[*from].base(), 0);
   if (array_[to].check() != *from) {
     *value = default_value;
@@ -765,3 +789,43 @@ void ReimuTrie::Impl::DumpBlock(int block_idx) {
 }
 
 }  // namespace milkcat
+
+reimu_trie_t *reimutrie_open(const char *filename) {
+  return reinterpret_cast<reimu_trie_t *>(
+    milkcat::ReimuTrie::Open(filename));
+}
+
+reimu_trie_t *reimutrie_new() {
+  return reinterpret_cast<reimu_trie_t *>(new milkcat::ReimuTrie());
+}
+
+void reimutrie_delete(reimu_trie_t *trie) {
+  milkcat::ReimuTrie *reimu_trie = reinterpret_cast<milkcat::ReimuTrie *>(trie);
+  delete reimu_trie;
+}
+
+void reimutrie_put(reimu_trie_t *trie, const char *key, int32_t value) {
+  milkcat::ReimuTrie *reimu_trie = reinterpret_cast<milkcat::ReimuTrie *>(trie);
+  reimu_trie->Put(key, value);
+}
+
+int32_t reimutrie_get(reimu_trie_t *trie,
+                      const char *key,
+                      int32_t default_value) {
+  milkcat::ReimuTrie *reimu_trie = reinterpret_cast<milkcat::ReimuTrie *>(trie);
+  return reimu_trie->Get(key, default_value);
+}
+
+bool reimutrie_traverse(reimu_trie_t *trie,
+                        int32_t *from,
+                        char ch,
+                        int32_t *value,
+                        int32_t default_value) {
+  milkcat::ReimuTrie *reimu_trie = reinterpret_cast<milkcat::ReimuTrie *>(trie);
+  return reimu_trie->Traverse(from, ch, value, default_value);
+}
+
+bool reimutrie_save(reimu_trie_t *trie, const char *filename) {
+  milkcat::ReimuTrie *reimu_trie = reinterpret_cast<milkcat::ReimuTrie *>(trie);
+  return reimu_trie->Save(filename);
+}
