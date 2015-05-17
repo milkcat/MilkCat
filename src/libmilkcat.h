@@ -106,7 +106,7 @@ enum ParserType {
 
 class Parser::Impl {
  public:
-  static Impl *New(const Options &options);
+  static Impl *New(const Options &options, Model *external_model);
   ~Impl();
 
   void Predict(Iterator *iterator, const char *text);
@@ -119,6 +119,8 @@ class Parser::Impl {
     return dependency_parser_;
   }
 
+  Model *model() { return model_; }
+
  private:
   Impl();
 
@@ -127,10 +129,29 @@ class Parser::Impl {
   DependencyParser *dependency_parser_;
   Model *model_;
 
+  // `external_model_` is true when `model_` is borrowed from another
+  // Parser::Impl instance
+  bool external_model_;
+
   // These fields are used when using gbk encoding
   bool use_gbk_;
   char *utf8_buffer_;
   int utf8_buffersize_;
+};
+
+class ParserPool::Impl {
+ public:
+  static Impl *New(const Parser::Options &options);
+  Impl();
+  ~Impl();
+
+  Parser *NewParser();
+  void ReleaseAll();
+
+ private:
+  Parser::Impl *original_parser_;
+  std::vector<Parser *> mass_parsers_;
+  Parser::Options options_;
 };
 
 class Parser::Options::Impl {

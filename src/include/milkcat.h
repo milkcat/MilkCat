@@ -82,6 +82,9 @@ class MILKCAT_API Parser: public noncopyable {
   Parser();
   ~Parser();
 
+  // Creates the Parser instance by Impl, ONLY for internal usage
+  Parser(Impl *impl);
+
   // Creates the parser with `options`.
   explicit Parser(const Options &options);
 
@@ -91,7 +94,7 @@ class MILKCAT_API Parser: public noncopyable {
   // Parses the text and stores the result into the iterator
   void Predict(Iterator *iterator, const char *text);
 
-  // Get the instance of the implementation class
+  // Get the instance of the implementation class, ONLY for internal usage
   Impl *impl() const { return impl_; }
 
  private:
@@ -104,7 +107,10 @@ class MILKCAT_API Parser::Options {
   class Impl;
 
   Options();
+  Options(const Options &options);
   ~Options();
+
+  Options &operator=(const Options &options);
 
   // Use GBK or UTF-8 encoding
   void UseGBK();
@@ -137,6 +143,49 @@ class MILKCAT_API Parser::Options {
   Impl *impl() const { return impl_; }
 
  private:
+  Impl *impl_;
+};
+
+//
+// ParserPool is the class that can create multiple Parser instances which
+// shared the same model data. It mainly used in multi-thread programs since
+// Parser is not thread safe and users should create the Parser instance for
+// each threads.
+// 
+// Usage:
+//   milkcat::ParserPool parser_pool;
+//   if (parser_pool.ok()) {
+//     milkcat::Parser *parser1 = parser_pool.NewParser();
+//     milkcat::Parser *parser2 = parser_pool.NewParser();
+//     ...
+//     parser_pool.ReleaseAll();
+//   } else {
+//     puts(milkcat::LastError())
+//   }
+//
+class MILKCAT_API ParserPool {
+ public:
+  ParserPool();
+  ~ParserPool();
+
+  // Creates the parser with `options`. The usage of options is just the same
+  // as `Parser::Parser()`
+  explicit ParserPool(const Parser::Options &options);
+
+  // Creates the Parser instance. When ParserPool::ok() is false, it retuens
+  // a NULL pointer. And use ParserPool::ReleaseAll() to release the instances
+  // it creates. Users SHOULD NOT delete the instance by himself, or the
+  // program would be crashed.
+  Parser *NewParser();
+
+  // Releases all the Parser instances it creates
+  void ReleaseAll();
+
+  // Returns true when successfully initialized.
+  bool ok() { return impl_ != NULL; }
+
+ private:
+  class Impl;
   Impl *impl_;
 };
 

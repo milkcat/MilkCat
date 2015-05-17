@@ -28,6 +28,7 @@
 #include <stdio.h>
 #include <string.h>
 #include "include/milkcat.h"
+#include "libmilkcat.h"
 #include "util/encoding.h"
 
 using milkcat::Parser;
@@ -70,7 +71,6 @@ void check_prediction(Parser::Iterator *parseriter, bool use_gbk) {
       encoding->UTF8ToGBK(word[i], gbk_word, sizeof(gbk_word));
       assert(strcmp(parseriter->word(), gbk_word) == 0);
     } else {
-      puts(parseriter->word());
       assert(strcmp(parseriter->word(), word[i]) == 0);
     }
     
@@ -106,6 +106,39 @@ int parser_test() {
   delete parser;
 
   delete parseriter;
+  return 0;
+}
+
+int parserpool_test() {
+  Parser::Options options;
+  options.UseMixedSegmenter();
+  options.UseMixedPOSTagger();
+  options.UseBeamYamadaParser();
+  options.SetModelPath(MODEL_DIR);
+
+  const int kParsers = 5;
+
+  milkcat::ParserPool parser_pool(options);
+  assert(parser_pool.ok());
+
+  Parser::Iterator parseriter;
+  Parser *first_parser = NULL;
+  for (int i = 0; i < kParsers; ++i) {
+    Parser *parser = parser_pool.NewParser();
+    assert(parser);
+
+    parser->Predict(&parseriter, kSentence);
+    check_prediction(&parseriter, false);
+
+    if (i == 0) {
+      first_parser = parser;
+    } else {
+      assert(first_parser->impl()->model() == parser->impl()->model());
+      assert(first_parser->impl()->segmenter() != parser->impl()->segmenter());
+    }
+  }
+
+  parser_pool.ReleaseAll();
   return 0;
 }
 
@@ -190,6 +223,7 @@ int main() {
   empty_string_test();
   bigram_segmenter_test();
   gbk_test();
+  parserpool_test();
 
   return 0;
 }

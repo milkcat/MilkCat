@@ -305,6 +305,7 @@ Parser::Impl::Impl(): segmenter_(NULL),
                       part_of_speech_tagger_(NULL),
                       dependency_parser_(NULL),
                       model_(NULL),
+                      external_model_(false),
                       use_gbk_(false),
                       utf8_buffersize_(1024) {
   utf8_buffer_ = new char[1024];
@@ -320,29 +321,39 @@ Parser::Impl::~Impl() {
   delete dependency_parser_;
   dependency_parser_ = NULL;
 
-  delete model_;
-  model_ = NULL;
+  if (external_model_ == false) {
+    delete model_;
+    model_ = NULL;
+  }
 
   delete[] utf8_buffer_;
   utf8_buffer_ = NULL;
 }
 
-Parser::Impl *Parser::Impl::New(const Options &options) {
+Parser::Impl *Parser::Impl::New(const Options &options, Model *external_model) {
   Status status = Status::OK();
   Impl *self = new Parser::Impl();
-  int type = options.impl()->TypeValue();
 
+  int type = options.impl()->TypeValue();
   self->use_gbk_ = options.impl()->use_gbk();
 
-  if (strcmp(options.impl()->model_path(), "") == 0) {
-    self->model_ = new Model(MODEL_DIR);
+  if (external_model) {
+    // Just use the external model
+    self->external_model_ = true;
+    self->model_ = external_model;
   } else {
-    self->model_ = new Model(options.impl()->model_path());
-  }
+    // Initialize the model by itself
+    if (strcmp(options.impl()->model_path(), "") == 0) {
+      self->model_ = new Model(MODEL_DIR);
+    } else {
+      self->model_ = new Model(options.impl()->model_path());
+    }
 
-  if (status.ok() && strcmp(options.impl()->user_dictionary(), "") != 0) {
-    self->model_->ReadUserDictionary(options.impl()->user_dictionary(),
-                                     &status);
+    if (status.ok() && strcmp(options.impl()->user_dictionary(), "") != 0) {
+      self->model_->ReadUserDictionary(
+          options.impl()->user_dictionary(),
+          &status);
+    }
   }
 
   if (status.ok())
@@ -410,9 +421,11 @@ Parser::~Parser() {
   impl_ = NULL;
 }
 
-Parser::Parser(): impl_(Impl::New(Options())) {
+Parser::Parser(): impl_(Impl::New(Options(), NULL)) {
 }
-Parser::Parser(const Options &options): impl_(Impl::New(options)) {
+Parser::Parser(const Options &options): impl_(Impl::New(options, NULL)) {
+}
+Parser::Parser(Impl *impl): impl_(impl) {
 }
 
 void Parser::Predict(Parser::Iterator *iterator, const char *text) {
@@ -420,11 +433,80 @@ void Parser::Predict(Parser::Iterator *iterator, const char *text) {
   return impl_->Predict(iterator, text);
 }
 
+ParserPool::Impl::Impl(): original_parser_(NULL) {
+}
+
+ParserPool::Impl::~Impl() {
+  ReleaseAll();
+
+  delete original_parser_;
+  original_parser_ = NULL;
+}
+
+ParserPool::Impl *ParserPool::Impl::New(const Parser::Options &options) {
+  ParserPool::Impl *self = new ParserPool::Impl();
+
+  self->options_ = options;
+  self->original_parser_ = Parser::Impl::New(options, NULL);
+  if (self->original_parser_ == NULL) {
+    delete self;
+    return NULL;
+  } else {
+    return self;
+  }
+}
+
+Parser *ParserPool::Impl::NewParser() {
+  Parser::Impl *parser_impl = Parser::Impl::New(
+      options_,
+      original_parser_->model());
+  assert(parser_impl);
+  Parser *parser = new Parser(parser_impl);
+  mass_parsers_.push_back(parser);
+
+  return parser;
+}
+
+void ParserPool::Impl::ReleaseAll() {
+  for (std::vector<Parser *>::iterator it = mass_parsers_.begin();
+       it != mass_parsers_.end();
+       ++it) {
+    delete *it;
+  }
+  mass_parsers_ = std::vector<Parser *>();
+}
+
+ParserPool::ParserPool(): impl_(ParserPool::Impl::New(Parser::Options())) {
+}
+ParserPool::~ParserPool() {
+  delete impl_;
+  impl_ = NULL;
+}
+ParserPool::ParserPool(const Parser::Options &options):
+    impl_(ParserPool::Impl::New(options)) {
+}
+Parser *ParserPool::NewParser() { 
+  if (impl_ == NULL) return NULL;
+  return impl_->NewParser(); 
+}
+void ParserPool::ReleaseAll() {
+  if (impl_ == NULL) return ;
+  impl_->ReleaseAll();
+}
+
 Parser::Options::Options(): impl_(new Impl()) {
+}
+Parser::Options::Options(const Options &options) {
+  impl_ = new Impl(*options.impl_);
 }
 Parser::Options::~Options() {
   delete impl_;
   impl_ = NULL;
+}
+Parser::Options &Parser::Options::operator=(const Parser::Options &options) {
+  delete impl_;
+  impl_ = new Impl(*options.impl_); 
+  return *this;
 }
 
 Parser::Options::Impl::Impl():
